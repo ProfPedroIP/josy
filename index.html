@@ -2,13 +2,13 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Missão Espacial: Josy & Pedro</title>
-    <!-- Importando uma fonte pixelada do Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { 
             background: #050505; 
-            color: #00ff41; /* Verde Matrix/Retro */
+            color: #00ff41; 
             font-family: 'Press Start 2P', cursive; 
             text-align: center;
             display: flex;
@@ -17,10 +17,11 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        /* Efeito de Scanlines (linhas de TV antiga) */
+        /* Efeito de Scanlines */
         body::before {
             content: " ";
             display: block;
@@ -33,114 +34,140 @@
             pointer-events: none;
         }
 
-        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin-bottom: 20px; }
-        p { font-size: 10px; line-height: 1.5; color: #00ffff; }
+        /* Aumentado em 50% (Base era 18px -> 27px) */
+        h1 { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin: 30px 0; }
+        
+        /* Aumentado em 50% (Base era 10px -> 15px) */
+        p { font-size: 14px; line-height: 1.6; color: #00ffff; }
 
         .grid { 
             display: grid; 
-            grid-template-columns: repeat(5, 60px); 
-            gap: 15px; 
+            /* Células aumentadas de 60px para 90px */
+            grid-template-columns: repeat(5, 85px); 
+            gap: 12px; 
             background: #111;
-            padding: 20px;
-            border: 4px solid #4a90e2;
-            box-shadow: 0 0 20px #4a90e2, inset 0 0 10px #4a90e2;
-            position: relative;
+            padding: 15px;
+            border: 6px solid #4a90e2;
+            box-shadow: 0 0 25px #4a90e2;
+            margin-bottom: 20px;
         }
 
         .cell { 
-            width: 60px; 
-            height: 60px; 
+            width: 85px; 
+            height: 85px; 
             background: #000; 
-            border: 2px solid #333; 
+            border: 3px solid #333; 
             cursor: pointer; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 24px;
-            transition: all 0.2s;
+            font-size: 36px; /* Ícones maiores */
+            transition: 0.2s;
+            color: #444;
+            -webkit-tap-highlight-color: transparent; /* Remove brilho de clique no mobile */
         }
 
-        .cell:hover { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
+        .cell.hit { background: #220022; border-color: #ff4d6d; animation: blink 0.5s infinite; }
+        .cell.miss { background: #111; border-color: #222; color: #222; }
 
-        .cell.hit { 
-            background: #220022; 
-            border-color: #ff4d6d; 
-            animation: blink 0.5s infinite;
-        }
-
-        .cell.miss { background: #111; border-color: #222; color: #444; }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         #message { 
-            margin-top: 30px; 
+            margin-top: 25px; 
             display: none; 
-            padding: 20px; 
-            border: 4px double #ff4d6d; 
+            padding: 30px; 
+            border: 6px double #ff4d6d; 
             background: rgba(255, 77, 109, 0.1);
-            max-width: 80%;
-            animation: fadeIn 2s;
+            width: 90%; 
+            max-width: 500px;
+            animation: fadeIn 1s;
+        }
+
+        /* Botão Jogar de Novo - Grande e fácil de clicar */
+        .btn-restart {
+            margin-top: 25px;
+            padding: 20px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            background-color: #ff00ff;
+            color: white;
+            border: 5px solid #4b0082;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px #4b0082;
+            width: 100%;
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .signature { color: #ff00ff; margin-top: 15px; font-size: 8px; }
+        /* Ajuste para telas muito pequenas (iPhone SE etc) */
+        @media (max-width: 450px) {
+            .grid { grid-template-columns: repeat(5, 65px); gap: 8px; }
+            .cell { width: 65px; height: 65px; font-size: 28px; }
+            h1 { font-size: 20px; }
+        }
     </style>
 </head>
 <body>
 
     <h1>> PLAYER 1: JOSY</h1>
-    <p>MISSÃO: ENCONTRE OS 3 CORAÇÕES ESTELARES</p>
+    <p>MISSÃO: ENCONTRE OS 3 CORAÇÕES</p>
     
     <div class="grid" id="grid"></div>
     
     <div id="message">
-        <h2 style="color: #ff4d6d;">LEVEL CLEAR! 🏆</h2>
-        <p style="color: #fff;">Assim como você encontrou esses corações entre as estrelas...</p>
-        <p style="color: #00ffff;">Eu tive a sorte de te encontrar entre 8 bilhões de humanos.</p>
-        <p><strong>TE AMO DO TANTO DE ESTRELAS NO CÉU!</strong></p>
-        <p class="signature">PEDRO AMA JOSY <br> [INSERT COIN TO CONTINUE]</p>
+        <h2 style="color: #ff4d6d; font-size: 22px;">LEVEL CLEAR! 🏆</h2>
+        <p style="color: #fff; font-size: 16px;">Assim como você encontrou esses corações...</p>
+        <p style="color: #00ffff; font-size: 16px;">Sorte a minha ter te encontrado no mundo.</p>
+        <p style="font-size: 18px;"><strong>TE AMO, JOSY!</strong></p>
+        
+        <button class="btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
     </div>
 
     <script>
         const grid = document.getElementById('grid');
         const messageDiv = document.getElementById('message');
-        
-        // Posições aleatórias para os corações ficarem em lugares diferentes cada vez que abrir
-        const targets = [];
-        while(targets.length < 3){
-            let r = Math.floor(Math.random() * 25);
-            if(targets.indexOf(r) === -1) targets.push(r);
-        }
-
+        let targets = [];
         let found = 0;
 
-        for (let i = 0; i < 25; i++) {
-            const cell = document.createElement('div');
-            cell.classList.add('cell');
-            cell.innerHTML = "?"; // Estilo mistério
-            
-            cell.onclick = () => {
-                if (targets.includes(i)) {
-                    cell.innerText = '❤️';
-                    cell.classList.add('hit');
-                    found++;
-                    if (found === targets.length) {
-                        messageDiv.style.display = 'block';
-                        window.scrollTo(0, document.body.scrollHeight);
+        function startGame() {
+            grid.innerHTML = '';
+            messageDiv.style.display = 'none';
+            found = 0;
+            targets = [];
+
+            while(targets.length < 3){
+                let r = Math.floor(Math.random() * 25);
+                if(!targets.includes(r)) targets.push(r);
+            }
+
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.innerHTML = "?";
+                
+                cell.onclick = () => {
+                    if (targets.includes(i)) {
+                        cell.innerText = '❤️';
+                        cell.classList.add('hit');
+                        found++;
+                        if (found === 3) {
+                            messageDiv.style.display = 'block';
+                            // Scroll suave para a mensagem no celular
+                            setTimeout(() => {
+                                messageDiv.scrollIntoView({ behavior: 'smooth' });
+                            }, 300);
+                        }
+                    } else {
+                        cell.innerText = 'X';
+                        cell.classList.add('miss');
                     }
-                } else {
-                    cell.innerText = 'X';
-                    cell.classList.add('miss');
-                }
-                cell.onclick = null;
-            };
-            grid.appendChild(cell);
+                    cell.onclick = null;
+                };
+                grid.appendChild(cell);
+            }
         }
+
+        startGame();
     </script>
 </body>
 </html>
