@@ -2,50 +2,142 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Missão espacial: Encontre os corações</title>
+    <title>Missão Espacial: Josy & Pedro</title>
+    <!-- Importando uma fonte pixelada do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { background: #0b0d17; color: white; font-family: 'Courier New', Courier, monospace; text-align: center; }
-        .grid { display: grid; grid-template-columns: repeat(5, 50px); gap: 10px; justify-content: center; margin-top: 20px; }
-        .cell { width: 50px; height: 50px; background: #1a1e2e; border: 1px solid #4a90e2; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .cell.hit { background: #e94b3c; }
-        .cell.miss { background: #333; }
-        #message { margin-top: 30px; display: none; padding: 20px; border: 2px dashed #ff4d6d; border-radius: 10px; }
+        body { 
+            background: #050505; 
+            color: #00ff41; /* Verde Matrix/Retro */
+            font-family: 'Press Start 2P', cursive; 
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Efeito de Scanlines (linhas de TV antiga) */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin-bottom: 20px; }
+        p { font-size: 10px; line-height: 1.5; color: #00ffff; }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 60px); 
+            gap: 15px; 
+            background: #111;
+            padding: 20px;
+            border: 4px solid #4a90e2;
+            box-shadow: 0 0 20px #4a90e2, inset 0 0 10px #4a90e2;
+            position: relative;
+        }
+
+        .cell { 
+            width: 60px; 
+            height: 60px; 
+            background: #000; 
+            border: 2px solid #333; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .cell:hover { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
+
+        .cell.hit { 
+            background: #220022; 
+            border-color: #ff4d6d; 
+            animation: blink 0.5s infinite;
+        }
+
+        .cell.miss { background: #111; border-color: #222; color: #444; }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        #message { 
+            margin-top: 30px; 
+            display: none; 
+            padding: 20px; 
+            border: 4px double #ff4d6d; 
+            background: rgba(255, 77, 109, 0.1);
+            max-width: 80%;
+            animation: fadeIn 2s;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .signature { color: #ff00ff; margin-top: 15px; font-size: 8px; }
     </style>
 </head>
 <body>
-    <h1>🚀 Missão: Encontre os Corações Estelares</h1>
-    <p>Dica: Há algo especial escondido nessas coordenadas!</p>
-    <p>Encontre os três corações...</p>
+
+    <h1>> PLAYER 1: JOSY</h1>
+    <p>MISSÃO: ENCONTRE OS 3 CORAÇÕES ESTELARES</p>
     
     <div class="grid" id="grid"></div>
     
     <div id="message">
-        <h2>💖 Você conseguiu!</h2>
-        <p>Assim como você encontrou esses corações, dentre 8 bilhões de pessoas, eu tive a sorte de te encontrar...</p>
-        <p><strong>Te amo do tanto de estrelas que tem no céu! Pedro ama Josy! > <</strong></p>
-        <p>Com carinho, Pedro</p>
+        <h2 style="color: #ff4d6d;">LEVEL CLEAR! 🏆</h2>
+        <p style="color: #fff;">Assim como você encontrou esses corações entre as estrelas...</p>
+        <p style="color: #00ffff;">Eu tive a sorte de te encontrar entre 8 bilhões de humanos.</p>
+        <p><strong>TE AMO DO TANTO DE ESTRELAS NO CÉU!</strong></p>
+        <p class="signature">PEDRO AMA JOSY <br> [INSERT COIN TO CONTINUE]</p>
     </div>
 
     <script>
         const grid = document.getElementById('grid');
         const messageDiv = document.getElementById('message');
-        const targets = [4, 12, 22]; // Posições dos "navios"
+        
+        // Posições aleatórias para os corações ficarem em lugares diferentes cada vez que abrir
+        const targets = [];
+        while(targets.length < 3){
+            let r = Math.floor(Math.random() * 25);
+            if(targets.indexOf(r) === -1) targets.push(r);
+        }
+
         let found = 0;
 
         for (let i = 0; i < 25; i++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
+            cell.innerHTML = "?"; // Estilo mistério
+            
             cell.onclick = () => {
                 if (targets.includes(i)) {
                     cell.innerText = '❤️';
                     cell.classList.add('hit');
                     found++;
-                    if (found === targets.length) messageDiv.style.display = 'block';
+                    if (found === targets.length) {
+                        messageDiv.style.display = 'block';
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
                 } else {
-                    cell.innerText = '•';
+                    cell.innerText = 'X';
                     cell.classList.add('miss');
                 }
-                cell.onclick = null; // Impede clicar de novo
+                cell.onclick = null;
             };
             grid.appendChild(cell);
         }
