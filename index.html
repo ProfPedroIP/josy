@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Missão Espacial: Amor</title>
+    <style>
+        body { background: #0b0d17; color: white; font-family: 'Courier New', Courier, monospace; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(5, 50px); gap: 10px; justify-content: center; margin-top: 20px; }
+        .cell { width: 50px; height: 50px; background: #1a1e2e; border: 1px solid #4a90e2; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .cell.hit { background: #e94b3c; }
+        .cell.miss { background: #333; }
+        #message { margin-top: 30px; display: none; padding: 20px; border: 2px dashed #ff4d6d; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Missão: Encontre os Corações Estelares</h1>
+    <p>Dica: Há algo especial escondido nessas coordenadas!</p>
+    
+    <div class="grid" id="grid"></div>
+    
+    <div id="message">
+        <h2>💖 Você conseguiu!</h2>
+        <p>Assim como você encontrou esses corações, eu tive a sorte de te encontrar...</p>
+        <p><strong>[Sua Mensagem Personalizada Aqui]</strong></p>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const messageDiv = document.getElementById('message');
+        const targets = [4, 12, 22]; // Posições dos "navios"
+        let found = 0;
+
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.onclick = () => {
+                if (targets.includes(i)) {
+                    cell.innerText = '❤️';
+                    cell.classList.add('hit');
+                    found++;
+                    if (found === targets.length) messageDiv.style.display = 'block';
+                } else {
+                    cell.innerText = '•';
+                    cell.classList.add('miss');
+                }
+                cell.onclick = null; // Impede clicar de novo
+            };
+            grid.appendChild(cell);
+        }
+    </script>
+</body>
+</html>
