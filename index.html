@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Missão Espacial: Josy & Pedro</title>
+    
+    <!-- Favicon de Foguete -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -59,11 +63,10 @@
             justify-content: center; 
             font-size: 32px; 
             transition: 0.2s;
-            color: #ffd700; /* Cor dourada para as estrelas iniciais */
+            color: #ffd700; 
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Efeito de brilho nas estrelas não clicadas */
         .cell.initial:hover {
             color: #fff;
             text-shadow: 0 0 10px #ffd700;
@@ -78,7 +81,7 @@
         .cell.miss { 
             background: #111; 
             border-color: #ff0000; 
-            color: #ff0000; /* X em vermelho */
+            color: #ff0000; 
         }
 
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -125,11 +128,11 @@
     
     <div id="message">
         <h2 style="color: #ff4d6d; font-size: 22px;">LEVEL CLEAR! 🏆</h2>
-        <p style="color: #fff; font-size: 16px;">Assim como você encontrou esses corações...</p>
+        <p style="color: #fff; font-size: 16px;">Assim como você encontrou os corações...</p>
         <p style="color: #00ffff; font-size: 16px;">Sorte a minha ter te encontrado entre 8 bilhões de pessoas.</p>
         <p style="font-size: 18px;"><strong>PEDRO AMA JOSY!</strong></p>
         
-        <button class="btn-restart" onclick="startGame()">Play Again...</button>
+        <button class="btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
     </div>
 
     <script>
@@ -144,7 +147,6 @@
             found = 0;
             targets = [];
 
-            // Sorteia 3 posições aleatórias
             while(targets.length < 3){
                 let r = Math.floor(Math.random() * 25);
                 if(!targets.includes(r)) targets.push(r);
@@ -154,7 +156,7 @@
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
                 cell.classList.add('initial');
-                cell.innerHTML = "★"; // Começa com estrela
+                cell.innerHTML = "★"; 
                 
                 cell.onclick = () => {
                     cell.classList.remove('initial');
@@ -169,10 +171,10 @@
                             }, 300);
                         }
                     } else {
-                        cell.innerText = 'X'; // Errou, mostra o X
+                        cell.innerText = 'X'; 
                         cell.classList.add('miss');
                     }
-                    cell.onclick = null; // Desabilita novos cliques na mesma célula
+                    cell.onclick = null; 
                 };
                 grid.appendChild(cell);
             }
