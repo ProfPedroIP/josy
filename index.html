@@ -21,8 +21,9 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         /* Efeito de Scanlines */
@@ -38,30 +39,34 @@
             pointer-events: none;
         }
 
-        h1 { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin: 30px 0; }
-        p { font-size: 14px; line-height: 1.6; color: #00ffff; }
+        /* Reduzido para 20px */
+        h1 { font-size: 20px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 20px 0; }
+        
+        /* Reduzido para 12px */
+        p { font-size: 12px; line-height: 1.4; color: #00ffff; margin-bottom: 15px; }
 
         .grid { 
             display: grid; 
-            grid-template-columns: repeat(5, 85px); 
-            gap: 12px; 
+            /* Células reduzidas para 70px para caber melhor em telas estreitas */
+            grid-template-columns: repeat(5, 68px); 
+            gap: 8px; 
             background: #111;
-            padding: 15px;
-            border: 6px solid #4a90e2;
-            box-shadow: 0 0 25px #4a90e2;
-            margin-bottom: 20px;
+            padding: 12px;
+            border: 4px solid #4a90e2;
+            box-shadow: 0 0 15px #4a90e2;
+            margin-bottom: 15px;
         }
 
         .cell { 
-            width: 85px; 
-            height: 85px; 
+            width: 68px; 
+            height: 68px; 
             background: #000; 
-            border: 3px solid #333; 
+            border: 2px solid #333; 
             cursor: pointer; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 32px; 
+            font-size: 24px; 
             transition: 0.2s;
             color: #ffd700; 
             -webkit-tap-highlight-color: transparent;
@@ -69,7 +74,7 @@
 
         .cell.initial:hover {
             color: #fff;
-            text-shadow: 0 0 10px #ffd700;
+            text-shadow: 0 0 8px #ffd700;
         }
 
         .cell.hit { 
@@ -87,35 +92,36 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         #message { 
-            margin-top: 25px; 
+            margin-top: 15px; 
             display: none; 
-            padding: 30px; 
-            border: 6px double #ff4d6d; 
+            padding: 20px; 
+            border: 4px double #ff4d6d; 
             background: rgba(255, 77, 109, 0.1);
             width: 90%; 
-            max-width: 500px;
+            max-width: 400px;
             animation: fadeIn 1s;
         }
 
         .btn-restart {
-            margin-top: 25px;
-            padding: 20px 30px;
+            margin-top: 20px;
+            padding: 15px 20px;
             font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
+            font-size: 14px;
             background-color: #ff00ff;
             color: white;
-            border: 5px solid #4b0082;
+            border: 4px solid #4b0082;
             cursor: pointer;
-            box-shadow: 6px 6px 0px #4b0082;
+            box-shadow: 4px 4px 0px #4b0082;
             width: 100%;
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        @media (max-width: 450px) {
-            .grid { grid-template-columns: repeat(5, 65px); gap: 8px; }
-            .cell { width: 65px; height: 65px; font-size: 24px; }
-            h1 { font-size: 20px; }
+        /* Ajuste fino para celulares muito pequenos */
+        @media (max-width: 380px) {
+            .grid { grid-template-columns: repeat(5, 58px); gap: 5px; padding: 8px;}
+            .cell { width: 58px; height: 58px; font-size: 20px; }
+            h1 { font-size: 16px; }
         }
     </style>
 </head>
@@ -127,10 +133,10 @@
     <div class="grid" id="grid"></div>
     
     <div id="message">
-        <h2 style="color: #ff4d6d; font-size: 22px;">LEVEL CLEAR! 🏆</h2>
-        <p style="color: #fff; font-size: 16px;">Assim como você encontrou os corações...</p>
-        <p style="color: #00ffff; font-size: 16px;">Sorte a minha ter te encontrado entre 8 bilhões de pessoas.</p>
-        <p style="font-size: 18px;"><strong>PEDRO AMA JOSY!</strong></p>
+        <h2 style="color: #ff4d6d; font-size: 18px;">LEVEL CLEAR! 🏆</h2>
+        <p style="color: #fff; font-size: 14px;">Assim como você encontrou esses corações...</p>
+        <p style="color: #00ffff; font-size: 14px;">Sorte a minha ter te encontrado entre 8 bilhões de pessoas.</p>
+        <p style="font-size: 16px;"><strong>PEDRO AMA JOSY!</strong></p>
         
         <button class="btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
     </div>
