@@ -73,6 +73,20 @@
         #score-display {
             position: absolute; top: 20px; left: 20px; z-index: 50; font-size: 14px; text-shadow: 2px 2px #000;
         }
+
+        /* Estilo da Foto Polaroid */
+        .polaroid {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border: 6px solid #fff;
+            border-bottom: 20px solid #fff;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+            margin: 15px auto;
+            display: block;
+            background-color: #fff;
+            transform: rotate(-3deg);
+        }
     </style>
 </head>
 <body>
@@ -100,6 +114,10 @@
             <p style="color: #fff; font-size: 12px; line-height: 1.6;">O universo está a salvo, mas a minha maior conquista já foi feita...</p>
             <p style="color: #00ffff; font-size: 12px;">Ganhar o seu coração!</p>
             <p style="font-size: 14px;"><strong>PEDRO AMA JOSY!</strong></p>
+            
+            <!-- Foto estilo Polaroid -->
+            <img src="assets/images/guerra_estelar_photo.png" class="polaroid" alt="Pedro e Josy">
+
             <button class="btn" style="background: #ff4d6d; box-shadow: 4px 4px 0px #800020; color: white;" onclick="resetGame()">JOGAR DE NOVO</button>
             <a href="index.html" class="btn btn-blue">VOLTAR AO MENU</a>
         </div>
