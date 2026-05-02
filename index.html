@@ -27,13 +27,11 @@
             position: fixed;
             top: 0; left: 0; width: 2px; height: 2px;
             background: transparent;
-            /* Gera 100 pequenas estrelas em posições aleatórias usando box-shadow */
             box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
             animation: spaceMove 100s linear infinite;
             z-index: -1;
         }
 
-        /* Camada extra de estrelas menores para profundidade */
         .stars::after {
             content: "";
             position: fixed;
@@ -48,7 +46,7 @@
             to { transform: translateY(-100vh); }
         }
 
-        /* Efeito CRT (ajustado z-index para ficar acima das estrelas) */
+        /* Efeito CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -78,9 +76,32 @@
             background: #111; color: #00ffff; border: 4px solid #4a90e2;
             cursor: pointer; text-decoration: none; transition: 0.3s;
             box-shadow: 6px 6px 0px #4b0082;
+            position: relative; /* Necessário para a etiqueta Novo Jogo não fugir do botão */
         }
 
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
+
+        /* Estilo Específico do Novo Jogo */
+        .arcade-btn-novo {
+            border-color: #ff00ff;
+            color: #ff00ff;
+        }
+
+        .badge-novo {
+            position: absolute;
+            top: -12px;
+            right: -15px;
+            background: #ff00ff;
+            color: #fff;
+            font-size: 8px;
+            padding: 6px 8px;
+            border: 2px solid #fff;
+            box-shadow: 2px 2px 0px #4b0082;
+            animation: blink 1s infinite;
+            transform: rotate(5deg);
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .footer { margin-top: 50px; font-size: 10px; color: #444; position: relative; z-index: 5; }
 
@@ -115,7 +136,12 @@
     <div class="menu-container">
         <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
         <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
-        <div class="arcade-btn" style="opacity: 0.5; cursor: not-allowed;">03. EM BREVE...</div>
+        
+        <!-- Botão Destacado -->
+        <a href="guerra_estelar.html" class="arcade-btn arcade-btn-novo">
+            03. GUARDIÃO DO AMOR
+            <span class="badge-novo">NOVO JOGO!</span>
+        </a>
     </div>
 
     <div class="footer">MADE WITH ❤️ BY PEDRO</div>
@@ -123,6 +149,7 @@
     <script>
         function startArcade() {
             const audio = document.getElementById('bgTrack');
+            audio.volume = 0.5; // Ajustando volume do menu para 50%
             audio.play().catch(e => console.log("Erro ao tocar áudio:", e));
             document.getElementById('overlay').style.display = 'none';
         }
