@@ -89,7 +89,7 @@
         <!-- Tela Inicial -->
         <div id="start-screen" class="panel">
             <h2 style="color: #ff00ff; font-size: 16px;">GUARDIÃO DO AMOR</h2>
-            <p style="font-size: 10px; line-height: 1.6; color: #fff;">Arraste para os lados para mover a nave. O tiro é automático!</p>
+            <p style="font-size: 10px; line-height: 1.6; color: #fff;">Arraste para mover a nave. O tiro é automático!</p>
             <p style="font-size: 10px; color: #00ffff;">Destrua os invasores e alcance 1000 pontos!</p>
             <button class="btn" onclick="startGame()">DECOLAR 🚀</button>
         </div>
@@ -146,17 +146,22 @@
         let isPlaying = false;
         let score = 0;
         let frames = 0;
-        let spawnRate = 100; // A cada quantos frames nasce um inimigo (diminui com o tempo)
+        let spawnRate = 100;
 
         // Entidades
         const player = { x: 160, y: 500, width: 40, height: 40 };
         let bullets = [];
         let enemies = [];
-        let particles = [];
 
-        // Controle Mobile / Mouse
+        // Controle Mobile / Mouse (Atualizado para fluidez total)
         function movePlayer(e) {
             if(!isPlaying) return;
+            
+            // Impede a tela do celular de rolar ou dar zoom acidental
+            if(e.type === 'touchmove' || e.type === 'touchstart') {
+                e.preventDefault();
+            }
+
             let clientX = e.touches ? e.touches[0].clientX : e.clientX;
             let rect = canvas.getBoundingClientRect();
             let scaleX = canvas.width / rect.width;
@@ -167,36 +172,44 @@
             if(player.x + player.width > canvas.width) player.x = canvas.width - player.width;
         }
 
+        // Adicionados os eventos de clique inicial (mousedown e touchstart)
         canvas.addEventListener('mousemove', movePlayer);
+        canvas.addEventListener('mousedown', movePlayer);
         canvas.addEventListener('touchmove', movePlayer, {passive: false});
+        canvas.addEventListener('touchstart', movePlayer, {passive: false});
 
         // Loop Principal do Jogo
         function loop() {
             if(!isPlaying) return;
             
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa a tela
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             frames++;
 
-            // 1. DESENHA O JOGADOR (Usando emoji para ficar com estilo arcade leve)
+            // 1. DESENHA O JOGADOR (Nave reta!)
+            ctx.save(); // Salva o estado atual da tela
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2); // Move o eixo para o centro da nave
+            ctx.rotate(-45 * Math.PI / 180); // Rotaciona -45 graus (para alinhar o foguete)
             ctx.font = "40px Arial";
-            ctx.fillText("🚀", player.x, player.y + 35);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🚀", 0, 0); // Desenha a nave rotacionada no centro
+            ctx.restore(); // Restaura o eixo da tela para não bugar o resto
 
             // 2. ATIRAR AUTOMATICAMENTE
-            if (frames % 15 === 0) { // A cada 15 frames
-                bullets.push({ x: player.x + 15, y: player.y, width: 4, height: 15, color: '#00ffff' });
+            if (frames % 15 === 0) {
+                bullets.push({ x: player.x + 18, y: player.y, width: 4, height: 15, color: '#00ffff' });
                 playSound('soundLaser');
             }
 
             // 3. ATUALIZA E DESENHA TIROS
             bullets.forEach((bullet, index) => {
-                bullet.y -= 10; // Velocidade do tiro subindo
+                bullet.y -= 10;
                 ctx.fillStyle = bullet.color;
                 ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-                // Remove tiro se sair da tela
                 if (bullet.y < 0) bullets.splice(index, 1);
             });
 
-            // 4. SPAWN DE INIMIGOS (Dificuldade Progressiva)
+            // 4. SPAWN DE INIMIGOS
             if (frames % spawnRate === 0) {
                 let type = Math.random();
                 let x = Math.random() * (canvas.width - 40);
@@ -212,8 +225,10 @@
 
             // 5. ATUALIZA E DESENHA INIMIGOS
             enemies.forEach((enemy, eIndex) => {
-                enemy.y += enemy.speed; // Inimigo descendo
+                enemy.y += enemy.speed;
                 ctx.font = enemy.hp > 3 ? "50px Arial" : "40px Arial";
+                ctx.textAlign = "left"; // Resetando caso tenha mudado
+                ctx.textBaseline = "alphabetic"; // Resetando caso tenha mudado
                 ctx.fillText(enemy.type, enemy.x, enemy.y + 35);
 
                 // Game Over se o inimigo tocar no chão ou na nave
@@ -228,19 +243,17 @@
                     if (bullet.x < enemy.x + enemy.width && bullet.x + bullet.width > enemy.x &&
                         bullet.y < enemy.y + enemy.height && bullet.y + bullet.height > enemy.y) {
                         
-                        bullets.splice(bIndex, 1); // Destrói o tiro
-                        enemy.hp--; // Tira vida do inimigo
+                        bullets.splice(bIndex, 1);
+                        enemy.hp--;
                         
                         if (enemy.hp <= 0) {
                             playSound('soundExplosion');
                             score += enemy.points;
                             scoreDisplay.innerText = `PONTOS: ${score}`;
-                            enemies.splice(eIndex, 1); // Destrói o inimigo
+                            enemies.splice(eIndex, 1);
                             
-                            // Aumenta a dificuldade
                             if (spawnRate > 20) spawnRate--; 
                             
-                            // Checa Vitória
                             if (score >= 1000) endGame(true);
                         }
                     }
@@ -258,7 +271,7 @@
             bullets = []; enemies = [];
             scoreDisplay.innerText = `PONTOS: 0`;
             
-            player.x = 160; // Centraliza nave
+            player.x = 160;
             
             track.volume = 0.4;
             track.play();
