@@ -21,7 +21,23 @@
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             text-align: center; display: flex; flex-direction: column; align-items: center; 
             justify-content: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
-            overflow-x: hidden;
+            overflow: hidden; /* Mantém as estrelas no fundo sem rolar */
+            position: relative;
+        }
+
+        /* FUNDO DE ESTRELAS PIXELADAS */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 2px; height: 2px;
+            background: transparent;
+            box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
+            animation: spaceMove 100s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes spaceMove {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100vh); }
         }
 
         /* Scanlines CRT */
@@ -42,7 +58,7 @@
 
         .popup-start {
             border: 4px solid #ff00ff; padding: 30px; background: #111;
-            box-shadow: 0 0 20px #ff00ff; max-width: 400px;
+            box-shadow: 0 0 20px #ff00ff; max-width: 400px; position: relative; z-index: 101;
         }
 
         .start-game-btn {
@@ -51,12 +67,13 @@
             box-shadow: 4px 4px 0px #008f25;
         }
 
-        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 15px 0; }
-        .status { font-size: 10px; color: #00ffff; margin-bottom: 10px; height: 20px; }
+        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 15px 0; z-index: 5; }
+        .status { font-size: 10px; color: #00ffff; margin-bottom: 10px; height: 20px; z-index: 5; }
 
         .grid { 
             display: grid; grid-template-columns: repeat(5, 62px); gap: 8px; 
             background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2;
+            z-index: 5;
         }
 
         .cell { 
@@ -74,7 +91,7 @@
 
         #message, #game-over { 
             display: none; padding: 20px; border: 4px double #ff4d6d; margin-top: 20px;
-            background: rgba(255, 77, 109, 0.1); width: 90%; max-width: 350px; animation: fadeIn 0.5s;
+            background: rgba(255, 77, 109, 0.1); width: 90%; max-width: 350px; animation: fadeIn 0.5s; z-index: 20;
         }
 
         #game-over { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
@@ -98,6 +115,8 @@
 </head>
 <body>
 
+    <div class="stars"></div>
+
     <!-- Overlay de Início -->
     <div id="overlay">
         <div class="popup-start">
@@ -106,8 +125,8 @@
         </div>
     </div>
 
-    <!-- Áudios -->
-    <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
+    <!-- Áudios Atualizados -->
+    <audio id="bgTrack" loop><source src="assets/sounds/campo_minado.mp3" type="audio/mpeg"></audio>
     <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
     <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
     <audio id="soundLose"><source src="assets/sounds/lose.wav" type="audio/wav"></audio>
@@ -139,6 +158,7 @@
         const messageDiv = document.getElementById('message');
         const gameOverDiv = document.getElementById('game-over');
         const statusText = document.getElementById('status');
+        const track = document.getElementById('bgTrack');
         const size = 5;
         let hearts = [];
         let blackholes = [];
@@ -146,7 +166,6 @@
         let gameActive = true;
 
         function iniciarMissao() {
-            const track = document.getElementById('bgTrack');
             track.volume = 0.5; 
             track.play();
             document.getElementById('overlay').style.display = 'none';
@@ -170,6 +189,12 @@
             hearts = [];
             blackholes = [];
             gameActive = true;
+            
+            // Reinicia a música se ela tiver parado na rodada anterior
+            if(track.paused && document.getElementById('overlay').style.display === 'none') {
+                track.currentTime = 0;
+                track.play();
+            }
 
             let positions = Array.from({length: 25}, (_, i) => i);
             positions.sort(() => Math.random() - 0.5);
@@ -192,7 +217,8 @@
             cell.classList.add('revealed');
             
             if (blackholes.includes(index)) {
-                playLose(); // Toca som de derrota
+                track.pause(); // Pára a música no Game Over
+                playLose(); 
                 cell.innerHTML = "🌑";
                 cell.classList.add('blackhole');
                 endGame(false);
@@ -203,7 +229,8 @@
                 foundHearts++;
                 statusText.innerText = `CORAÇÕES: ${foundHearts}/3`;
                 if (foundHearts === 3) {
-                    playWin(); // Toca som de vitória
+                    track.pause(); // Pára a música na Vitória
+                    playWin(); 
                     endGame(true);
                 }
             } else {
