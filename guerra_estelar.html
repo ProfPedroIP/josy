@@ -153,6 +153,10 @@
         // Áudio
         const track = document.getElementById('bgTrack');
         
+        // Ajuste dos volumes individuais
+        document.getElementById('soundLaser').volume = 0.33;
+        document.getElementById('soundExplosion').volume = 0.67;
+        
         function playSound(id) {
             const sound = document.getElementById(id);
             sound.currentTime = 0;
@@ -291,7 +295,7 @@
             
             player.x = 160;
             
-            track.volume = 0.4;
+            track.volume = 1.0; // Música de fundo em 100%
             track.play();
             
             isPlaying = true;
