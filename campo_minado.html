@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minado Amorous: Josy & Pedro</title>
+    
+    <!-- Favicon de Estrela -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
+            text-align: center; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        /* Scanlines CRT */
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
+        }
+
+        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 15px 0; }
+        .status { font-size: 10px; color: #00ffff; margin-bottom: 10px; height: 20px; }
+
+        .grid { 
+            display: grid; grid-template-columns: repeat(5, 62px); gap: 8px; 
+            background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2;
+        }
+
+        .cell { 
+            width: 62px; height: 62px; background: #000; border: 2px solid #333; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            font-size: 20px; color: #ffd700; transition: 0.2s; -webkit-tap-highlight-color: transparent;
+        }
+
+        .cell.revealed { background: #1a1a1a; border-color: #444; cursor: default; }
+        .cell.heart { background: #220022; border-color: #ff4d6d; color: #ff4d6d; animation: blink 0.5s infinite; }
+        .cell.blackhole { background: #000; border-color: #ff0000; color: #fff; text-shadow: 0 0 8px #ff0000; }
+        .cell.number { color: #00ffff; }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        #message, #game-over { 
+            display: none; padding: 20px; border: 4px double #ff4d6d; margin-top: 20px;
+            background: rgba(255, 77, 109, 0.1); width: 90%; max-width: 350px; animation: fadeIn 0.5s;
+        }
+
+        #game-over { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
+
+        .btn {
+            margin-top: 15px; padding: 12px; font-family: 'Press Start 2P'; font-size: 10px;
+            color: white; cursor: pointer; width: 100%; display: block; text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .btn-restart {
+            background: #ff00ff; border: 4px solid #4b0082; box-shadow: 4px 4px 0px #4b0082;
+        }
+
+        .btn-menu {
+            background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366;
+            margin-top: 10px;
+        }
+
+        .btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 380px) {
+            .grid { grid-template-columns: repeat(5, 55px); gap: 5px; }
+            .cell { width: 55px; height: 55px; font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>> MINADO AMOROUS</h1>
+    <div class="status" id="status">ENCONTRE OS 3 ❤️</div>
+    
+    <div class="grid" id="grid"></div>
+    
+    <!-- Mensagem de Vitória -->
+    <div id="message">
+        <h2 style="color: #ff4d6d; font-size: 16px;">SISTEMA RESTAURADO! 🏆</h2>
+        <p style="color: #fff; font-size: 12px;">Você desviou de todos os buracos negros para me encontrar.</p>
+        <p style="color: #00ffff; font-size: 12px;">Sorte a minha ter te encontrado nesse universo!</p>
+        <p style="font-size: 14px;"><strong>PEDRO AMA JOSY!</strong></p>
+        <button class="btn btn-restart" onclick="startGame()">JOGAR NOVAMENTE</button>
+        <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+    </div>
+
+    <!-- Mensagem de Game Over -->
+    <div id="game-over">
+        <h2 style="color: #ff0000; font-size: 16px;">OPS! 🌑</h2>
+        <p style="color: #fff; font-size: 12px;">Você caiu em um buraco negro!</p>
+        <p style="color: #00ffff; font-size: 12px;">O amor vence o tempo e o espaço. Tente de novo!</p>
+        <button class="btn btn-restart" onclick="startGame()" style="background:#444; border-color:#000; box-shadow: 4px 4px 0px #222;">REINICIAR MISSÃO</button>
+        <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const messageDiv = document.getElementById('message');
+        const gameOverDiv = document.getElementById('game-over');
+        const statusText = document.getElementById('status');
+        const size = 5;
+        let hearts = [];
+        let blackholes = [];
+        let foundHearts = 0;
+        let gameActive = true;
+
+        function startGame() {
+            grid.innerHTML = '';
+            messageDiv.style.display = 'none';
+            gameOverDiv.style.display = 'none';
+            statusText.innerText = 'ENCONTRE OS 3 ❤️';
+            foundHearts = 0;
+            hearts = [];
+            blackholes = [];
+            gameActive = true;
+
+            let positions = Array.from({length: 25}, (_, i) => i);
+            positions.sort(() => Math.random() - 0.5);
+            
+            hearts = positions.slice(0, 3);
+            blackholes = positions.slice(3, 6);
+
+            for (let i = 0; i < size * size; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.innerHTML = "★";
+                cell.onclick = () => revealCell(cell, i);
+                grid.appendChild(cell);
+            }
+        }
+
+        function revealCell(cell, index) {
+            if (!gameActive || cell.classList.contains('revealed')) return;
+
+            cell.classList.add('revealed');
+            
+            if (blackholes.includes(index)) {
+                cell.innerHTML = "🌑";
+                cell.classList.add('blackhole');
+                endGame(false);
+            } else if (hearts.includes(index)) {
+                cell.innerHTML = "❤️";
+                cell.classList.add('heart');
+                foundHearts++;
+                statusText.innerText = `CORAÇÕES: ${foundHearts}/3`;
+                if (foundHearts === 3) endGame(true);
+            } else {
+                const count = countNeighborHearts(index);
+                cell.classList.add('number');
+                cell.innerHTML = count > 0 ? count : "";
+                cell.style.color = "#444";
+            }
+        }
+
+        function countNeighborHearts(index) {
+            const row = Math.floor(index / size);
+            const col = index % size;
+            let count = 0;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const nRow = row + i, nCol = col + j;
+                    if (nRow >= 0 && nRow < size && nCol >= 0 && nCol < size) {
+                        if (hearts.includes(nRow * size + nCol)) count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            if (isWin) {
+                messageDiv.style.display = 'block';
+                statusText.innerText = 'MISSÃO CUMPRIDA!';
+            } else {
+                gameOverDiv.style.display = 'block';
+                statusText.innerText = 'SISTEMA OFFLINE';
+                const cells = document.querySelectorAll('.cell');
+                blackholes.forEach(idx => {
+                    cells[idx].innerHTML = "🌑";
+                    cells[idx].classList.add('blackhole');
+                });
+            }
+            setTimeout(() => {
+                const target = isWin ? messageDiv : gameOverDiv;
+                target.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
