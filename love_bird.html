@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>Love Bird: Josy & Pedro</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐦</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
+            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; height: 100vh; overflow: hidden; background-color: #000;
+        }
+
+        .stars {
+            position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
+            box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
+            animation: spaceMove 50s linear infinite; z-index: 1;
+        }
+        @keyframes spaceMove { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
+
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
+        }
+
+        canvas {
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px solid #4a90e2;
+            box-shadow: 0 0 20px #4a90e2;
+            max-width: 100%;
+            max-height: 100%;
+            z-index: 5;
+            touch-action: none;
+        }
+
+        #ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+
+        .panel {
+            background: #111; border: 4px solid #ff00ff; padding: 30px;
+            box-shadow: 0 0 20px #ff00ff; max-width: 350px; text-align: center;
+        }
+
+        .btn {
+            margin-top: 20px; padding: 15px; background: #00ff41; color: #000;
+            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25;
+            width: 100%; display: block; text-decoration: none; box-sizing: border-box; font-size: 12px;
+        }
+        .btn-blue { background: #4a90e2; box-shadow: 4px 4px 0px #003366; color: white; margin-top: 10px; }
+
+        .hidden { display: none !important; }
+
+        #score-display {
+            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+            z-index: 50; font-size: 24px; color: #fff; text-shadow: 3px 3px #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+        }
+
+        #countdown {
+            position: absolute; font-size: 80px; color: #00ffff; z-index: 200; 
+            text-shadow: 5px 5px #000; display: none; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+    <div id="score-display">0</div>
+    <div id="countdown">3</div>
+
+    <canvas id="gameCanvas" width="360" height="600"></canvas>
+
+    <div id="ui-layer">
+        <!-- Tela de Início -->
+        <div id="start-screen" class="panel">
+            <h2 style="color: #ff00ff; font-size: 16px;">LOVE BIRD</h2>
+            <p style="font-size: 10px; line-height: 1.6; color: #fff; margin-top: 15px;">Faça o pássaro conquistar o amor chegando em 100 pontos clicando na tela ou apertando a tecla SPACE.</p>
+            <button class="btn" onclick="startGame()">VOAR 🐦</button>
+        </div>
+
+        <!-- Painel de Mensagens de Recorde -->
+        <div id="milestone-screen" class="panel hidden" style="border-color: #00ffff; box-shadow: 0 0 20px #00ffff;">
+            <h2 id="milestone-title" style="color: #00ffff; font-size: 18px;">MARCO ATINGIDO!</h2>
+            <p id="milestone-text" style="color: #fff; font-size: 12px; line-height: 1.6; margin: 15px 0;"></p>
+            <button class="btn" id="btn-continue" onclick="resumeWithCountdown()">CONTINUAR</button>
+        </div>
+
+        <!-- Tela de Derrota -->
+        <div id="lose-screen" class="panel hidden" style="border-color: #ff0000;">
+            <h2 style="color: #ff0000; font-size: 18px;">GAME OVER</h2>
+            <p id="final-score-text" style="color: #fff; font-size: 10px; margin: 10px 0; line-height: 1.4;"></p>
+            <button class="btn" onclick="resetGame()">TENTAR NOVAMENTE</button>
+            <a href="index.html" class="btn btn-blue">VOLTAR AO MENU</a>
+        </div>
+    </div>
+
+    <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
+    <audio id="soundJump"><source src="assets/sounds/pulo.wav" type="audio/wav"></audio>
+    <audio id="soundPoint"><source src="assets/sounds/ponto.wav" type="audio/wav"></audio>
+    <audio id="soundHit"><source src="assets/sounds/lose.wav" type="audio/wav"></audio>
+    <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score-display');
+        const countdownEl = document.getElementById('countdown');
+        
+        const uiLayer = document.getElementById('ui-layer');
+        const startScreen = document.getElementById('start-screen');
+        const milestoneScreen = document.getElementById('milestone-screen');
+        const loseScreen = document.getElementById('lose-screen');
+
+        const track = document.getElementById('bgTrack');
+        
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            sound.currentTime = 0;
+            sound.play().catch(e => {});
+        }
+
+        let animationId;
+        let isPlaying = false;
+        let isPausedForMilestone = false;
+        
+        // Controle da Cutscene do Final (100 pontos)
+        let isEndingCutscene = false;
+        let cutsceneDone = false;
+        let endingTimer = 0;
+
+        let score = 0;
+        let frames = 0;
+
+        // FÍSICA E DIFICULDADE
+        const gravity = 0.4;
+        const jumpLift = -7;
+        let currentPipeSpeed = 3.5;
+        let currentPipeGap = 160;
+
+        let player = { x: 50, y: 300, width: 35, height: 35, velocity: 0 };
+        let pipes = [];
+
+        const milestones = {
+            25: "Você é o meu melhor começo! ❤️",
+            50: "Metade do caminho, mas você já tem 100% do meu amor! 🥰",
+            75: "Quase lá! Minha campeã favorita. 🏆",
+            100: "VOCÊ É INCRÍVEL! 100 pontos! O amor venceu todos os obstáculos. 💖"
+        };
+
+        // Matriz do Coração Pixelado
+        const heartMatrix = [
+            [0,1,1,0,0,0,1,1,0],
+            [1,1,1,1,0,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [0,1,1,1,1,1,1,1,0],
+            [0,0,1,1,1,1,1,0,0],
+            [0,0,0,1,1,1,0,0,0],
+            [0,0,0,0,1,0,0,0,0]
+        ];
+
+        function jump(e) {
+            if(!isPlaying || isPausedForMilestone || isEndingCutscene) return;
+            
+            // Suporte para Barra de Espaço
+            if (e.type === 'keydown' && e.code !== 'Space') return;
+            if(e.type === 'touchstart' || e.type === 'mousedown') e.preventDefault(); 
+            
+            player.velocity = jumpLift;
+            playSound('soundJump');
+        }
+
+        canvas.addEventListener('mousedown', jump);
+        canvas.addEventListener('touchstart', jump, {passive: false});
+        window.addEventListener('keydown', jump); // Escuta o teclado
+
+        function drawMarioPipe(x, y, width, height, isTopPipe) {
+            const capHeight = 24;
+            const capExtraWidth = 8;
+            let gradient = ctx.createLinearGradient(x, 0, x + width, 0);
+            gradient.addColorStop(0, "#549C16");
+            gradient.addColorStop(0.3, "#85D638");
+            gradient.addColorStop(0.7, "#74BF2E");
+            gradient.addColorStop(1, "#549C16");
+
+            let capGradient = ctx.createLinearGradient(x - capExtraWidth/2, 0, x + width + capExtraWidth/2, 0);
+            capGradient.addColorStop(0, "#549C16");
+            capGradient.addColorStop(0.3, "#85D638");
+            capGradient.addColorStop(0.7, "#74BF2E");
+            capGradient.addColorStop(1, "#549C16");
+
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#305A0C";
+
+            if (isTopPipe) {
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, width, height - capHeight);
+                ctx.strokeRect(x, y, width, height - capHeight);
+                ctx.fillStyle = capGradient;
+                ctx.fillRect(x - capExtraWidth/2, height - capHeight, width + capExtraWidth, capHeight);
+                ctx.strokeRect(x - capExtraWidth/2, height - capHeight, width + capExtraWidth, capHeight);
+            } else {
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y + capHeight, width, height - capHeight);
+                ctx.strokeRect(x, y + capHeight, width, height - capHeight);
+                ctx.fillStyle = capGradient;
+                ctx.fillRect(x - capExtraWidth/2, y, width + capExtraWidth, capHeight);
+                ctx.strokeRect(x - capExtraWidth/2, y, width + capExtraWidth, capHeight);
+            }
+        }
+
+        function drawPixelHeart(cx, cy, scale, alpha) {
+            ctx.fillStyle = `rgba(255, 77, 109, ${alpha})`; // Rosa choque
+            const w = heartMatrix[0].length;
+            const h = heartMatrix.length;
+            const startX = cx - (w * scale) / 2;
+            const startY = cy - (h * scale) / 2;
+
+            for(let r=0; r<h; r++) {
+                for(let c=0; c<w; c++) {
+                    if(heartMatrix[r][c]) {
+                        ctx.fillRect(startX + c * scale, startY + r * scale, scale, scale);
+                    }
+                }
+            }
+        }
+
+        function updateDifficulty() {
+            if (currentPipeSpeed < 6.5) currentPipeSpeed += 0.03;
+            if (currentPipeGap > 105) currentPipeGap -= 0.5;
+        }
+
+        function loop() {
+            if(!isPlaying || isPausedForMilestone) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frames++;
+
+            // ==========================================
+            // ANIMAÇÃO FINAL (100 PONTOS)
+            // ==========================================
+            if (isEndingCutscene) {
+                endingTimer++;
+                
+                // Animação de crescimento do coração
+                let heartScale = Math.min(20, endingTimer * 0.2); 
+                let heartAlpha = Math.min(1, endingTimer / 60);
+                drawPixelHeart(canvas.width/2, canvas.height/2, heartScale, heartAlpha);
+
+                // Passarinho 1 (Josy) voando pro centro
+                player.x += (canvas.width/2 - 30 - player.x) * 0.05;
+                player.y += (canvas.height/2 - player.y) * 0.05;
+                player.velocity = 0; // Para de cair
+
+                ctx.save();
+                ctx.translate(player.x, player.y);
+                ctx.scale(-1, 1);
+                ctx.font = "35px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("🐦", 0, 0);
+                ctx.restore();
+
+                // Passarinho 2 (Pedro/Amor) aparecendo no centro
+                ctx.save();
+                ctx.translate(canvas.width/2 + 30, canvas.height/2);
+                ctx.font = "35px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.globalAlpha = heartAlpha; // Aparece junto com o coração
+                ctx.fillText("🐦", 0, 0);
+                ctx.restore();
+
+                // Após 3 segundos de animação, exibe a mensagem!
+                if (endingTimer === 180) {
+                    showMilestone(100);
+                    isEndingCutscene = false; // Desliga a animação para preparar o retorno
+                }
+
+                animationId = requestAnimationFrame(loop);
+                return; // Pula o resto da física
+            }
+
+            // ==========================================
+            // FÍSICA NORMAL DO JOGO
+            // ==========================================
+            player.velocity += gravity;
+            player.y += player.velocity;
+
+            if (player.y < 0) { player.y = 0; player.velocity = 0; }
+
+            // DESENHAR O PÁSSARO (Espelhado para a direita)
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (player.velocity * 0.1)));
+            ctx.rotate(rotation);
+            ctx.scale(-1, 1);
+            ctx.font = "35px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🐦", 0, 0);
+            ctx.restore();
+
+            if (frames % 90 === 0) {
+                let minPipeHeight = 50;
+                let randomY = Math.floor(Math.random() * (canvas.height - currentPipeGap - minPipeHeight * 2)) + minPipeHeight;
+                pipes.push({
+                    x: canvas.width,
+                    topY: 0,
+                    topHeight: randomY,
+                    bottomY: randomY + currentPipeGap,
+                    bottomHeight: canvas.height - (randomY + currentPipeGap),
+                    width: 55,
+                    passed: false
+                });
+            }
+
+            pipes.forEach((pipe, index) => {
+                pipe.x -= currentPipeSpeed;
+                drawMarioPipe(pipe.x, pipe.topY, pipe.width, pipe.topHeight, true);
+                drawMarioPipe(pipe.x, pipe.bottomY, pipe.width, pipe.bottomHeight, false);
+
+                if (pipe.x + pipe.width < player.x && !pipe.passed) {
+                    score++;
+                    scoreDisplay.innerText = score;
+                    pipe.passed = true;
+                    playSound('soundPoint');
+                    updateDifficulty();
+                    
+                    // GATILHO DA CUTSCENE DOS 100 PONTOS
+                    if (score === 100 && !cutsceneDone) {
+                        cutsceneDone = true;
+                        isEndingCutscene = true;
+                        endingTimer = 0;
+                        pipes = []; // Limpa os canos da tela!
+                        track.pause();
+                        playSound('soundWin');
+                    } else if(milestones[score] && score !== 100) {
+                        showMilestone(score);
+                    }
+                }
+
+                if (player.x < pipe.x + pipe.width && player.x + player.width > pipe.x &&
+                    (player.y < pipe.topHeight || player.y + player.height > pipe.bottomY)) {
+                    endGame();
+                }
+
+                if (pipe.x + pipe.width < 0) pipes.splice(index, 1);
+            });
+
+            if (player.y + player.height >= canvas.height) endGame();
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        function showMilestone(s) {
+            isPausedForMilestone = true;
+            track.pause();
+            
+            if(s !== 100) playSound('soundWin');
+            
+            document.getElementById('milestone-text').innerText = milestones[s];
+            
+            // Muda o texto do botão se for o modo impossível
+            let btn = document.getElementById('btn-continue');
+            if (s === 100) {
+                btn.innerText = "MODO IMPOSSÍVEL 🔥";
+                btn.style.background = "#ff0000";
+                btn.style.color = "#fff";
+            } else {
+                btn.innerText = "CONTINUAR";
+                btn.style.background = "#00ff41";
+                btn.style.color = "#000";
+            }
+
+            uiLayer.classList.remove('hidden');
+            milestoneScreen.classList.remove('hidden');
+        }
+
+        function resumeWithCountdown() {
+            milestoneScreen.classList.add('hidden');
+            uiLayer.classList.add('hidden');
+            
+            // REPOSICIONA O PÁSSARO PARA EVITAR MORTE INSTANTÂNEA
+            player.x = 50;
+            player.y = 300;
+            player.velocity = 0;
+            pipes = []; // Limpa os canos para ela ter tempo de respirar
+
+            countdownEl.style.display = 'block';
+            let count = 3;
+            countdownEl.innerText = count;
+
+            let timer = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    countdownEl.innerText = count;
+                } else {
+                    clearInterval(timer);
+                    countdownEl.style.display = 'none';
+                    isPausedForMilestone = false;
+                    track.play();
+                    loop();
+                }
+            }, 800);
+        }
+
+        function startGame() {
+            uiLayer.classList.add('hidden');
+            startScreen.classList.add('hidden');
+            milestoneScreen.classList.add('hidden');
+            loseScreen.classList.add('hidden');
+            
+            score = 0; frames = 0;
+            currentPipeSpeed = 3.5;
+            currentPipeGap = 160;
+            pipes = [];
+            scoreDisplay.innerText = "0";
+            player.x = 50;
+            player.y = 300;
+            player.velocity = 0;
+            
+            isEndingCutscene = false;
+            cutsceneDone = false;
+            
+            track.volume = 0.5;
+            track.play().catch(e=>{});
+            
+            isPlaying = true;
+            isPausedForMilestone = false;
+            loop();
+        }
+
+        function endGame() {
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            track.pause();
+            playSound('soundHit');
+            
+            document.getElementById('final-score-text').innerText = "O QUE IMPORTA É TENTAR...\nSua pontuação final: " + score;
+            uiLayer.classList.remove('hidden');
+            loseScreen.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
