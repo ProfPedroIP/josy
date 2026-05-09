@@ -13,11 +13,10 @@
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             margin: 0; display: flex; align-items: center; justify-content: center; 
-            min-height: 100dvh; overflow-y: auto; /* Permite rolagem segura no PC */
+            min-height: 100dvh; overflow-y: auto; 
             position: relative; padding: 20px 0; box-sizing: border-box;
         }
 
-        /* FUNDO DE ESTRELAS PIXELADAS */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
@@ -26,7 +25,6 @@
 
         @keyframes spaceMove { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
 
-        /* EFEITO CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -34,7 +32,6 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        /* --- CÁPSULA RESPONSIVA PADRÃO --- */
         #app-wrapper {
             position: relative; width: 100%; max-width: 450px; min-height: 90dvh; height: auto;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
@@ -45,11 +42,10 @@
             #app-wrapper {
                 border: 2px solid #003300; border-radius: 15px;
                 box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
-                margin: 20px 0; /* Descola do topo/fundo da tela no PC */
+                margin: 20px 0;
             }
         }
 
-        /* --- CONTROLES SUPERIORES --- */
         .top-controls {
             width: 100%; display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; z-index: 50;
@@ -68,9 +64,7 @@
             font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
             box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
         }
-        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
 
-        /* --- PLACAR CAIXA AMARELA --- */
         .score-board {
             background: #111; border: 3px solid #ffd700; padding: 10px 20px;
             font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
@@ -78,12 +72,10 @@
             z-index: 50;
         }
 
-        /* --- CONTAINER DO CANVAS (Para centralizar o Canvas e o Countdown) --- */
         .canvas-container {
             position: relative; width: 100%; max-width: 360px; display: flex; justify-content: center; align-items: center;
         }
 
-        /* --- O CANVAS DO JOGO --- */
         canvas {
             background: rgba(0, 0, 0, 0.8);
             border: 4px solid #4a90e2;
@@ -93,13 +85,11 @@
             z-index: 5; touch-action: none;
         }
 
-        /* --- CONTAGEM REGRESSIVA --- */
         #countdown {
             position: absolute; font-size: 80px; color: #00ffff; z-index: 200; 
             text-shadow: 5px 5px #000; display: none; pointer-events: none;
         }
 
-        /* --- OVERLAY INICIAL --- */
         #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 100; border-radius: 13px;
@@ -117,7 +107,6 @@
             border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25; font-size: 10px;
         }
 
-        /* --- MENSAGENS DE MILESTONE E FIM DE JOGO --- */
         .message-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             display: none; padding: 20px; background: rgba(17, 17, 17, 0.95); 
@@ -148,52 +137,40 @@
     <div class="stars"></div>
 
     <div id="app-wrapper">
-
-        <!-- CONTROLES SUPERIORES -->
         <div class="top-controls">
             <button id="btn-sound" class="btn-sound">🔇</button>
             <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
         </div>
 
-        <!-- PLACAR PADRONIZADO CAIXA AMARELA -->
-        <div class="score-board" id="score-display">
-            PONTOS: 0
-        </div>
+        <div class="score-board" id="score-display">PONTOS: 0</div>
 
-        <!-- CANVAS E CONTAGEM REGRESSIVA -->
         <div class="canvas-container">
             <canvas id="gameCanvas" width="360" height="600"></canvas>
             <div id="countdown">3</div>
         </div>
 
-        <!-- OVERLAY DE INÍCIO -->
         <div id="overlay">
             <div class="popup-start">
                 <h2 style="color: #ff00ff; font-size: 16px; margin-bottom: 15px;">LOVE BIRD</h2>
-                <p style="font-size: 10px; line-height: 1.6; color: #fff;">Faça o pássaro conquistar o amor chegando em 100 pontos.</p>
-                <p style="font-size: 10px; color: #00ffff; margin-top: 10px;">Clique na tela ou aperte a tecla SPACE para voar!</p>
+                <p style="font-size: 10px; color: #fff;">Chegue em 100 pontos para a surpresa!</p>
                 <button class="start-btn" onclick="iniciarMissao()">VOAR 🐦</button>
             </div>
         </div>
 
-        <!-- TELA DE MARCO (MILESTONE) -->
         <div id="milestone-screen" class="message-box">
             <h2 id="milestone-title" class="msg-title-cyan">MARCO ATINGIDO!</h2>
             <p id="milestone-text" class="msg-white"></p>
             <button class="btn btn-green" id="btn-continue" onclick="resumeWithCountdown()">CONTINUAR</button>
         </div>
 
-        <!-- TELA DE DERROTA -->
         <div id="game-over" class="message-box">
             <h2 class="msg-title-red">GAME OVER 🌑</h2>
             <p id="final-score-text" class="msg-white"></p>
             <button class="btn btn-restart-lose" onclick="resetGame()">TENTAR NOVAMENTE</button>
             <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
         </div>
-
     </div>
 
-    <!-- Áudios -->
     <audio id="bgTrack" loop><source src="assets/sounds/love_bird.mp3" type="audio/mpeg"></audio>
     <audio id="soundJump"><source src="assets/sounds/pulo.wav" type="audio/wav"></audio>
     <audio id="soundPoint"><source src="assets/sounds/ponto.wav" type="audio/wav"></audio>
@@ -205,15 +182,45 @@
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('score-display');
         const countdownEl = document.getElementById('countdown');
-        
         const overlay = document.getElementById('overlay');
         const milestoneScreen = document.getElementById('milestone-screen');
         const gameOverDiv = document.getElementById('game-over');
         const btnSound = document.getElementById('btn-sound');
-
         const track = document.getElementById('bgTrack');
-        
-        // Lógica do Som
+
+        let animationId;
+        let isPlaying = false;
+        let isPausedForMilestone = false;
+        let isEndingCutscene = false;
+        let cutsceneDone = false;
+        let endingTimer = 0;
+        let lastTime = 0;
+        let pipeSpawnTimer = 0;
+
+        // FÍSICA ESCALADA POR SEGUNDO
+        const gravity = 1200; 
+        const jumpLift = -400;
+        const pipeSpawnInterval = 1.6; 
+        let currentPipeSpeed = 210;
+        let currentPipeGap = 160;
+        let score = 0;
+
+        let player = { x: 50, y: 300, width: 35, height: 35, velocity: 0 };
+        let pipes = [];
+
+        const milestones = {
+            25: "Você é o meu melhor começo! ❤️",
+            50: "Metade do caminho, mas você já tem 100% do meu amor! 🥰",
+            75: "Quase lá! Minha campeã favorita. 🏆",
+            100: "VOCÊ É INCRÍVEL! 100 pontos! O amor venceu todos os obstáculos. 💖"
+        };
+
+        const heartMatrix = [
+            [0,1,1,0,0,0,1,1,0], [1,1,1,1,0,1,1,1,1], [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1], [0,1,1,1,1,1,1,1,0], [0,0,1,1,1,1,1,0,0],
+            [0,0,0,1,1,1,0,0,0], [0,0,0,0,1,0,0,0,0]
+        ];
+
         track.volume = 0.5;
         btnSound.addEventListener('click', () => {
             if (track.paused) {
@@ -229,337 +236,165 @@
             sound.play().catch(e => {});
         }
 
-        let animationId;
-        let isPlaying = false;
-        let isPausedForMilestone = false;
-        
-        // Controle da Cutscene do Final (100 pontos)
-        let isEndingCutscene = false;
-        let cutsceneDone = false;
-        let endingTimer = 0;
-
-        let score = 0;
-        let frames = 0;
-
-        // FÍSICA E DIFICULDADE
-        const gravity = 0.4;
-        const jumpLift = -7;
-        let currentPipeSpeed = 3.5;
-        let currentPipeGap = 160;
-
-        let player = { x: 50, y: 300, width: 35, height: 35, velocity: 0 };
-        let pipes = [];
-
-        const milestones = {
-            25: "Você é o meu melhor começo! ❤️",
-            50: "Metade do caminho, mas você já tem 100% do meu amor! 🥰",
-            75: "Quase lá! Minha campeã favorita. 🏆",
-            100: "VOCÊ É INCRÍVEL! 100 pontos! O amor venceu todos os obstáculos. 💖"
-        };
-
-        // Matriz do Coração Pixelado
-        const heartMatrix = [
-            [0,1,1,0,0,0,1,1,0],
-            [1,1,1,1,0,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1],
-            [0,1,1,1,1,1,1,1,0],
-            [0,0,1,1,1,1,1,0,0],
-            [0,0,0,1,1,1,0,0,0],
-            [0,0,0,0,1,0,0,0,0]
-        ];
-
         function jump(e) {
             if(!isPlaying || isPausedForMilestone || isEndingCutscene) return;
-            
-            // Suporte para Barra de Espaço
             if (e.type === 'keydown' && e.code !== 'Space') return;
             if(e.type === 'touchstart' || e.type === 'mousedown') e.preventDefault(); 
-            
             player.velocity = jumpLift;
             if(btnSound.classList.contains("on")) playSound('soundJump');
         }
 
         canvas.addEventListener('mousedown', jump);
         canvas.addEventListener('touchstart', jump, {passive: false});
-        window.addEventListener('keydown', jump); 
+        window.addEventListener('keydown', jump);
 
         function drawMarioPipe(x, y, width, height, isTopPipe) {
             const capHeight = 24;
             const capExtraWidth = 8;
             let gradient = ctx.createLinearGradient(x, 0, x + width, 0);
-            gradient.addColorStop(0, "#549C16");
-            gradient.addColorStop(0.3, "#85D638");
-            gradient.addColorStop(0.7, "#74BF2E");
-            gradient.addColorStop(1, "#549C16");
-
-            let capGradient = ctx.createLinearGradient(x - capExtraWidth/2, 0, x + width + capExtraWidth/2, 0);
-            capGradient.addColorStop(0, "#549C16");
-            capGradient.addColorStop(0.3, "#85D638");
-            capGradient.addColorStop(0.7, "#74BF2E");
-            capGradient.addColorStop(1, "#549C16");
-
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "#305A0C";
+            gradient.addColorStop(0, "#549C16"); gradient.addColorStop(0.3, "#85D638");
+            gradient.addColorStop(0.7, "#74BF2E"); gradient.addColorStop(1, "#549C16");
+            
+            ctx.lineWidth = 3; ctx.strokeStyle = "#305A0C"; ctx.fillStyle = gradient;
 
             if (isTopPipe) {
-                ctx.fillStyle = gradient;
                 ctx.fillRect(x, y, width, height - capHeight);
                 ctx.strokeRect(x, y, width, height - capHeight);
-                ctx.fillStyle = capGradient;
                 ctx.fillRect(x - capExtraWidth/2, height - capHeight, width + capExtraWidth, capHeight);
                 ctx.strokeRect(x - capExtraWidth/2, height - capHeight, width + capExtraWidth, capHeight);
             } else {
-                ctx.fillStyle = gradient;
                 ctx.fillRect(x, y + capHeight, width, height - capHeight);
                 ctx.strokeRect(x, y + capHeight, width, height - capHeight);
-                ctx.fillStyle = capGradient;
                 ctx.fillRect(x - capExtraWidth/2, y, width + capExtraWidth, capHeight);
                 ctx.strokeRect(x - capExtraWidth/2, y, width + capExtraWidth, capHeight);
             }
         }
 
-        function drawPixelHeart(cx, cy, scale, alpha) {
-            ctx.fillStyle = `rgba(255, 77, 109, ${alpha})`; 
-            const w = heartMatrix[0].length;
-            const h = heartMatrix.length;
-            const startX = cx - (w * scale) / 2;
-            const startY = cy - (h * scale) / 2;
+        function loop(timestamp) {
+            if(!isPlaying || isPausedForMilestone) return;
 
-            for(let r=0; r<h; r++) {
-                for(let c=0; c<w; c++) {
-                    if(heartMatrix[r][c]) {
-                        ctx.fillRect(startX + c * scale, startY + r * scale, scale, scale);
+            if (!lastTime) lastTime = timestamp;
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+            const delta = Math.min(dt, 0.1); 
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (isEndingCutscene) {
+                endingTimer += delta;
+                let heartScale = Math.min(20, endingTimer * 12);
+                let heartAlpha = Math.min(1, endingTimer / 1.5);
+                
+                // Desenhar Coração
+                ctx.fillStyle = `rgba(255, 77, 109, ${heartAlpha})`;
+                const scale = heartScale;
+                const startX = (canvas.width/2) - (heartMatrix[0].length * scale) / 2;
+                const startY = (canvas.height/2) - (heartMatrix.length * scale) / 2;
+                for(let r=0; r<heartMatrix.length; r++) {
+                    for(let c=0; c<heartMatrix[0].length; c++) {
+                        if(heartMatrix[r][c]) ctx.fillRect(startX + c * scale, startY + r * scale, scale, scale);
                     }
                 }
-            }
-        }
-
-        function updateDifficulty() {
-            if (currentPipeSpeed < 6.5) currentPipeSpeed += 0.03;
-            if (currentPipeGap > 105) currentPipeGap -= 0.5;
-        }
-
-        function loop() {
-            if(!isPlaying || isPausedForMilestone) return;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            frames++;
-
-            // ==========================================
-            // ANIMAÇÃO FINAL (100 PONTOS)
-            // ==========================================
-            if (isEndingCutscene) {
-                endingTimer++;
-                
-                let heartScale = Math.min(20, endingTimer * 0.2); 
-                let heartAlpha = Math.min(1, endingTimer / 60);
-                drawPixelHeart(canvas.width/2, canvas.height/2, heartScale, heartAlpha);
 
                 player.x += (canvas.width/2 - 30 - player.x) * 0.05;
                 player.y += (canvas.height/2 - player.y) * 0.05;
-                player.velocity = 0; 
+                
+                ctx.save(); ctx.translate(player.x, player.y); ctx.scale(-1, 1);
+                ctx.font = "35px Arial"; ctx.textAlign = "center"; ctx.fillText("🐦", 0, 0); ctx.restore();
 
-                ctx.save();
-                ctx.translate(player.x, player.y);
-                ctx.scale(-1, 1);
-                ctx.font = "35px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("🐦", 0, 0);
-                ctx.restore();
+                ctx.save(); ctx.translate(canvas.width/2 + 30, canvas.height/2);
+                ctx.font = "35px Arial"; ctx.globalAlpha = heartAlpha; ctx.fillText("🐦", 0, 0); ctx.restore();
 
-                ctx.save();
-                ctx.translate(canvas.width/2 + 30, canvas.height/2);
-                ctx.font = "35px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.globalAlpha = heartAlpha; 
-                ctx.fillText("🐦", 0, 0);
-                ctx.restore();
-
-                if (endingTimer === 180) {
-                    showMilestone(100);
-                    isEndingCutscene = false; 
-                }
-
+                if (endingTimer >= 3) { showMilestone(100); isEndingCutscene = false; }
                 animationId = requestAnimationFrame(loop);
-                return; 
+                return;
             }
 
-            // ==========================================
-            // FÍSICA NORMAL DO JOGO
-            // ==========================================
-            player.velocity += gravity;
-            player.y += player.velocity;
-
+            player.velocity += gravity * delta;
+            player.y += player.velocity * delta;
             if (player.y < 0) { player.y = 0; player.velocity = 0; }
 
             ctx.save();
             ctx.translate(player.x + player.width/2, player.y + player.height/2);
-            let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (player.velocity * 0.1)));
-            ctx.rotate(rotation);
-            ctx.scale(-1, 1);
-            ctx.font = "35px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("🐦", 0, 0);
-            ctx.restore();
+            ctx.rotate(Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (player.velocity * 0.002))));
+            ctx.scale(-1, 1); ctx.font = "35px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("🐦", 0, 0); ctx.restore();
 
-            if (frames % 90 === 0) {
-                let minPipeHeight = 50;
-                let randomY = Math.floor(Math.random() * (canvas.height - currentPipeGap - minPipeHeight * 2)) + minPipeHeight;
-                pipes.push({
-                    x: canvas.width,
-                    topY: 0,
-                    topHeight: randomY,
-                    bottomY: randomY + currentPipeGap,
-                    bottomHeight: canvas.height - (randomY + currentPipeGap),
-                    width: 55,
-                    passed: false
-                });
+            pipeSpawnTimer += delta;
+            if (pipeSpawnTimer >= pipeSpawnInterval) {
+                let randomY = Math.floor(Math.random() * (canvas.height - currentPipeGap - 100)) + 50;
+                pipes.push({ x: canvas.width, topY: 0, topHeight: randomY, bottomY: randomY + currentPipeGap, bottomHeight: canvas.height - (randomY + currentPipeGap), width: 55, passed: false });
+                pipeSpawnTimer = 0;
             }
 
             pipes.forEach((pipe, index) => {
-                pipe.x -= currentPipeSpeed;
+                pipe.x -= currentPipeSpeed * delta;
                 drawMarioPipe(pipe.x, pipe.topY, pipe.width, pipe.topHeight, true);
                 drawMarioPipe(pipe.x, pipe.bottomY, pipe.width, pipe.bottomHeight, false);
 
                 if (pipe.x + pipe.width < player.x && !pipe.passed) {
-                    score++;
-                    scoreDisplay.innerText = "PONTOS: " + score;
-                    pipe.passed = true;
+                    score++; scoreDisplay.innerText = "PONTOS: " + score; pipe.passed = true;
                     if(btnSound.classList.contains("on")) playSound('soundPoint');
-                    updateDifficulty();
+                    if (currentPipeSpeed < 390) currentPipeSpeed += 5;
                     
                     if (score === 100 && !cutsceneDone) {
-                        cutsceneDone = true;
-                        isEndingCutscene = true;
-                        endingTimer = 0;
-                        pipes = []; 
-                        track.pause();
+                        cutsceneDone = true; isEndingCutscene = true; endingTimer = 0; pipes = []; track.pause();
                         if(btnSound.classList.contains("on")) playSound('soundWin');
-                    } else if(milestones[score] && score !== 100) {
-                        showMilestone(score);
-                    }
+                    } else if(milestones[score] && score !== 100) { showMilestone(score); }
                 }
 
-                if (player.x < pipe.x + pipe.width && player.x + player.width > pipe.x &&
-                    (player.y < pipe.topHeight || player.y + player.height > pipe.bottomY)) {
-                    endGame();
-                }
-
+                if (player.x < pipe.x + pipe.width && player.x + player.width > pipe.x && (player.y < pipe.topHeight || player.y + player.height > pipe.bottomY)) endGame();
                 if (pipe.x + pipe.width < 0) pipes.splice(index, 1);
             });
 
             if (player.y + player.height >= canvas.height) endGame();
-
             animationId = requestAnimationFrame(loop);
         }
 
         function showMilestone(s) {
-            isPausedForMilestone = true;
-            track.pause();
-            
+            isPausedForMilestone = true; track.pause();
             if(s !== 100 && btnSound.classList.contains("on")) playSound('soundWin');
-            
             document.getElementById('milestone-text').innerText = milestones[s];
-            
             let btn = document.getElementById('btn-continue');
-            if (s === 100) {
-                btn.innerText = "MODO IMPOSSÍVEL 🔥";
-                btn.style.background = "#ff0000";
-                btn.style.color = "#fff";
-                btn.style.borderColor = "#a00000";
-                btn.style.boxShadow = "4px 4px 0px #a00000";
-            } else {
-                btn.innerText = "CONTINUAR";
-                btn.style.background = "#00ff41";
-                btn.style.color = "#000";
-                btn.style.borderColor = "#008f25";
-                btn.style.boxShadow = "4px 4px 0px #008f25";
-            }
-
+            if (s === 100) { btn.innerText = "MODO IMPOSSÍVEL 🔥"; btn.style.background = "#ff0000"; }
+            else { btn.innerText = "CONTINUAR"; btn.style.background = "#00ff41"; }
             milestoneScreen.style.display = 'block';
         }
 
         function resumeWithCountdown() {
-            milestoneScreen.style.display = 'none';
-            
-            player.x = 50;
-            player.y = 300;
-            player.velocity = 0;
-            pipes = []; 
-
-            countdownEl.style.display = 'block';
-            let count = 3;
-            countdownEl.innerText = count;
-
+            milestoneScreen.style.display = 'none'; player.x = 50; player.y = 300; player.velocity = 0; pipes = [];
+            countdownEl.style.display = 'block'; let count = 3; countdownEl.innerText = count;
             let timer = setInterval(() => {
                 count--;
-                if(count > 0) {
-                    countdownEl.innerText = count;
-                } else {
-                    clearInterval(timer);
-                    countdownEl.style.display = 'none';
-                    isPausedForMilestone = false;
-                    if(btnSound.classList.contains("on")) track.play();
-                    loop();
-                }
+                if(count > 0) countdownEl.innerText = count;
+                else { clearInterval(timer); countdownEl.style.display = 'none'; isPausedForMilestone = false; lastTime = 0; if(btnSound.classList.contains("on")) track.play(); requestAnimationFrame(loop); }
             }, 800);
         }
 
         function iniciarMissao() {
             overlay.style.display = 'none';
-            if(btnSound.classList.contains("on")) {
-                track.play(); 
-            } else {
-                btnSound.innerHTML = "🔊"; 
-                btnSound.classList.add("on");
-                track.play();
-            }
-            startGame();
+            if(!btnSound.classList.contains("on")) { btnSound.innerHTML = "🔊"; btnSound.classList.add("on"); }
+            track.play(); startGame();
         }
 
         function startGame() {
-            milestoneScreen.style.display = 'none';
-            gameOverDiv.style.display = 'none';
-            
-            score = 0; frames = 0;
-            currentPipeSpeed = 3.5;
-            currentPipeGap = 160;
-            pipes = [];
-            scoreDisplay.innerText = "PONTOS: 0";
-            player.x = 50;
-            player.y = 300;
-            player.velocity = 0;
-            
-            isEndingCutscene = false;
-            cutsceneDone = false;
-            
-            isPlaying = true;
-            isPausedForMilestone = false;
-            loop();
+            milestoneScreen.style.display = 'none'; gameOverDiv.style.display = 'none';
+            score = 0; currentPipeSpeed = 210; pipes = []; scoreDisplay.innerText = "PONTOS: 0";
+            player.y = 300; player.velocity = 0; isEndingCutscene = false; cutsceneDone = false;
+            isPlaying = true; isPausedForMilestone = false; lastTime = 0; pipeSpawnTimer = 0;
+            requestAnimationFrame(loop);
         }
 
         function endGame() {
-            isPlaying = false;
-            cancelAnimationFrame(animationId);
-            track.pause();
-            if(btnSound.classList.contains("on")) playSound('soundHit');
-            
+            isPlaying = false; track.pause(); if(btnSound.classList.contains("on")) playSound('soundHit');
             if(window.registrarRecorde) window.registrarRecorde(score, 'love_bird_max');
-            
-            document.getElementById('final-score-text').innerText = "O QUE IMPORTA É TENTAR...\nSua pontuação final: " + score;
+            document.getElementById('final-score-text').innerText = "Sua pontuação final: " + score;
             gameOverDiv.style.display = 'block';
         }
 
-        function resetGame() {
-            startGame();
-        }
+        function resetGame() { startGame(); }
     </script>
 
-    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -579,19 +414,13 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         let userUID = null;
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) userUID = user.uid;
-        });
+        onAuthStateChanged(auth, (user) => { if (user) userUID = user.uid; });
 
         window.registrarRecorde = async function(pontos, nomeDoJogo) {
             if (!userUID) return;
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
-            const recordeAntigo = snapshot.val() || 0;
-            if (pontos > recordeAntigo) {
-                set(dbRef, pontos); 
-            }
+            if (pontos > (snapshot.val() || 0)) set(dbRef, pontos);
         };
     </script>
 </body>
