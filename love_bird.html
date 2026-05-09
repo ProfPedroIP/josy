@@ -446,6 +446,9 @@
             track.pause();
             playSound('soundHit');
             
+            // GATILHO FIREBASE: SALVA O RECORDE
+            if(window.registrarRecorde) window.registrarRecorde(score, 'love_bird_max');
+            
             document.getElementById('final-score-text').innerText = "O QUE IMPORTA É TENTAR...\nSua pontuação final: " + score;
             uiLayer.classList.remove('hidden');
             loseScreen.classList.remove('hidden');
@@ -454,6 +457,53 @@
         function resetGame() {
             startGame();
         }
+    </script>
+
+    <!-- MOTOR DO FIREBASE (Adicionado antes do fechamento do body) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
+            authDomain: "josyarcade.firebaseapp.com",
+            databaseURL: "https://josyarcade-default-rtdb.firebaseio.com",
+            projectId: "josyarcade",
+            storageBucket: "josyarcade.firebasestorage.app",
+            messagingSenderId: "960445216740",
+            appId: "1:960445216740:web:d913dc274acdb1ffad39f1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        let userUID = null;
+
+        // Fica de olho se o jogador está logado
+        onAuthStateChanged(auth, (user) => {
+            if (user) userUID = user.uid;
+        });
+
+        // Função para somar vitórias
+        window.registrarVitoria = async function(nomeDoJogo) {
+            if (!userUID) return; 
+            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
+            const snapshot = await get(dbRef);
+            const atual = snapshot.val() || 0;
+            set(dbRef, atual + 1); 
+        };
+
+        // Função para salvar pontuação máxima (Recordes)
+        window.registrarRecorde = async function(pontos, nomeDoJogo) {
+            if (!userUID) return;
+            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
+            const snapshot = await get(dbRef);
+            const recordeAntigo = snapshot.val() || 0;
+            if (pontos > recordeAntigo) {
+                set(dbRef, pontos); // Só salva se o ponto novo for maior que o antigo
+            }
+        };
     </script>
 </body>
 </html>
