@@ -72,6 +72,50 @@
             cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
         }
 
+        /* --- CHAT STYLE --- */
+        #chat-trigger {
+            position: fixed; bottom: 20px; left: 20px; z-index: 100;
+            background: #111; border: 3px solid #00ff41; color: #00ff41;
+            padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px;
+            box-shadow: 4px 4px 0px #008f25; display: none; 
+        }
+
+        .notification-dot {
+            position: absolute; top: -5px; right: -5px; width: 12px; height: 12px;
+            background: #ff0000; border: 2px solid #fff;
+            display: none; animation: blink 0.5s infinite;
+        }
+
+        #chat-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 0, 0.98); z-index: 300; display: none;
+            flex-direction: column; padding: 20px; box-sizing: border-box;
+        }
+
+        #chat-messages {
+            flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px;
+            margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;
+            background: rgba(0, 20, 0, 0.5);
+        }
+
+        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; }
+        .msg-me { align-self: flex-end; background: #003300; border: 1px solid #00ff41; color: #00ff41; text-align: right; }
+        .msg-other { align-self: flex-start; background: #111; border: 1px solid #ff00ff; color: #ff00ff; text-align: left; }
+
+        .msg-info { font-size: 6px; display: block; margin-bottom: 5px; opacity: 0.8; }
+        .msg-time { font-size: 5px; display: block; margin-top: 5px; color: #888; }
+
+        #chat-input-container { display: flex; gap: 10px; }
+        #chat-input {
+            flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41;
+            padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none;
+        }
+        #chat-send {
+            background: #00ff41; border: none; color: #000; padding: 10px 20px;
+            font-family: 'Press Start 2P'; cursor: pointer;
+        }
+
+        /* --- MODAIS --- */
         #stats-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 200; display: none;
@@ -103,11 +147,10 @@
         .leaderboard-table .draw { color: #ffd700; font-style: italic; }
         .leaderboard-table .score { text-align: right;}
         
-        /* Classes de cores dinâmicas */
-        .score-win { color: #00ff41; }   /* Verde (Recorde do usuário logado) */
-        .score-draw { color: #ffd700; }  /* Amarelo/Dourado (Empate) */
-        .score-lose { color: #ff4444; }  /* Vermelho (Recorde de outro jogador) */
-        .score-indiv { color: #00ffff; } /* Azul ciano padrão do menu */
+        .score-win { color: #00ff41; }   
+        .score-draw { color: #ffd700; }  
+        .score-lose { color: #ff4444; }  
+        .score-indiv { color: #00ffff; } 
 
         .modal-footer { display: flex; gap: 10px; margin-top: 15px; }
         .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: none; box-sizing: border-box; text-decoration: none; text-align: center; }
@@ -120,6 +163,11 @@
     <div class="stars"></div>
 
     <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
+    
+    <button id="chat-trigger">
+        CHAT
+        <div class="notification-dot" id="chat-notif"></div>
+    </button>
 
     <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
 
@@ -129,6 +177,18 @@
             ENTRAR
         </button>
         <img id="profile-pic" src="" alt="Perfil" title="Ver Menu de Perfil">
+    </div>
+
+    <div id="chat-modal">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <span style="font-size: 10px; color: #00ff41;">MATRIX_CHAT.EXE</span>
+            <button class="tab-btn" onclick="toggleChat(false)" style="border-color: #ff0000; color: #ff0000;">X</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="DIGITE AQUI..." autocomplete="off">
+            <button id="chat-send">ENVIAR</button>
+        </div>
     </div>
 
     <div id="stats-modal">
@@ -158,8 +218,7 @@
             <div id="tab-leaderboard" class="tab-content">
                 <table class="leaderboard-table">
                     <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORDE</th></tr></thead>
-                    <tbody id="leaderboard-body">
-                        </tbody>
+                    <tbody id="leaderboard-body"></tbody>
                 </table>
             </div>
 
@@ -186,7 +245,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
@@ -204,43 +263,31 @@
         const db = getDatabase(app);
         const provider = new GoogleAuthProvider();
 
+        const usuariosAutorizados = ["phsc1994@gmail.com", "johcat.barth@gmail.com"];
+
         const btnLogin = document.getElementById('btn-login');
         const profilePic = document.getElementById('profile-pic');
         const statsModal = document.getElementById('stats-modal');
         const gameMenu = document.getElementById('game-menu');
-        const btnCloseStats = document.getElementById('btn-close-stats');
-        const btnLogout = document.getElementById('btn-logout'); 
-        const playerNameTitle = document.getElementById('player-name-title');
-        const modalProfilePic = document.getElementById('modal-profile-pic');
-        const btnSound = document.getElementById('btn-sound');
-        const audioTrack = document.getElementById('bgTrack');
+        const chatTrigger = document.getElementById('chat-trigger');
+        const chatModal = document.getElementById('chat-modal');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+        const chatNotif = document.getElementById('chat-notif');
         
         let currentUserName = "";
+        let currentUserUID = "";
+        let chatAberto = false;
 
+        const btnSound = document.getElementById('btn-sound');
+        const audioTrack = document.getElementById('bgTrack');
         audioTrack.volume = 0.5;
-
         btnSound.addEventListener('click', () => {
             if (audioTrack.paused) {
-                audioTrack.play().catch(e => console.log("Erro ao tocar:", e));
-                btnSound.innerHTML = "🔊 SOM ON";
-                btnSound.classList.add("on");
+                audioTrack.play(); btnSound.innerHTML = "🔊 SOM ON"; btnSound.classList.add("on");
             } else {
-                audioTrack.pause();
-                btnSound.innerHTML = "🔇 SOM OFF";
-                btnSound.classList.remove("on");
-            }
-        });
-
-        btnLogin.addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch((error) => { console.error("Erro:", error); alert("Erro ao logar!"); });
-        });
-
-        btnLogout.addEventListener('click', () => {
-            if (confirm("Deseja realmente sair do Arcade?")) {
-                signOut(auth).then(() => {
-                    statsModal.style.display = 'none'; 
-                    location.reload(); 
-                }).catch((error) => { console.error("Erro ao sair:", error); });
+                audioTrack.pause(); btnSound.innerHTML = "🔇 SOM OFF"; btnSound.classList.remove("on");
             }
         });
 
@@ -249,126 +296,116 @@
                 btnLogin.style.display = 'none';
                 gameMenu.style.display = 'block';
                 profilePic.style.display = 'block';
-                profilePic.src = user.photoURL; 
-                modalProfilePic.src = user.photoURL;
+                profilePic.src = user.photoURL;
+                currentUserUID = user.uid;
                 currentUserName = user.displayName.split(" ")[0].toUpperCase();
-                playerNameTitle.innerText = currentUserName;
+                document.getElementById('player-name-title').innerText = currentUserName;
+                document.getElementById('modal-profile-pic').src = user.photoURL;
+                
+                if(usuariosAutorizados.includes(user.email)) {
+                    chatTrigger.style.display = 'block';
+                    iniciarEscutaChat();
+                }
 
                 set(ref(db, 'usuarios/' + user.uid + '/nome'), currentUserName);
-
                 carregarEstatisticas(user.uid);
-                carregarPlacarGlobal(); 
+                carregarPlacarGlobal();
             } else {
                 btnLogin.style.display = 'flex';
                 gameMenu.style.display = 'none';
                 profilePic.style.display = 'none';
+                chatTrigger.style.display = 'none';
             }
         });
 
-        profilePic.addEventListener('click', () => { statsModal.style.display = 'flex'; });
-        btnCloseStats.addEventListener('click', () => { statsModal.style.display = 'none'; });
+        btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
+        document.getElementById('btn-logout').addEventListener('click', () => confirm("SAIR?") && signOut(auth).then(() => location.reload()));
+
+        function iniciarEscutaChat() {
+            onValue(ref(db, 'chat_global'), (snapshot) => {
+                const msgs = snapshot.val();
+                chatMessages.innerHTML = "";
+                if (msgs) {
+                    Object.values(msgs).forEach(m => {
+                        const div = document.createElement('div');
+                        const isMe = m.uid === currentUserUID;
+                        div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
+                        const data = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "";
+                        div.innerHTML = `<span class="msg-info">${m.nome}</span>${m.texto}<span class="msg-time">${data}</span>`;
+                        chatMessages.appendChild(div);
+                    });
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    if(!chatAberto) chatNotif.style.display = 'block';
+                }
+            });
+        }
+
+        function toggleChat(abrir) {
+            chatAberto = abrir;
+            chatModal.style.display = abrir ? 'flex' : 'none';
+            if(abrir) chatNotif.style.display = 'none';
+        }
+
+        chatTrigger.addEventListener('click', () => toggleChat(true));
+
+        function enviarMensagem() {
+            const texto = chatInput.value.trim();
+            if(!texto) return;
+            push(ref(db, 'chat_global'), {
+                uid: currentUserUID, nome: currentUserName, texto: texto, timestamp: serverTimestamp()
+            });
+            chatInput.value = "";
+        }
+
+        chatSend.addEventListener('click', enviarMensagem);
+        chatInput.addEventListener('keypress', (e) => e.key === 'Enter' && enviarMensagem());
+
+        window.openTab = (evt, tabName) => {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).style.display = 'block';
+            evt.currentTarget.classList.add('active');
+        };
 
         function carregarEstatisticas(uid) {
-            const statsRef = ref(db, 'usuarios/' + uid + '/estatisticas');
-            onValue(statsRef, (snapshot) => {
-                const dados = snapshot.val() || {};
-                document.getElementById('stat-busca').innerText = (dados.busca_estelar || 0) + "V";
-                document.getElementById('stat-minado').innerText = (dados.minado_amorous || 0) + "V";
-                document.getElementById('stat-guardiao').innerText = (dados.guardiao_amor || 0) + "V";
-                document.getElementById('stat-bird').innerText = (dados.love_bird_max || 0) + "Pts";
+            onValue(ref(db, 'usuarios/' + uid + '/estatisticas'), (snap) => {
+                const d = snap.val() || {};
+                document.getElementById('stat-busca').innerText = (d.busca_estelar || 0) + "V";
+                document.getElementById('stat-minado').innerText = (d.minado_amorous || 0) + "V";
+                document.getElementById('stat-guardiao').innerText = (d.guardiao_amor || 0) + "V";
+                document.getElementById('stat-bird').innerText = (d.love_bird_max || 0) + "Pts";
             });
         }
 
         async function carregarPlacarGlobal() {
-            const leaderboardBody = document.getElementById('leaderboard-body');
-            leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Buscando recordes...</td></tr>';
+            const body = document.getElementById('leaderboard-body');
+            const snap = await get(ref(db, 'usuarios'));
+            const all = snap.val();
+            if(!all) return;
 
-            try {
-                const snapshot = await get(ref(db, 'usuarios'));
-                const allUsers = snapshot.val();
+            const games = [
+                {k:'busca_estelar', l:'01. BUSCA ESTELAR', s:'V'},
+                {k:'minado_amorous', l:'02. MINADO AMOROUS', s:'V'},
+                {k:'guardiao_amor', l:'03. GUARDIÃO DO AMOR', s:'V'},
+                {k:'love_bird_max', l:'04. LOVE BIRD', s:'Pts'}
+            ];
 
-                if (!allUsers) {
-                    leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Ainda não há resultados.</td></tr>';
-                    return;
+            body.innerHTML = "";
+            games.forEach(g => {
+                let scores = Object.values(all).map(u => ({n: (u.nome || "ANÔNIMO"), s: (u.estatisticas && u.estatisticas[g.k]) || 0})).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
+                let leader = "---", score = 0, cls = "score";
+                if(scores.length > 0) {
+                    score = scores[0].s;
+                    if(scores.length > 1 && scores[1].s === score) { leader = "EMPATE!"; cls += " score-draw"; }
+                    else { leader = scores[0].n; cls += (leader === currentUserName) ? " score-win" : " score-lose"; }
                 }
-
-                const games = [
-                    { key: 'busca_estelar', label: '01. BUSCA ESTELAR', suffix: 'V' },
-                    { key: 'minado_amorous', label: '02. MINADO AMOROUS', suffix: 'V' },
-                    { key: 'guardiao_amor', label: '03. GUARDIÃO DO AMOR', suffix: 'V' },
-                    { key: 'love_bird_max', label: '04. LOVE BIRD', suffix: 'Pts' }
-                ];
-
-                leaderboardBody.innerHTML = '';
-
-                games.forEach(game => {
-                    let scoresFound = [];
-
-                    for (const uid in allUsers) {
-                        const user = allUsers[uid];
-                        const scoreValue = (user.estatisticas && user.estatisticas[game.key]) || 0;
-                        if (scoreValue > 0) {
-                            scoresFound.push({ name: (user.nome || "Anônimo").toUpperCase(), score: scoreValue });
-                        }
-                    }
-
-                    let leaderName = "---";
-                    let displayScore = 0;
-                    let isDraw = false;
-                    let scoreClass = "score";
-
-                    if (scoresFound.length > 0) {
-                        scoresFound.sort((a, b) => b.score - a.score);
-                        displayScore = scoresFound[0].score;
-                        leaderName = scoresFound[0].name;
-
-                        // Lógica Global de cores (Preparada para múltiplos jogadores)
-                        if (scoresFound.length > 1 && scoresFound[1].score === displayScore) {
-                            leaderName = "EMPATE!";
-                            isDraw = true;
-                            scoreClass += " score-draw";
-                        } else {
-                            // Se o recorde for EXATAMENTE do usuário que está olhando a tela
-                            if (leaderName === currentUserName) {
-                                scoreClass += " score-win"; 
-                            } else {
-                                // Se for de QUALQUER outra pessoa
-                                scoreClass += " score-lose"; 
-                            }
-                        }
-                    }
-
-                    const nameClass = isDraw ? "top-player draw" : "top-player";
-
-                    const row = `
-                        <tr>
-                            <td class="game-name">${game.label}</td>
-                            <td class="${nameClass}">${leaderName}</td>
-                            <td class="${scoreClass}">${displayScore}${game.suffix}</td>
-                        </tr>
-                    `;
-                    leaderboardBody.innerHTML += row;
-                });
-
-            } catch (error) {
-                console.error("Erro no placar:", error);
-                leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Ainda não há resultados.</td></tr>';
-            }
+                body.innerHTML += `<tr><td class="game-name">${g.l}</td><td class="top-player">${leader}</td><td class="${cls}">${score}${g.s}</td></tr>`;
+            });
         }
 
-        window.openTab = function(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tab-btn");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
+        profilePic.addEventListener('click', () => statsModal.style.display = 'flex');
+        document.getElementById('btn-close-stats').addEventListener('click', () => statsModal.style.display = 'none');
+        window.toggleChat = toggleChat;
     </script>
 </body>
 </html>
