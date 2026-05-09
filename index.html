@@ -11,10 +11,9 @@
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             margin: 0; display: flex; align-items: center; justify-content: center; 
-            min-height: 100dvh; overflow: hidden; /* Fundo travado */
+            min-height: 100dvh; overflow: hidden;
         }
 
-        /* As estrelas ficam no fundo do monitor inteiro */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
@@ -29,21 +28,19 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        /* --- A MÁGICA DA RESPONSIVIDADE AQUI --- */
         #app-wrapper {
             position: relative;
             width: 100%;
-            max-width: 450px; /* Largura máxima de celular */
-            height: 100dvh;   /* Altura Dinâmica para corrigir PWA/Safari */
+            max-width: 450px; 
+            height: 100dvh;   
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* Corta o que passar das bordas */
+            overflow: hidden; 
             z-index: 20;
         }
 
-        /* No Computador (Telas largas), damos um contorno de "máquina" */
         @media (min-width: 451px) {
             #app-wrapper {
                 height: 90dvh;
@@ -76,7 +73,6 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* Todos os botões fixos agora são ABSOLUTE dentro do app-wrapper */
         .btn-sound {
             position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 50;
             background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
@@ -99,7 +95,6 @@
         }
 
         #chat-trigger {
-            /* Usando max com safe-area para garantir que o PWA/iPhone não engula o botão */
             position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 20px; z-index: 100;
             background: #111; border: 3px solid #00ff41; color: #00ff41;
             padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px;
@@ -112,7 +107,6 @@
             display: none; animation: blink 0.5s infinite;
         }
 
-        /* Modais mudaram para absolute para preencherem só o App Wrapper */
         #chat-modal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 5, 0, 0.98); z-index: 300; display: none;
@@ -187,11 +181,9 @@
 </head>
 <body>
 
-    <!-- Fundo estelar fica DE FORA da cápsula, pra pegar o monitor inteiro -->
     <div class="stars"></div>
     <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
 
-    <!-- INÍCIO DA CÁPSULA RESPONSIVA (MOBILE APP WRAPPER) -->
     <div id="app-wrapper">
 
         <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
@@ -210,9 +202,9 @@
         </div>
 
         <div id="chat-modal">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <span style="font-size: 10px; color: #00ff41;">MATRIX_CHAT.EXE</span>
-                <button class="tab-btn" onclick="toggleChat(false)" style="border-color: #ff0000; color: #ff0000; padding: 5px 10px;">X</button>
+            <!-- Cabeçalho do Chat com Botão X Quadrado -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
+                <button onclick="toggleChat(false)" style="background: #111; border: 2px solid #ff0000; color: #ff0000; font-family: 'Press Start 2P'; font-size: 10px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">X</button>
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
@@ -273,7 +265,6 @@
         </div>
 
     </div> 
-    <!-- FIM DA CÁPSULA -->
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
