@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <title>Arcade Josy & Pedro</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>">
@@ -10,11 +10,11 @@
     <style>
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            text-align: center; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; min-height: 100vh; margin: 0; padding: 20px;
-            overflow: hidden; position: relative;
+            margin: 0; display: flex; align-items: center; justify-content: center; 
+            min-height: 100dvh; overflow: hidden; /* Fundo travado */
         }
 
+        /* As estrelas ficam no fundo do monitor inteiro */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
@@ -29,17 +29,42 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; position: relative; z-index: 5; }
+        /* --- A MÁGICA DA RESPONSIVIDADE AQUI --- */
+        #app-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 450px; /* Largura máxima de celular */
+            height: 100dvh;   /* Altura Dinâmica para corrigir PWA/Safari */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Corta o que passar das bordas */
+            z-index: 20;
+        }
 
-        #game-menu { display: none; }
+        /* No Computador (Telas largas), damos um contorno de "máquina" */
+        @media (min-width: 451px) {
+            #app-wrapper {
+                height: 90dvh;
+                border: 2px solid #003300;
+                border-radius: 15px;
+                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1);
+                background: rgba(5, 5, 5, 0.8);
+            }
+        }
 
-        .menu-container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 300px; position: relative; z-index: 5; }
+        h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; text-align: center;}
+
+        #game-menu { display: none; width: 100%; }
+
+        .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
 
         .arcade-btn {
-            padding: 20px; font-family: 'Press Start 2P'; font-size: 12px;
+            padding: 20px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center;
             background: #111; color: #00ffff; border: 4px solid #4a90e2;
             cursor: pointer; text-decoration: none; transition: 0.3s;
-            box-shadow: 6px 6px 0px #4b0082; position: relative;
+            box-shadow: 6px 6px 0px #4b0082; position: relative; display: block;
         }
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
 
@@ -51,15 +76,16 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+        /* Todos os botões fixos agora são ABSOLUTE dentro do app-wrapper */
         .btn-sound {
-            position: absolute; top: 25px; left: 20px; z-index: 50;
+            position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 50;
             background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
             font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
             box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
         }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
 
-        #auth-container { position: absolute; top: 20px; right: 20px; z-index: 50; }
+        #auth-container { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 50; }
 
         .btn-login {
             background: #fff; color: #000; border: 3px solid #4a90e2; padding: 10px;
@@ -72,9 +98,9 @@
             cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
         }
 
-        /* --- CHAT STYLE --- */
         #chat-trigger {
-            position: fixed; bottom: 20px; left: 20px; z-index: 100;
+            /* Usando max com safe-area para garantir que o PWA/iPhone não engula o botão */
+            position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 20px; z-index: 100;
             background: #111; border: 3px solid #00ff41; color: #00ff41;
             padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px;
             box-shadow: 4px 4px 0px #008f25; display: none; 
@@ -86,10 +112,11 @@
             display: none; animation: blink 0.5s infinite;
         }
 
+        /* Modais mudaram para absolute para preencherem só o App Wrapper */
         #chat-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 5, 0, 0.98); z-index: 300; display: none;
-            flex-direction: column; padding: 20px; box-sizing: border-box;
+            flex-direction: column; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px; box-sizing: border-box;
         }
 
         #chat-messages {
@@ -108,35 +135,35 @@
         #chat-input-container { display: flex; gap: 10px; }
         #chat-input {
             flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41;
-            padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none;
+            padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; width: 100%; box-sizing: border-box;
         }
         #chat-send {
-            background: #00ff41; border: none; color: #000; padding: 10px 20px;
-            font-family: 'Press Start 2P'; cursor: pointer;
+            background: #00ff41; border: none; color: #000; padding: 10px;
+            font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px;
         }
 
-        /* --- MODAIS --- */
         #stats-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 200; display: none;
             align-items: center; justify-content: center; flex-direction: column;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
         }
 
         .stats-box {
-            background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 450px;
+            background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px;
             box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative;
-            display: flex; flex-direction: column; gap: 15px;
+            display: flex; flex-direction: column; gap: 15px; box-sizing: border-box;
         }
 
         .modal-header-profile { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 5px; }
         #modal-profile-pic { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #00ffff; box-shadow: 0 0 10px #00ffff; object-fit: cover; }
-        .profile-name-title { color: #fff; font-size: 14px; text-align: center; }
+        .profile-name-title { color: #fff; font-size: 14px; text-align: center; margin: 0;}
 
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; }
+        .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; flex: 1; text-align: center;}
         .tab-btn.active { background: #00ffff; color: #000; border-color: #fff; }
 
-        .tab-content { display: none; min-height: 200px;}
+        .tab-content { display: none; min-height: 180px;}
         .tab-content.active { display: block; }
 
         .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
@@ -160,87 +187,93 @@
 </head>
 <body>
 
+    <!-- Fundo estelar fica DE FORA da cápsula, pra pegar o monitor inteiro -->
     <div class="stars"></div>
-
-    <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
-    
-    <button id="chat-trigger">
-        CHAT
-        <div class="notification-dot" id="chat-notif"></div>
-    </button>
-
     <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
 
-    <div id="auth-container">
-        <button id="btn-login" class="btn-login">
-            <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-            ENTRAR
+    <!-- INÍCIO DA CÁPSULA RESPONSIVA (MOBILE APP WRAPPER) -->
+    <div id="app-wrapper">
+
+        <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
+        
+        <button id="chat-trigger">
+            CHAT
+            <div class="notification-dot" id="chat-notif"></div>
         </button>
-        <img id="profile-pic" src="" alt="Perfil" title="Ver Menu de Perfil">
-    </div>
 
-    <div id="chat-modal">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <span style="font-size: 10px; color: #00ff41;">MATRIX_CHAT.EXE</span>
-            <button class="tab-btn" onclick="toggleChat(false)" style="border-color: #ff0000; color: #ff0000;">X</button>
+        <div id="auth-container">
+            <button id="btn-login" class="btn-login">
+                <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                ENTRAR
+            </button>
+            <img id="profile-pic" src="" alt="Perfil" title="Ver Menu de Perfil">
         </div>
-        <div id="chat-messages"></div>
-        <div id="chat-input-container">
-            <input type="text" id="chat-input" placeholder="DIGITE AQUI..." autocomplete="off">
-            <button id="chat-send">ENVIAR</button>
-        </div>
-    </div>
 
-    <div id="stats-modal">
-        <div class="stats-box">
-            <div class="modal-header-profile">
-                <img id="modal-profile-pic" src="" alt="Foto">
-                <h2 class="profile-name-title" id="player-name-title">JOGADOR</h2>
+        <div id="chat-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span style="font-size: 10px; color: #00ff41;">MATRIX_CHAT.EXE</span>
+                <button class="tab-btn" onclick="toggleChat(false)" style="border-color: #ff0000; color: #ff0000; padding: 5px 10px;">X</button>
             </div>
-            
-            <div class="modal-tabs">
-                <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">INDIVIDUAL</button>
-                <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">GERAL</button>
-            </div>
-
-            <div id="tab-stats" class="tab-content active">
-                <table class="leaderboard-table">
-                    <thead><tr><th class="game-name">JOGO</th><th class="score">PONTUAÇÃO</th></tr></thead>
-                    <tbody>
-                        <tr><td class="game-name">01. BUSCA ESTELAR</td><td class="score score-indiv" id="stat-busca">0V</td></tr>
-                        <tr><td class="game-name">02. MINADO AMOROUS</td><td class="score score-indiv" id="stat-minado">0V</td></tr>
-                        <tr><td class="game-name">03. GUARDIÃO DO AMOR</td><td class="score score-indiv" id="stat-guardiao">0V</td></tr>
-                        <tr><td class="game-name">04. LOVE BIRD</td><td class="score score-indiv" id="stat-bird">0Pts</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div id="tab-leaderboard" class="tab-content">
-                <table class="leaderboard-table">
-                    <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORDE</th></tr></thead>
-                    <tbody id="leaderboard-body"></tbody>
-                </table>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-modal-action btn-close" id="btn-close-stats">FECHAR</button>
-                <button class="btn-modal-action btn-logout" id="btn-logout">SAIR</button>
+            <div id="chat-messages"></div>
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="DIGITE AQUI..." autocomplete="off">
+                <button id="chat-send">ENVIAR</button>
             </div>
         </div>
-    </div>
 
-    <div id="game-menu">
-        <h1>🎮 JOSY ARCADE 🎮</h1>
-        <div class="menu-container">
-            <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
-            <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
-            <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
-            <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
-                04. LOVE BIRD
-                <span class="badge-novo">NOVO JOGO!</span>
-            </a>
+        <div id="stats-modal">
+            <div class="stats-box">
+                <div class="modal-header-profile">
+                    <img id="modal-profile-pic" src="" alt="Foto">
+                    <h2 class="profile-name-title" id="player-name-title">JOGADOR</h2>
+                </div>
+                
+                <div class="modal-tabs">
+                    <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">INDIVIDUAL</button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">GERAL</button>
+                </div>
+
+                <div id="tab-stats" class="tab-content active">
+                    <table class="leaderboard-table">
+                        <thead><tr><th class="game-name">JOGO</th><th class="score">PONTUAÇÃO</th></tr></thead>
+                        <tbody>
+                            <tr><td class="game-name">01. BUSCA ESTELAR</td><td class="score score-indiv" id="stat-busca">0V</td></tr>
+                            <tr><td class="game-name">02. MINADO AMOROUS</td><td class="score score-indiv" id="stat-minado">0V</td></tr>
+                            <tr><td class="game-name">03. GUARDIÃO DO AMOR</td><td class="score score-indiv" id="stat-guardiao">0V</td></tr>
+                            <tr><td class="game-name">04. LOVE BIRD</td><td class="score score-indiv" id="stat-bird">0Pts</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="tab-leaderboard" class="tab-content">
+                    <table class="leaderboard-table">
+                        <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORDE</th></tr></thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-modal-action btn-close" id="btn-close-stats">FECHAR</button>
+                    <button class="btn-modal-action btn-logout" id="btn-logout">SAIR</button>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <div id="game-menu">
+            <h1>🎮 JOSY ARCADE 🎮</h1>
+            <div class="menu-container">
+                <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
+                <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
+                <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
+                <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
+                    04. LOVE BIRD
+                    <span class="badge-novo">NOVO JOGO!</span>
+                </a>
+            </div>
+        </div>
+
+    </div> 
+    <!-- FIM DA CÁPSULA -->
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
