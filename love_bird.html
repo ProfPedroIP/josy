@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <title>Love Bird: Josy & Pedro</title>
     
@@ -12,17 +12,21 @@
     <style>
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; height: 100vh; overflow: hidden; background-color: #000;
+            margin: 0; display: flex; align-items: center; justify-content: center; 
+            min-height: 100dvh; overflow-y: auto; /* Permite rolagem segura no PC */
+            position: relative; padding: 20px 0; box-sizing: border-box;
         }
 
+        /* FUNDO DE ESTRELAS PIXELADAS */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
-            animation: spaceMove 50s linear infinite; z-index: 1;
+            animation: spaceMove 50s linear infinite; z-index: -1;
         }
+
         @keyframes spaceMove { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
 
+        /* EFEITO CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -30,79 +34,166 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
+        /* --- CÁPSULA RESPONSIVA PADRÃO --- */
+        #app-wrapper {
+            position: relative; width: 100%; max-width: 450px; min-height: 90dvh; height: auto;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            z-index: 20; padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px; box-sizing: border-box;
+        }
+
+        @media (min-width: 451px) {
+            #app-wrapper {
+                border: 2px solid #003300; border-radius: 15px;
+                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
+                margin: 20px 0; /* Descola do topo/fundo da tela no PC */
+            }
+        }
+
+        /* --- CONTROLES SUPERIORES --- */
+        .top-controls {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; z-index: 50;
+        }
+
+        .btn-sound {
+            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
+            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
+        }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+
+        .btn-close {
+            background: #111; color: #ff0000; border: 3px solid #ff0000; 
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
+            box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
+        }
+        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
+
+        /* --- PLACAR CAIXA AMARELA --- */
+        .score-board {
+            background: #111; border: 3px solid #ffd700; padding: 10px 20px;
+            font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
+            margin-bottom: 15px; text-align: center; width: 100%; box-sizing: border-box;
+            z-index: 50;
+        }
+
+        /* --- CONTAINER DO CANVAS (Para centralizar o Canvas e o Countdown) --- */
+        .canvas-container {
+            position: relative; width: 100%; max-width: 360px; display: flex; justify-content: center; align-items: center;
+        }
+
+        /* --- O CANVAS DO JOGO --- */
         canvas {
             background: rgba(0, 0, 0, 0.8);
             border: 4px solid #4a90e2;
-            box-shadow: 0 0 20px #4a90e2;
-            max-width: 100%;
-            max-height: 100%;
-            z-index: 5;
-            touch-action: none;
+            box-shadow: 0 0 15px #4a90e2;
+            width: 100%; height: auto; aspect-ratio: 360 / 600;
+            object-fit: contain;
+            z-index: 5; touch-action: none;
         }
 
-        #ui-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 100;
-        }
-
-        .panel {
-            background: #111; border: 4px solid #ff00ff; padding: 30px;
-            box-shadow: 0 0 20px #ff00ff; max-width: 350px; text-align: center;
-        }
-
-        .btn {
-            margin-top: 20px; padding: 15px; background: #00ff41; color: #000;
-            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25;
-            width: 100%; display: block; text-decoration: none; box-sizing: border-box; font-size: 12px;
-        }
-        .btn-blue { background: #4a90e2; box-shadow: 4px 4px 0px #003366; color: white; margin-top: 10px; }
-
-        .hidden { display: none !important; }
-
-        #score-display {
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            z-index: 50; font-size: 24px; color: #fff; text-shadow: 3px 3px #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
-        }
-
+        /* --- CONTAGEM REGRESSIVA --- */
         #countdown {
             position: absolute; font-size: 80px; color: #00ffff; z-index: 200; 
             text-shadow: 5px 5px #000; display: none; pointer-events: none;
         }
+
+        /* --- OVERLAY INICIAL --- */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 100; border-radius: 13px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+        }
+
+        .popup-start {
+            border: 4px solid #ff00ff; padding: 30px; background: #111;
+            box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center;
+        }
+
+        .start-btn {
+            margin-top: 20px; padding: 15px; background: #00ff41; color: #000; width: 100%;
+            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25; font-size: 10px;
+        }
+
+        /* --- MENSAGENS DE MILESTONE E FIM DE JOGO --- */
+        .message-box { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: none; padding: 20px; background: rgba(17, 17, 17, 0.95); 
+            width: 85%; max-width: 350px; animation: fadeIn 0.5s; z-index: 60; text-align: center;
+        }
+
+        #milestone-screen { border: 4px double #00ffff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); }
+        #game-over { border: 4px double #ff0000; box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); }
+
+        .msg-title-cyan { color: #00ffff; font-size: 16px; margin-bottom: 15px; }
+        .msg-title-red { color: #ff0000; font-size: 16px; margin-bottom: 15px; }
+        .msg-white { color: #ffffff; font-size: 10px; line-height: 1.6; margin-bottom: 15px; }
+
+        .btn {
+            padding: 15px 20px; font-family: 'Press Start 2P', cursive;
+            font-size: 10px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center;
+        }
+
+        .btn-green { background: #00ff41; border: 4px solid #008f25; box-shadow: 4px 4px 0px #008f25; color: #000; }
+        .btn-restart-lose { background: #444; border: 4px solid #000; box-shadow: 4px 4px 0px #222; }
+        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="stars"></div>
-    <div id="score-display">0</div>
-    <div id="countdown">3</div>
 
-    <canvas id="gameCanvas" width="360" height="600"></canvas>
+    <div id="app-wrapper">
 
-    <div id="ui-layer">
-        <!-- Tela de Início -->
-        <div id="start-screen" class="panel">
-            <h2 style="color: #ff00ff; font-size: 16px;">LOVE BIRD</h2>
-            <p style="font-size: 10px; line-height: 1.6; color: #fff; margin-top: 15px;">Faça o pássaro conquistar o amor chegando em 100 pontos clicando na tela ou apertando a tecla SPACE.</p>
-            <button class="btn" onclick="startGame()">VOAR 🐦</button>
+        <!-- CONTROLES SUPERIORES -->
+        <div class="top-controls">
+            <button id="btn-sound" class="btn-sound">🔇</button>
+            <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
         </div>
 
-        <!-- Painel de Mensagens de Recorde -->
-        <div id="milestone-screen" class="panel hidden" style="border-color: #00ffff; box-shadow: 0 0 20px #00ffff;">
-            <h2 id="milestone-title" style="color: #00ffff; font-size: 18px;">MARCO ATINGIDO!</h2>
-            <p id="milestone-text" style="color: #fff; font-size: 12px; line-height: 1.6; margin: 15px 0;"></p>
-            <button class="btn" id="btn-continue" onclick="resumeWithCountdown()">CONTINUAR</button>
+        <!-- PLACAR PADRONIZADO CAIXA AMARELA -->
+        <div class="score-board" id="score-display">
+            PONTOS: 0
         </div>
 
-        <!-- Tela de Derrota -->
-        <div id="lose-screen" class="panel hidden" style="border-color: #ff0000;">
-            <h2 style="color: #ff0000; font-size: 18px;">GAME OVER</h2>
-            <p id="final-score-text" style="color: #fff; font-size: 10px; margin: 10px 0; line-height: 1.4;"></p>
-            <button class="btn" onclick="resetGame()">TENTAR NOVAMENTE</button>
-            <a href="index.html" class="btn btn-blue">VOLTAR AO MENU</a>
+        <!-- CANVAS E CONTAGEM REGRESSIVA -->
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="360" height="600"></canvas>
+            <div id="countdown">3</div>
         </div>
+
+        <!-- OVERLAY DE INÍCIO -->
+        <div id="overlay">
+            <div class="popup-start">
+                <h2 style="color: #ff00ff; font-size: 16px; margin-bottom: 15px;">LOVE BIRD</h2>
+                <p style="font-size: 10px; line-height: 1.6; color: #fff;">Faça o pássaro conquistar o amor chegando em 100 pontos.</p>
+                <p style="font-size: 10px; color: #00ffff; margin-top: 10px;">Clique na tela ou aperte a tecla SPACE para voar!</p>
+                <button class="start-btn" onclick="iniciarMissao()">VOAR 🐦</button>
+            </div>
+        </div>
+
+        <!-- TELA DE MARCO (MILESTONE) -->
+        <div id="milestone-screen" class="message-box">
+            <h2 id="milestone-title" class="msg-title-cyan">MARCO ATINGIDO!</h2>
+            <p id="milestone-text" class="msg-white"></p>
+            <button class="btn btn-green" id="btn-continue" onclick="resumeWithCountdown()">CONTINUAR</button>
+        </div>
+
+        <!-- TELA DE DERROTA -->
+        <div id="game-over" class="message-box">
+            <h2 class="msg-title-red">GAME OVER 🌑</h2>
+            <p id="final-score-text" class="msg-white"></p>
+            <button class="btn btn-restart-lose" onclick="resetGame()">TENTAR NOVAMENTE</button>
+            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+        </div>
+
     </div>
 
+    <!-- Áudios -->
     <audio id="bgTrack" loop><source src="assets/sounds/love_bird.mp3" type="audio/mpeg"></audio>
     <audio id="soundJump"><source src="assets/sounds/pulo.wav" type="audio/wav"></audio>
     <audio id="soundPoint"><source src="assets/sounds/ponto.wav" type="audio/wav"></audio>
@@ -115,13 +206,23 @@
         const scoreDisplay = document.getElementById('score-display');
         const countdownEl = document.getElementById('countdown');
         
-        const uiLayer = document.getElementById('ui-layer');
-        const startScreen = document.getElementById('start-screen');
+        const overlay = document.getElementById('overlay');
         const milestoneScreen = document.getElementById('milestone-screen');
-        const loseScreen = document.getElementById('lose-screen');
+        const gameOverDiv = document.getElementById('game-over');
+        const btnSound = document.getElementById('btn-sound');
 
         const track = document.getElementById('bgTrack');
         
+        // Lógica do Som
+        track.volume = 0.5;
+        btnSound.addEventListener('click', () => {
+            if (track.paused) {
+                track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
+            } else {
+                track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on");
+            }
+        });
+
         function playSound(id) {
             const sound = document.getElementById(id);
             sound.currentTime = 0;
@@ -176,12 +277,12 @@
             if(e.type === 'touchstart' || e.type === 'mousedown') e.preventDefault(); 
             
             player.velocity = jumpLift;
-            playSound('soundJump');
+            if(btnSound.classList.contains("on")) playSound('soundJump');
         }
 
         canvas.addEventListener('mousedown', jump);
         canvas.addEventListener('touchstart', jump, {passive: false});
-        window.addEventListener('keydown', jump); // Escuta o teclado
+        window.addEventListener('keydown', jump); 
 
         function drawMarioPipe(x, y, width, height, isTopPipe) {
             const capHeight = 24;
@@ -219,7 +320,7 @@
         }
 
         function drawPixelHeart(cx, cy, scale, alpha) {
-            ctx.fillStyle = `rgba(255, 77, 109, ${alpha})`; // Rosa choque
+            ctx.fillStyle = `rgba(255, 77, 109, ${alpha})`; 
             const w = heartMatrix[0].length;
             const h = heartMatrix.length;
             const startX = cx - (w * scale) / 2;
@@ -251,15 +352,13 @@
             if (isEndingCutscene) {
                 endingTimer++;
                 
-                // Animação de crescimento do coração
                 let heartScale = Math.min(20, endingTimer * 0.2); 
                 let heartAlpha = Math.min(1, endingTimer / 60);
                 drawPixelHeart(canvas.width/2, canvas.height/2, heartScale, heartAlpha);
 
-                // Passarinho 1 (Josy) voando pro centro
                 player.x += (canvas.width/2 - 30 - player.x) * 0.05;
                 player.y += (canvas.height/2 - player.y) * 0.05;
-                player.velocity = 0; // Para de cair
+                player.velocity = 0; 
 
                 ctx.save();
                 ctx.translate(player.x, player.y);
@@ -270,24 +369,22 @@
                 ctx.fillText("🐦", 0, 0);
                 ctx.restore();
 
-                // Passarinho 2 (Pedro/Amor) aparecendo no centro
                 ctx.save();
                 ctx.translate(canvas.width/2 + 30, canvas.height/2);
                 ctx.font = "35px Arial";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.globalAlpha = heartAlpha; // Aparece junto com o coração
+                ctx.globalAlpha = heartAlpha; 
                 ctx.fillText("🐦", 0, 0);
                 ctx.restore();
 
-                // Após 3 segundos de animação, exibe a mensagem!
                 if (endingTimer === 180) {
                     showMilestone(100);
-                    isEndingCutscene = false; // Desliga a animação para preparar o retorno
+                    isEndingCutscene = false; 
                 }
 
                 animationId = requestAnimationFrame(loop);
-                return; // Pula o resto da física
+                return; 
             }
 
             // ==========================================
@@ -298,7 +395,6 @@
 
             if (player.y < 0) { player.y = 0; player.velocity = 0; }
 
-            // DESENHAR O PÁSSARO (Espelhado para a direita)
             ctx.save();
             ctx.translate(player.x + player.width/2, player.y + player.height/2);
             let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (player.velocity * 0.1)));
@@ -331,19 +427,18 @@
 
                 if (pipe.x + pipe.width < player.x && !pipe.passed) {
                     score++;
-                    scoreDisplay.innerText = score;
+                    scoreDisplay.innerText = "PONTOS: " + score;
                     pipe.passed = true;
-                    playSound('soundPoint');
+                    if(btnSound.classList.contains("on")) playSound('soundPoint');
                     updateDifficulty();
                     
-                    // GATILHO DA CUTSCENE DOS 100 PONTOS
                     if (score === 100 && !cutsceneDone) {
                         cutsceneDone = true;
                         isEndingCutscene = true;
                         endingTimer = 0;
-                        pipes = []; // Limpa os canos da tela!
+                        pipes = []; 
                         track.pause();
-                        playSound('soundWin');
+                        if(btnSound.classList.contains("on")) playSound('soundWin');
                     } else if(milestones[score] && score !== 100) {
                         showMilestone(score);
                     }
@@ -366,35 +461,35 @@
             isPausedForMilestone = true;
             track.pause();
             
-            if(s !== 100) playSound('soundWin');
+            if(s !== 100 && btnSound.classList.contains("on")) playSound('soundWin');
             
             document.getElementById('milestone-text').innerText = milestones[s];
             
-            // Muda o texto do botão se for o modo impossível
             let btn = document.getElementById('btn-continue');
             if (s === 100) {
                 btn.innerText = "MODO IMPOSSÍVEL 🔥";
                 btn.style.background = "#ff0000";
                 btn.style.color = "#fff";
+                btn.style.borderColor = "#a00000";
+                btn.style.boxShadow = "4px 4px 0px #a00000";
             } else {
                 btn.innerText = "CONTINUAR";
                 btn.style.background = "#00ff41";
                 btn.style.color = "#000";
+                btn.style.borderColor = "#008f25";
+                btn.style.boxShadow = "4px 4px 0px #008f25";
             }
 
-            uiLayer.classList.remove('hidden');
-            milestoneScreen.classList.remove('hidden');
+            milestoneScreen.style.display = 'block';
         }
 
         function resumeWithCountdown() {
-            milestoneScreen.classList.add('hidden');
-            uiLayer.classList.add('hidden');
+            milestoneScreen.style.display = 'none';
             
-            // REPOSICIONA O PÁSSARO PARA EVITAR MORTE INSTANTÂNEA
             player.x = 50;
             player.y = 300;
             player.velocity = 0;
-            pipes = []; // Limpa os canos para ela ter tempo de respirar
+            pipes = []; 
 
             countdownEl.style.display = 'block';
             let count = 3;
@@ -408,32 +503,39 @@
                     clearInterval(timer);
                     countdownEl.style.display = 'none';
                     isPausedForMilestone = false;
-                    track.play();
+                    if(btnSound.classList.contains("on")) track.play();
                     loop();
                 }
             }, 800);
         }
 
+        function iniciarMissao() {
+            overlay.style.display = 'none';
+            if(btnSound.classList.contains("on")) {
+                track.play(); 
+            } else {
+                btnSound.innerHTML = "🔊"; 
+                btnSound.classList.add("on");
+                track.play();
+            }
+            startGame();
+        }
+
         function startGame() {
-            uiLayer.classList.add('hidden');
-            startScreen.classList.add('hidden');
-            milestoneScreen.classList.add('hidden');
-            loseScreen.classList.add('hidden');
+            milestoneScreen.style.display = 'none';
+            gameOverDiv.style.display = 'none';
             
             score = 0; frames = 0;
             currentPipeSpeed = 3.5;
             currentPipeGap = 160;
             pipes = [];
-            scoreDisplay.innerText = "0";
+            scoreDisplay.innerText = "PONTOS: 0";
             player.x = 50;
             player.y = 300;
             player.velocity = 0;
             
             isEndingCutscene = false;
             cutsceneDone = false;
-            
-            track.volume = 0.5;
-            track.play().catch(e=>{});
             
             isPlaying = true;
             isPausedForMilestone = false;
@@ -444,14 +546,12 @@
             isPlaying = false;
             cancelAnimationFrame(animationId);
             track.pause();
-            playSound('soundHit');
+            if(btnSound.classList.contains("on")) playSound('soundHit');
             
-            // GATILHO FIREBASE: SALVA O RECORDE
             if(window.registrarRecorde) window.registrarRecorde(score, 'love_bird_max');
             
             document.getElementById('final-score-text').innerText = "O QUE IMPORTA É TENTAR...\nSua pontuação final: " + score;
-            uiLayer.classList.remove('hidden');
-            loseScreen.classList.remove('hidden');
+            gameOverDiv.style.display = 'block';
         }
 
         function resetGame() {
@@ -459,7 +559,7 @@
         }
     </script>
 
-    <!-- MOTOR DO FIREBASE (Adicionado antes do fechamento do body) -->
+    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -480,28 +580,17 @@
         const db = getDatabase(app);
         let userUID = null;
 
-        // Fica de olho se o jogador está logado
         onAuthStateChanged(auth, (user) => {
             if (user) userUID = user.uid;
         });
 
-        // Função para somar vitórias
-        window.registrarVitoria = async function(nomeDoJogo) {
-            if (!userUID) return; 
-            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
-            const snapshot = await get(dbRef);
-            const atual = snapshot.val() || 0;
-            set(dbRef, atual + 1); 
-        };
-
-        // Função para salvar pontuação máxima (Recordes)
         window.registrarRecorde = async function(pontos, nomeDoJogo) {
             if (!userUID) return;
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const recordeAntigo = snapshot.val() || 0;
             if (pontos > recordeAntigo) {
-                set(dbRef, pontos); // Só salva se o ponto novo for maior que o antigo
+                set(dbRef, pontos); 
             }
         };
     </script>
