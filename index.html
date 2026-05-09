@@ -177,7 +177,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // [ COMANDO SET ADICIONADO ABAIXO ]
+        import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
@@ -241,6 +242,9 @@
                 const primeiroNome = user.displayName.split(" ")[0].toUpperCase();
                 playerNameDisplay.innerText = primeiroNome;
 
+                // SALVA O NOME DO USUÁRIO NO BANCO PARA APARECER NO PLACAR
+                set(ref(db, 'usuarios/' + user.uid + '/nome'), primeiroNome);
+
                 carregarEstatisticas(user.uid);
                 carregarPlacarGlobal(); 
             } else {
@@ -285,7 +289,7 @@
                     
                     if (score > 0) {
                         leaderboard.push({
-                            name: (userData.nome || "Anônimo").toUpperCase(),
+                            name: (userData.nome || "ANÔNIMO").toUpperCase(),
                             score: score
                         });
                     }
