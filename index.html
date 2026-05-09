@@ -98,10 +98,16 @@
         .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
         .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
         .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
-        .leaderboard-table .game-name { color: #fff; width: 50%; }
+        .leaderboard-table .game-name { color: #fff; width: 45%; }
         .leaderboard-table .top-player { color: #ff00ff; width: 30%; }
         .leaderboard-table .draw { color: #ffd700; font-style: italic; }
-        .leaderboard-table .score { color: #00ff41; text-align: right;}
+        .leaderboard-table .score { text-align: right;}
+        
+        /* Classes de cores dinâmicas */
+        .score-win { color: #00ff41; }   /* Verde (Recorde do usuário logado) */
+        .score-draw { color: #ffd700; }  /* Amarelo/Dourado (Empate) */
+        .score-lose { color: #ff4444; }  /* Vermelho (Recorde de outro jogador) */
+        .score-indiv { color: #00ffff; } /* Azul ciano padrão do menu */
 
         .modal-footer { display: flex; gap: 10px; margin-top: 15px; }
         .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: none; box-sizing: border-box; text-decoration: none; text-align: center; }
@@ -133,30 +139,27 @@
             </div>
             
             <div class="modal-tabs">
-                <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">ESTATÍSTICAS</button>
-                <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">PLACAR GLOBAL</button>
+                <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">INDIVIDUAL</button>
+                <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">GERAL</button>
             </div>
 
-            <!-- Aba de Estatísticas Individuais -->
             <div id="tab-stats" class="tab-content active">
                 <table class="leaderboard-table">
                     <thead><tr><th class="game-name">JOGO</th><th class="score">PONTUAÇÃO</th></tr></thead>
                     <tbody>
-                        <tr><td class="game-name">01. BUSCA ESTELAR</td><td class="score" id="stat-busca">0V</td></tr>
-                        <tr><td class="game-name">02. MINADO AMOROUS</td><td class="score" id="stat-minado">0V</td></tr>
-                        <tr><td class="game-name">03. GUARDIÃO DO AMOR</td><td class="score" id="stat-guardiao">0V</td></tr>
-                        <tr><td class="game-name">04. LOVE BIRD</td><td class="score" id="stat-bird" style="color: #00ffff;">0Pts</td></tr>
+                        <tr><td class="game-name">01. BUSCA ESTELAR</td><td class="score score-indiv" id="stat-busca">0V</td></tr>
+                        <tr><td class="game-name">02. MINADO AMOROUS</td><td class="score score-indiv" id="stat-minado">0V</td></tr>
+                        <tr><td class="game-name">03. GUARDIÃO DO AMOR</td><td class="score score-indiv" id="stat-guardiao">0V</td></tr>
+                        <tr><td class="game-name">04. LOVE BIRD</td><td class="score score-indiv" id="stat-bird">0Pts</td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Aba de Placar Global -->
             <div id="tab-leaderboard" class="tab-content">
                 <table class="leaderboard-table">
                     <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORDE</th></tr></thead>
                     <tbody id="leaderboard-body">
-                        <!-- Carregado dinamicamente -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
@@ -212,6 +215,8 @@
         const btnSound = document.getElementById('btn-sound');
         const audioTrack = document.getElementById('bgTrack');
         
+        let currentUserName = "";
+
         audioTrack.volume = 0.5;
 
         btnSound.addEventListener('click', () => {
@@ -246,10 +251,10 @@
                 profilePic.style.display = 'block';
                 profilePic.src = user.photoURL; 
                 modalProfilePic.src = user.photoURL;
-                const primeiroNome = user.displayName.split(" ")[0].toUpperCase();
-                playerNameTitle.innerText = primeiroNome;
+                currentUserName = user.displayName.split(" ")[0].toUpperCase();
+                playerNameTitle.innerText = currentUserName;
 
-                set(ref(db, 'usuarios/' + user.uid + '/nome'), primeiroNome);
+                set(ref(db, 'usuarios/' + user.uid + '/nome'), currentUserName);
 
                 carregarEstatisticas(user.uid);
                 carregarPlacarGlobal(); 
@@ -303,22 +308,33 @@
                         const user = allUsers[uid];
                         const scoreValue = (user.estatisticas && user.estatisticas[game.key]) || 0;
                         if (scoreValue > 0) {
-                            scoresFound.push({ name: user.nome || "Anônimo", score: scoreValue });
+                            scoresFound.push({ name: (user.nome || "Anônimo").toUpperCase(), score: scoreValue });
                         }
                     }
 
-                    let displayText = "---";
+                    let leaderName = "---";
                     let displayScore = 0;
                     let isDraw = false;
+                    let scoreClass = "score";
 
                     if (scoresFound.length > 0) {
                         scoresFound.sort((a, b) => b.score - a.score);
                         displayScore = scoresFound[0].score;
-                        displayText = scoresFound[0].name;
+                        leaderName = scoresFound[0].name;
 
+                        // Lógica Global de cores (Preparada para múltiplos jogadores)
                         if (scoresFound.length > 1 && scoresFound[1].score === displayScore) {
-                            displayText = "EMPATE!";
+                            leaderName = "EMPATE!";
                             isDraw = true;
+                            scoreClass += " score-draw";
+                        } else {
+                            // Se o recorde for EXATAMENTE do usuário que está olhando a tela
+                            if (leaderName === currentUserName) {
+                                scoreClass += " score-win"; 
+                            } else {
+                                // Se for de QUALQUER outra pessoa
+                                scoreClass += " score-lose"; 
+                            }
                         }
                     }
 
@@ -327,8 +343,8 @@
                     const row = `
                         <tr>
                             <td class="game-name">${game.label}</td>
-                            <td class="${nameClass}">${displayText}</td>
-                            <td class="score">${displayScore}${game.suffix}</td>
+                            <td class="${nameClass}">${leaderName}</td>
+                            <td class="${scoreClass}">${displayScore}${game.suffix}</td>
                         </tr>
                     `;
                     leaderboardBody.innerHTML += row;
