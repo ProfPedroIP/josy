@@ -31,7 +31,6 @@
 
         h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; position: relative; z-index: 5; }
 
-        /* Oculta o menu por padrão */
         #game-menu { display: none; }
 
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 300px; position: relative; z-index: 5; }
@@ -96,14 +95,12 @@
         .tab-content { display: none; min-height: 200px;}
         .tab-content.active { display: block; }
 
-        .stat-line { font-size: 9px; color: #fff; margin: 12px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 5px;}
-        .stat-value { color: #ff00ff; }
-        
         .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
         .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
         .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
-        .leaderboard-table .game-name { color: #fff; width: 45%; }
-        .leaderboard-table .top-player { color: #ff00ff; width: 35%; }
+        .leaderboard-table .game-name { color: #fff; width: 50%; }
+        .leaderboard-table .top-player { color: #ff00ff; width: 30%; }
+        .leaderboard-table .draw { color: #ffd700; font-style: italic; }
         .leaderboard-table .score { color: #00ff41; text-align: right;}
 
         .modal-footer { display: flex; gap: 10px; margin-top: 15px; }
@@ -140,17 +137,23 @@
                 <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">PLACAR GLOBAL</button>
             </div>
 
+            <!-- Aba de Estatísticas Individuais -->
             <div id="tab-stats" class="tab-content active">
-                <div class="stat-line"><span>01. BUSCA ESTELAR:</span> <span class="stat-value" id="stat-busca">0 Vitórias</span></div>
-                <div class="stat-line"><span>02. MINADO AMOROUS:</span> <span class="stat-value" id="stat-minado">0 Vitórias</span></div>
-                <div class="stat-line"><span>03. GUARDIÃO DO AMOR:</span> <span class="stat-value" id="stat-guardiao">0 Vitórias</span></div>
-                <div class="stat-line" style="border-color: #ff00ff; margin-top: 20px;"><span>04. LOVE BIRD MAX:</span> <span class="stat-value" id="stat-bird" style="color: #00ffff;">0 Pts</span></div>
+                <table class="leaderboard-table">
+                    <thead><tr><th class="game-name">JOGO</th><th class="score">PONTUAÇÃO</th></tr></thead>
+                    <tbody>
+                        <tr><td class="game-name">01. BUSCA ESTELAR</td><td class="score" id="stat-busca">0V</td></tr>
+                        <tr><td class="game-name">02. MINADO AMOROUS</td><td class="score" id="stat-minado">0V</td></tr>
+                        <tr><td class="game-name">03. GUARDIÃO DO AMOR</td><td class="score" id="stat-guardiao">0V</td></tr>
+                        <tr><td class="game-name">04. LOVE BIRD</td><td class="score" id="stat-bird" style="color: #00ffff;">0Pts</td></tr>
+                    </tbody>
+                </table>
             </div>
 
+            <!-- Aba de Placar Global -->
             <div id="tab-leaderboard" class="tab-content">
-                <p style="font-size: 9px; color: #ff00ff; text-align: center; margin-bottom: 10px;">QUADRO DE CAMPEÕES</p>
                 <table class="leaderboard-table">
-                    <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORD</th></tr></thead>
+                    <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORDE</th></tr></thead>
                     <tbody id="leaderboard-body">
                         <!-- Carregado dinamicamente -->
                     </tbody>
@@ -164,7 +167,6 @@
         </div>
     </div>
 
-    <!-- Div envolta para controle de visibilidade -->
     <div id="game-menu">
         <h1>🎮 JOSY ARCADE 🎮</h1>
         <div class="menu-container">
@@ -232,7 +234,7 @@
             if (confirm("Deseja realmente sair do Arcade?")) {
                 signOut(auth).then(() => {
                     statsModal.style.display = 'none'; 
-                    location.reload(); // Recarrega para esconder o menu
+                    location.reload(); 
                 }).catch((error) => { console.error("Erro ao sair:", error); });
             }
         });
@@ -240,7 +242,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 btnLogin.style.display = 'none';
-                gameMenu.style.display = 'block'; // MOSTRA OS JOGOS
+                gameMenu.style.display = 'block';
                 profilePic.style.display = 'block';
                 profilePic.src = user.photoURL; 
                 modalProfilePic.src = user.photoURL;
@@ -253,7 +255,7 @@
                 carregarPlacarGlobal(); 
             } else {
                 btnLogin.style.display = 'flex';
-                gameMenu.style.display = 'none'; // ESCONDE OS JOGOS
+                gameMenu.style.display = 'none';
                 profilePic.style.display = 'none';
             }
         });
@@ -265,10 +267,10 @@
             const statsRef = ref(db, 'usuarios/' + uid + '/estatisticas');
             onValue(statsRef, (snapshot) => {
                 const dados = snapshot.val() || {};
-                document.getElementById('stat-busca').innerText = (dados.busca_estelar || 0) + " Vitórias";
-                document.getElementById('stat-minado').innerText = (dados.minado_amorous || 0) + " Vitórias";
-                document.getElementById('stat-guardiao').innerText = (dados.guardiao_amor || 0) + " Vitórias";
-                document.getElementById('stat-bird').innerText = (dados.love_bird_max || 0) + " Pts";
+                document.getElementById('stat-busca').innerText = (dados.busca_estelar || 0) + "V";
+                document.getElementById('stat-minado').innerText = (dados.minado_amorous || 0) + "V";
+                document.getElementById('stat-guardiao').innerText = (dados.guardiao_amor || 0) + "V";
+                document.getElementById('stat-bird').innerText = (dados.love_bird_max || 0) + "Pts";
             });
         }
 
@@ -285,34 +287,48 @@
                     return;
                 }
 
-                // Jogos na ordem correta
                 const games = [
-                    { key: 'busca_estelar', label: 'BUSCA ESTELAR', suffix: 'V' },
-                    { key: 'minado_amorous', label: 'MINADO AMOROUS', suffix: 'V' },
-                    { key: 'guardiao_amor', label: 'GUARDIÃO DO AMOR', suffix: 'V' },
-                    { key: 'love_bird_max', label: 'LOVE BIRD', suffix: 'Pts' }
+                    { key: 'busca_estelar', label: '01. BUSCA ESTELAR', suffix: 'V' },
+                    { key: 'minado_amorous', label: '02. MINADO AMOROUS', suffix: 'V' },
+                    { key: 'guardiao_amor', label: '03. GUARDIÃO DO AMOR', suffix: 'V' },
+                    { key: 'love_bird_max', label: '04. LOVE BIRD', suffix: 'Pts' }
                 ];
 
                 leaderboardBody.innerHTML = '';
 
                 games.forEach(game => {
-                    let topPlayer = "---";
-                    let topScore = 0;
+                    let scoresFound = [];
 
                     for (const uid in allUsers) {
                         const user = allUsers[uid];
-                        const score = (user.estatisticas && user.estatisticas[game.key]) || 0;
-                        if (score > topScore) {
-                            topScore = score;
-                            topPlayer = user.nome || "Anônimo";
+                        const scoreValue = (user.estatisticas && user.estatisticas[game.key]) || 0;
+                        if (scoreValue > 0) {
+                            scoresFound.push({ name: user.nome || "Anônimo", score: scoreValue });
                         }
                     }
+
+                    let displayText = "---";
+                    let displayScore = 0;
+                    let isDraw = false;
+
+                    if (scoresFound.length > 0) {
+                        scoresFound.sort((a, b) => b.score - a.score);
+                        displayScore = scoresFound[0].score;
+                        displayText = scoresFound[0].name;
+
+                        if (scoresFound.length > 1 && scoresFound[1].score === displayScore) {
+                            displayText = "EMPATE!";
+                            isDraw = true;
+                        }
+                    }
+
+                    const nameClass = isDraw ? "top-player draw" : "top-player";
 
                     const row = `
                         <tr>
                             <td class="game-name">${game.label}</td>
-                            <td class="top-player">${topPlayer}</td>
-                            <td class="score">${topScore}${game.suffix}</td>
+                            <td class="${nameClass}">${displayText}</td>
+                            <td class="score">${displayScore}${game.suffix}</td>
                         </tr>
                     `;
                     leaderboardBody.innerHTML += row;
