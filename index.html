@@ -73,10 +73,10 @@
         .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .btn-sound { position: absolute; top: 20px; left: 20px; z-index: 50; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
+        .btn-sound { position: absolute; top: 20px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
 
-        #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 20px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; }
+        #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 20px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
 
         /* --- CHAT --- */
         #chat-trigger { position: absolute; bottom: 20px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
@@ -95,7 +95,7 @@
         #chat-send { background: #00ff41; border: none; color: #000; padding: 10px; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; }
 
         /* --- STATS MODAL --- */
-        #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .stats-box { background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; flex: 1; text-align: center;}
@@ -114,18 +114,21 @@
     <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
 
     <div id="app-wrapper">
+        <!-- SOM GLOBAL: Visível em todos os estados -->
+        <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
         
+        <!-- TELA DE LOGIN -->
         <div id="login-screen">
             <img src="assets/images/icon-512.png" class="login-logo" alt="Logo">
             <div class="login-title">JOSY ARCADE</div>
             <button id="btn-login-google" class="btn-google-login">
                 <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                INSERT COIN
+                LOGIN FOR INSERT COIN
             </button>
         </div>
 
+        <!-- CONTEÚDO LOGADO -->
         <div id="game-content">
-            <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
             <img id="profile-pic" src="" alt="Perfil" title="Menu de Perfil">
 
             <div id="game-menu">
@@ -143,6 +146,7 @@
             </button>
         </div>
 
+        <!-- MODAL CHAT -->
         <div id="chat-modal">
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
                 <button onclick="window.toggleChat(false)" style="background: #111; border: 2px solid #ff0000; color: #ff0000; font-family: 'Press Start 2P'; font-size: 10px; width: 30px; height: 30px; cursor: pointer;">X</button>
@@ -154,6 +158,7 @@
             </div>
         </div>
 
+        <!-- MODAL STATS -->
         <div id="stats-modal">
             <div class="stats-box">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
@@ -215,11 +220,11 @@
         let currentUserName = "";
         let chatAberto = false;
 
-        // AUTH LOGIC
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('game-content').style.display = 'flex';
+                document.getElementById('profile-pic').style.display = 'block';
                 document.getElementById('profile-pic').src = user.photoURL;
                 currentUserUID = user.uid;
                 currentUserName = user.displayName.split(" ")[0].toUpperCase();
@@ -235,10 +240,10 @@
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('game-content').style.display = 'none';
+                document.getElementById('profile-pic').style.display = 'none';
             }
         });
 
-        // CHAT LISTENER
         function iniciarEscutaChat() {
             onValue(ref(db, 'chat_global'), (snapshot) => {
                 const msgs = snapshot.val();
@@ -255,7 +260,6 @@
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const data = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "";
                         
-                        // CHECK NEON APENAS SE LIDO E SE FOR MINHA
                         let checkHtml = "";
                         if (isMe && m.lida === true) {
                             checkHtml = `<span class="msg-status-neon">✓</span>`;
@@ -276,7 +280,6 @@
             });
         }
 
-        // GLOBAL FUNCTIONS
         window.toggleChat = async (abrir) => {
             chatAberto = abrir;
             document.getElementById('chat-modal').style.display = abrir ? 'flex' : 'none';
@@ -311,7 +314,6 @@
             input.value = "";
         }
 
-        // DOM EVENTS
         document.getElementById('btn-login-google').addEventListener('click', () => signInWithPopup(auth, provider));
         document.getElementById('btn-logout').addEventListener('click', () => confirm("SAIR?") && signOut(auth).then(() => location.reload()));
         document.getElementById('chat-send').addEventListener('click', enviarMensagem);
