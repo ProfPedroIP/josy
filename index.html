@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log("Service Worker registrado!"));
-      }
-    </script>
     <title>Arcade Josy & Pedro</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -18,53 +12,21 @@
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             text-align: center; display: flex; flex-direction: column; align-items: center; 
             justify-content: center; min-height: 100vh; margin: 0; padding: 20px;
-            overflow: hidden; /* Evita barras de rolagem por causa das estrelas */
-            position: relative;
+            overflow: hidden; position: relative;
         }
 
-        /* EFEITO DE ESTRELAS PIXELADAS */
         .stars {
-            position: fixed;
-            top: 0; left: 0; width: 2px; height: 2px;
-            background: transparent;
+            position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
-            animation: spaceMove 100s linear infinite;
-            z-index: -1;
+            animation: spaceMove 100s linear infinite; z-index: -1;
         }
+        @keyframes spaceMove { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
 
-        .stars::after {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 1px; height: 1px;
-            background: transparent;
-            box-shadow: 5vw 15vh #aaa, 25vw 35vh #aaa, 50vw 5vh #aaa, 80vw 25vh #aaa, 15vw 75vh #aaa, 40vw 95vh #aaa, 70vw 45vh #aaa, 95vw 10vh #aaa;
-            z-index: -1;
-        }
-
-        @keyframes spaceMove {
-            from { transform: translateY(0); }
-            to { transform: translateY(-100vh); }
-        }
-
-        /* Efeito CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
-        }
-
-        #overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 100;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; box-sizing: border-box;
-        }
-
-        .popup {
-            border: 4px solid #ff00ff; padding: 30px; background: #111;
-            box-shadow: 0 0 20px #ff00ff; max-width: 400px;
-            position: relative; z-index: 101;
         }
 
         h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; position: relative; z-index: 5; }
@@ -75,84 +37,171 @@
             padding: 20px; font-family: 'Press Start 2P'; font-size: 12px;
             background: #111; color: #00ffff; border: 4px solid #4a90e2;
             cursor: pointer; text-decoration: none; transition: 0.3s;
-            box-shadow: 6px 6px 0px #4b0082;
-            position: relative;
+            box-shadow: 6px 6px 0px #4b0082; position: relative;
         }
-
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
 
-        /* Estilo Específico do Novo Jogo */
-        .arcade-btn-novo {
-            border-color: #ff00ff;
-            color: #ff00ff;
-        }
-
+        .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
         .badge-novo {
-            position: absolute;
-            top: -12px;
-            right: -15px;
-            background: #ff00ff;
-            color: #fff;
-            font-size: 8px;
-            padding: 6px 8px;
-            border: 2px solid #fff;
-            box-shadow: 2px 2px 0px #4b0082;
-            animation: blink 1s infinite;
-            transform: rotate(5deg);
+            position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff;
+            font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082;
+            animation: blink 1s infinite; transform: rotate(5deg);
         }
-
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .footer { margin-top: 50px; font-size: 10px; color: #444; position: relative; z-index: 5; }
+        /* --- NOVOS ESTILOS DO SISTEMA DE LOGIN E PERFIL --- */
+        #auth-container {
+            position: absolute; top: 20px; right: 20px; z-index: 50;
+        }
 
-        .start-btn {
-            margin-top: 20px; padding: 15px; background: #00ff41; color: #000;
-            border: none; font-family: 'Press Start 2P'; cursor: pointer;
-            box-shadow: 4px 4px 0px #008f25;
+        .btn-login {
+            background: #fff; color: #000; border: 3px solid #4a90e2; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; display: flex;
+            align-items: center; gap: 8px; box-shadow: 3px 3px 0px #4a90e2;
+        }
+
+        #profile-pic {
+            width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff;
+            cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
+        }
+
+        /* --- MODAL DE ESTATÍSTICAS --- */
+        #stats-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 200; display: none;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+
+        .stats-box {
+            background: #111; border: 4px solid #00ffff; padding: 30px; width: 85%; max-width: 350px;
+            box-shadow: 0 0 20px #00ffff; text-align: left; position: relative;
+        }
+
+        .stats-title { color: #00ffff; font-size: 14px; text-align: center; margin-bottom: 20px; }
+        .stat-line { font-size: 10px; color: #fff; margin: 15px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 5px;}
+        .stat-value { color: #ff00ff; }
+        
+        .btn-close {
+            background: #ff0000; color: #fff; border: 2px solid #fff; padding: 10px; width: 100%;
+            font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Camada de Estrelas -->
     <div class="stars"></div>
 
-    <!-- Popup Inicial -->
-    <div id="overlay">
-        <div class="popup">
-            <p style="line-height: 1.6; font-size: 12px;">BEM-VINDA AO ARQUIVO DE JOGOS ARCADE DO PEDRO E DA JOSY!</p>
-            <button class="start-btn" onclick="startArcade()">INICIAR</button>
+    <!-- BOTÃO DE LOGIN / FOTO DO PERFIL -->
+    <div id="auth-container">
+        <button id="btn-login" class="btn-login">
+            <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            ENTRAR
+        </button>
+        <img id="profile-pic" src="" alt="Perfil" title="Ver Estatísticas">
+    </div>
+
+    <!-- MODAL DE ESTATÍSTICAS -->
+    <div id="stats-modal">
+        <div class="stats-box">
+            <h2 class="stats-title">ESTATÍSTICAS DE <span id="player-name">JOGADOR</span></h2>
+            
+            <div class="stat-line"><span>01. BUSCA ESTELAR:</span> <span class="stat-value" id="stat-busca">0 Vitórias</span></div>
+            <div class="stat-line"><span>02. MINADO AMOROUS:</span> <span class="stat-value" id="stat-minado">0 Vitórias</span></div>
+            <div class="stat-line"><span>03. GUARDIÃO DO AMOR:</span> <span class="stat-value" id="stat-guardiao">0 Vitórias</span></div>
+            <div class="stat-line" style="border-color: #ff00ff; margin-top: 25px;"><span>04. LOVE BIRD MAX:</span> <span class="stat-value" id="stat-bird" style="color: #00ffff;">0 Pts</span></div>
+
+            <button class="btn-close" id="btn-close-stats">FECHAR</button>
         </div>
     </div>
 
-    <!-- Áudio de Fundo -->
-    <audio id="bgTrack" loop>
-        <source src="assets/sounds/track.wav" type="audio/wav">
-    </audio>
-
     <h1>🎮 JOSY ARCADE 🎮</h1>
-    <p style="font-size: 12px; margin-bottom: 30px;">SELECIONE UM JOGO:</p>
+    <p style="font-size: 10px; margin-bottom: 30px; color: #fff;">Faça login para salvar seus recordes!</p>
 
     <div class="menu-container">
         <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
         <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
         <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
-        
-        <!-- Novo Jogo Destacado -->
         <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
             04. LOVE BIRD
             <span class="badge-novo">NOVO JOGO!</span>
         </a>
     </div>
 
-    <div class="footer">MADE WITH ❤️ BY PEDRO</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    <script>
-        function startArcade() {
-            const audio = document.getElementById('bgTrack');
-            audio.volume = 0.5; // Ajustando volume do menu para 50%
-            audio.play().catch(e => console.log("Erro ao tocar áudio:", e));
-            document.getElementById('overlay').style.display = 'none';
+        // Chaves inseridas exatamente como você forneceu
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
+            authDomain: "josyarcade.firebaseapp.com",
+            databaseURL: "https://josyarcade-default-rtdb.firebaseio.com",
+            projectId: "josyarcade",
+            storageBucket: "josyarcade.firebasestorage.app",
+            messagingSenderId: "960445216740",
+            appId: "1:960445216740:web:d913dc274acdb1ffad39f1",
+            measurementId: "G-M8B8C89YZR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        const btnLogin = document.getElementById('btn-login');
+        const profilePic = document.getElementById('profile-pic');
+        const statsModal = document.getElementById('stats-modal');
+        const btnCloseStats = document.getElementById('btn-close-stats');
+        const playerNameDisplay = document.getElementById('player-name');
+
+        btnLogin.addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("Erro no login:", error);
+                alert("Erro ao tentar fazer login!");
+            });
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                btnLogin.style.display = 'none';
+                profilePic.style.display = 'block';
+                profilePic.src = user.photoURL; 
+                
+                const primeiroNome = user.displayName.split(" ")[0].toUpperCase();
+                playerNameDisplay.innerText = primeiroNome;
+
+                carregarEstatisticas(user.uid);
+            } else {
+                btnLogin.style.display = 'flex';
+                profilePic.style.display = 'none';
+            }
+        });
+
+        profilePic.addEventListener('click', () => {
+            statsModal.style.display = 'flex';
+        });
+        
+        btnCloseStats.addEventListener('click', () => {
+            statsModal.style.display = 'none';
+        });
+
+        function carregarEstatisticas(uid) {
+            const statsRef = ref(db, 'usuarios/' + uid + '/estatisticas');
+            
+            onValue(statsRef, (snapshot) => {
+                const dados = snapshot.val() || {
+                    busca_estelar: 0,
+                    minado_amorous: 0,
+                    guardiao_amor: 0,
+                    love_bird_max: 0
+                };
+
+                document.getElementById('stat-busca').innerText = (dados.busca_estelar || 0) + " Vitórias";
+                document.getElementById('stat-minado').innerText = (dados.minado_amorous || 0) + " Vitórias";
+                document.getElementById('stat-guardiao').innerText = (dados.guardiao_amor || 0) + " Vitórias";
+                document.getElementById('stat-bird').innerText = (dados.love_bird_max || 0) + " Pts";
+            });
         }
     </script>
 </body>
