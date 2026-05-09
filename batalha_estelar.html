@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
@@ -17,28 +17,19 @@
     <style>
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            text-align: center; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; 
-            overflow: hidden; /* Mantém as estrelas dentro da tela */
-            position: relative;
+            margin: 0; display: flex; align-items: center; justify-content: center; 
+            min-height: 100dvh; overflow: hidden; position: relative;
         }
 
-        /* FUNDO DE ESTRELAS PIXELADAS */
+        /* FUNDO DE ESTRELAS PIXELADAS FICA FORA DO WRAPPER (TELA TODA) */
         .stars {
-            position: fixed;
-            top: 0; left: 0; width: 2px; height: 2px;
-            background: transparent;
+            position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
-            animation: spaceMove 100s linear infinite;
-            z-index: -1;
+            animation: spaceMove 100s linear infinite; z-index: -1;
         }
 
-        @keyframes spaceMove {
-            from { transform: translateY(0); }
-            to { transform: translateY(-100vh); }
-        }
+        @keyframes spaceMove { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
 
-        /* Efeito CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -46,31 +37,72 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
+        /* --- CÁPSULA RESPONSIVA (PADRÃO PARA TODOS OS JOGOS) --- */
+        #app-wrapper {
+            position: relative; width: 100%; max-width: 450px; height: 100dvh;   
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; z-index: 20; padding: 20px; box-sizing: border-box;
+        }
+
+        @media (min-width: 451px) {
+            #app-wrapper {
+                height: 90dvh; border: 2px solid #003300; border-radius: 15px;
+                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
+            }
+        }
+
+        /* --- CONTROLES SUPERIORES (DENTRO DA CÁPSULA) --- */
+        .btn-sound {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 50;
+            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
+            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
+        }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+
+        .btn-close {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 50;
+            background: #111; color: #ff0000; border: 3px solid #ff0000; 
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
+            box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
+        }
+        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
+
+        /* --- OVERLAY DE PREPARAÇÃO --- */
         #overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 20px; box-sizing: border-box;
         }
 
-        .popup { border: 4px solid #ff00ff; padding: 30px; background: #111; box-shadow: 0 0 20px #ff00ff; max-width: 400px; position: relative; z-index: 101; }
-
+        .popup { border: 4px solid #ff00ff; padding: 30px; background: #111; box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center; }
         .start-btn {
             margin-top: 20px; padding: 15px; background: #00ff41; color: #000;
-            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25;
+            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25; font-size: 10px;
         }
 
-        h1 { font-size: 20px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 20px 0; z-index: 5; }
-        p { font-size: 12px; line-height: 1.4; color: #00ffff; margin-bottom: 15px; z-index: 5; }
+        /* --- ESTÉTICA DOS TÍTULOS E PLACAR --- */
+        .game-header { margin-top: 40px; margin-bottom: 20px; text-align: center; width: 100%; }
+        h1 { font-size: 16px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 0 0 10px 0; }
+        .subtitle { font-size: 10px; color: #00ffff; }
 
+        .score-board {
+            background: #111; border: 3px solid #ffd700; padding: 10px 20px;
+            font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
+            margin-bottom: 20px; text-align: center;
+        }
+
+        /* --- GRID DO JOGO --- */
         .grid { 
-            display: grid; grid-template-columns: repeat(5, 68px); gap: 8px; 
+            display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; 
             background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2; margin-bottom: 15px;
             z-index: 5;
         }
 
         .cell { 
-            width: 68px; height: 68px; background: #000; border: 2px solid #333; 
+            width: 60px; height: 60px; background: #000; border: 2px solid #333; 
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
             font-size: 24px; transition: 0.2s; color: #ffd700; -webkit-tap-highlight-color: transparent;
         }
@@ -80,25 +112,33 @@
 
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
+        /* --- MENSAGENS DE FIM DE JOGO (PADRONIZADAS) --- */
         #message { 
-            margin-top: 15px; display: none; padding: 20px; border: 4px double #ff4d6d; 
-            background: rgba(255, 77, 109, 0.1); width: 90%; max-width: 400px; animation: fadeIn 1s; z-index: 20;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.95); 
+            width: 85%; max-width: 350px; animation: fadeIn 0.5s; z-index: 60; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 77, 109, 0.5);
         }
 
+        .msg-title { color: #ff4d6d; font-size: 16px; margin-bottom: 15px; }
+        .msg-white { color: #ffffff; font-size: 10px; line-height: 1.6; margin-bottom: 10px; }
+        .msg-blue  { color: #00ffff; font-size: 10px; line-height: 1.6; margin-bottom: 15px; }
+        .msg-red   { color: #ff0000; font-size: 14px; margin-bottom: 20px; text-shadow: 2px 2px #550000; }
+
         .btn {
-            margin-top: 15px; padding: 15px 20px; font-family: 'Press Start 2P', cursive;
-            font-size: 12px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none;
+            padding: 15px 20px; font-family: 'Press Start 2P', cursive;
+            font-size: 10px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center;
         }
 
         .btn-restart { background-color: #ff00ff; border: 4px solid #4b0082; box-shadow: 4px 4px 0px #4b0082; }
-        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; margin-top: 10px; }
+        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         @media (max-width: 380px) {
-            .grid { grid-template-columns: repeat(5, 58px); gap: 5px; padding: 8px;}
-            .cell { width: 58px; height: 58px; font-size: 20px; }
-            h1 { font-size: 16px; }
+            .grid { grid-template-columns: repeat(5, 50px); gap: 5px; padding: 8px;}
+            .cell { width: 50px; height: 50px; font-size: 20px; }
+            h1 { font-size: 14px; }
         }
     </style>
 </head>
@@ -106,42 +146,76 @@
 
     <div class="stars"></div>
 
-    <div id="overlay">
-        <div class="popup">
-            <p style="line-height: 1.6; font-size: 12px;">PREPARANDO MOTORES PARA A BUSCA ESTELAR...</p>
-            <button class="start-btn" onclick="iniciarMissao()">INICIAR MISSÃO</button>
+    <div id="app-wrapper">
+
+        <!-- OVERLAY DE INÍCIO -->
+        <div id="overlay">
+            <div class="popup">
+                <p style="line-height: 1.6; font-size: 10px; color: #00ff41;">PREPARANDO MOTORES PARA A BUSCA ESTELAR...</p>
+                <button class="start-btn" onclick="iniciarMissao()">INICIAR MISSÃO</button>
+            </div>
         </div>
-    </div>
 
-    <audio id="bgTrack" loop><source src="assets/sounds/batalha_estelar.mp3" type="audio/mpeg"></audio>
-    <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
-    <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
+        <!-- CONTROLES -->
+        <button id="btn-sound" class="btn-sound">🔇</button>
+        <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
 
-    <h1>> PLAYER 1: JOSY</h1>
-    <p>MISSÃO: ENCONTRE OS 3 CORAÇÕES</p>
-    
-    <div class="grid" id="grid"></div>
-    
-    <div id="message">
-        <h2 style="color: #ff4d6d; font-size: 18px;">LEVEL CLEAR! 🏆</h2>
-        <p style="color: #fff; font-size: 14px;">Assim como você encontrou os corações...</p>
-        <p style="color: #00ffff; font-size: 14px;">Sorte a minha ter te encontrado entre 8 bilhões de pessoas.</p>
-        <p style="font-size: 16px;"><strong>PEDRO AMA JOSY!</strong></p>
+        <audio id="bgTrack" loop><source src="assets/sounds/batalha_estelar.mp3" type="audio/mpeg"></audio>
+        <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
+        <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
+
+        <!-- HEADER PADRONIZADO -->
+        <div class="game-header">
+            <h1>> 01. BUSCA ESTELAR</h1>
+            <div class="subtitle">PLAYER 1: JOSY</div>
+        </div>
+
+        <!-- PLACAR FLUTUANTE PADRÃO -->
+        <div class="score-board" id="score-display">
+            CORAÇÕES: 0 / 3
+        </div>
         
-        <button class="btn btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
-        <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+        <div class="grid" id="grid"></div>
+        
+        <!-- MENSAGEM FINAL PADRONIZADA -->
+        <div id="message">
+            <h2 class="msg-title">LEVEL CLEAR! 🏆</h2>
+            <p class="msg-white">Assim como você encontrou os corações...</p>
+            <p class="msg-blue">Sorte a minha ter te encontrado entre 8 bilhões de pessoas.</p>
+            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
+            
+            <button class="btn btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
+            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+        </div>
+
     </div>
 
     <script>
         const grid = document.getElementById('grid');
         const messageDiv = document.getElementById('message');
         const track = document.getElementById('bgTrack');
+        const scoreDisplay = document.getElementById('score-display');
+        const btnSound = document.getElementById('btn-sound');
+        
         let targets = [];
         let found = 0;
 
+        // Lógica do Som
+        track.volume = 0.5;
+        btnSound.addEventListener('click', () => {
+            if (track.paused) {
+                track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
+            } else {
+                track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on");
+            }
+        });
+
         function iniciarMissao() {
-            track.volume = 0.5;
-            track.play();
+            // Se o botão não estiver marcado como 'on', deixamos mutado por padrão até o usuário querer ligar.
+            // Para forçar a tocar:
+            track.play(); 
+            btnSound.innerHTML = "🔊"; 
+            btnSound.classList.add("on");
             document.getElementById('overlay').style.display = 'none';
         }
 
@@ -160,8 +234,9 @@
             messageDiv.style.display = 'none';
             found = 0;
             targets = [];
+            scoreDisplay.innerText = "CORAÇÕES: 0 / 3";
             
-            if(track.paused) track.play();
+            if(btnSound.classList.contains("on")) track.play();
 
             while(targets.length < 3){
                 let r = Math.floor(Math.random() * 25);
@@ -171,16 +246,16 @@
             for (let i = 0; i < 25; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
-                cell.classList.add('initial');
                 cell.innerHTML = "★"; 
                 
                 cell.onclick = () => {
                     playClick();
-                    cell.classList.remove('initial');
                     if (targets.includes(i)) {
                         cell.innerText = '❤️';
                         cell.classList.add('hit');
                         found++;
+                        scoreDisplay.innerText = `CORAÇÕES: ${found} / 3`;
+                        
                         if (found === 3) {
                             track.pause();
                             playWin();
@@ -189,7 +264,6 @@
                             if(window.registrarVitoria) window.registrarVitoria('busca_estelar');
 
                             messageDiv.style.display = 'block';
-                            setTimeout(() => { messageDiv.scrollIntoView({ behavior: 'smooth' }); }, 300);
                         }
                     } else {
                         cell.innerText = 'X'; 
@@ -203,7 +277,7 @@
         startGame();
     </script>
 
-    <!-- MOTOR DO FIREBASE (Sempre antes do fechamento do body) -->
+    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -224,28 +298,25 @@
         const db = getDatabase(app);
         let userUID = null;
 
-        // Fica de olho se o jogador está logado
         onAuthStateChanged(auth, (user) => {
             if (user) userUID = user.uid;
         });
 
-        // Função para somar vitórias
         window.registrarVitoria = async function(nomeDoJogo) {
-            if (!userUID) return; // Se não fez login, não salva
+            if (!userUID) return; 
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const atual = snapshot.val() || 0;
-            set(dbRef, atual + 1); // Soma +1 vitória
+            set(dbRef, atual + 1); 
         };
 
-        // Função para salvar pontuação máxima (Recordes)
         window.registrarRecorde = async function(pontos, nomeDoJogo) {
             if (!userUID) return;
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const recordeAntigo = snapshot.val() || 0;
             if (pontos > recordeAntigo) {
-                set(dbRef, pontos); // Só salva se o ponto novo for maior que o antigo
+                set(dbRef, pontos); 
             }
         };
     </script>
