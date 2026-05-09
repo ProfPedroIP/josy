@@ -70,8 +70,6 @@
             box-shadow: 6px 6px 0px #4b0082; position: relative; display: block;
         }
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
-        .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .btn-sound { position: absolute; top: 20px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
@@ -103,9 +101,13 @@
         .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
         .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
         .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
+        
         .score-win { color: #00ff41; } .score-indiv { color: #00ffff; }
-        .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: none; box-sizing: border-box; text-decoration: none; text-align: center; }
-        .btn-close-blue { background: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
+        
+        /* BOTÕES DO MODAL */
+        .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: 4px solid; box-sizing: border-box; text-decoration: none; text-align: center; }
+        .btn-close-blue { background: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
+        .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: #550000; box-shadow: 4px 4px 0px #550000; color: #fff; }
     </style>
 </head>
 <body>
@@ -114,10 +116,8 @@
     <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
 
     <div id="app-wrapper">
-        <!-- SOM GLOBAL: Visível em todos os estados -->
         <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
         
-        <!-- TELA DE LOGIN -->
         <div id="login-screen">
             <img src="assets/images/icon-512.png" class="login-logo" alt="Logo">
             <div class="login-title">JOSY ARCADE</div>
@@ -127,9 +127,8 @@
             </button>
         </div>
 
-        <!-- CONTEÚDO LOGADO -->
         <div id="game-content">
-            <img id="profile-pic" src="" alt="Perfil" title="Menu de Perfil">
+            <img id="profile-pic" src="" alt="Perfil">
 
             <div id="game-menu">
                 <h1>🎮 JOSY ARCADE 🎮</h1>
@@ -146,7 +145,6 @@
             </button>
         </div>
 
-        <!-- MODAL CHAT -->
         <div id="chat-modal">
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
                 <button onclick="window.toggleChat(false)" style="background: #111; border: 2px solid #ff0000; color: #ff0000; font-family: 'Press Start 2P'; font-size: 10px; width: 30px; height: 30px; cursor: pointer;">X</button>
@@ -158,7 +156,6 @@
             </div>
         </div>
 
-        <!-- MODAL STATS -->
         <div id="stats-modal">
             <div class="stats-box">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
@@ -166,8 +163,8 @@
                     <h2 id="player-name-title" style="color:#fff; font-size:14px; margin:0;">JOGADOR</h2>
                 </div>
                 <div class="modal-tabs">
-                    <button class="tab-btn active" onclick="window.openTab(event, 'tab-stats')">STATS</button>
-                    <button class="tab-btn" onclick="window.openTab(event, 'tab-leaderboard')">RANK</button>
+                    <button class="tab-btn active" onclick="window.openTab(event, 'tab-stats')">INDIVIDUAL</button>
+                    <button class="tab-btn" onclick="window.openTab(event, 'tab-leaderboard')">GERAL</button>
                 </div>
                 <div id="tab-stats" class="tab-content active" style="display:block">
                     <table class="leaderboard-table">
@@ -182,13 +179,13 @@
                 </div>
                 <div id="tab-leaderboard" class="tab-content" style="display:none">
                     <table class="leaderboard-table">
-                        <thead><tr><th>JOGO</th><th>LÍDER</th><th style="text-align:right">BEST</th></tr></thead>
+                        <thead><tr><th>JOGO</th><th>LÍDER</th><th style="text-align:right">MÁXIMO</th></tr></thead>
                         <tbody id="leaderboard-body"></tbody>
                     </table>
                 </div>
                 <div style="display:flex; gap:10px; margin-top:15px;">
                     <button class="btn-modal-action btn-close-blue" onclick="document.getElementById('stats-modal').style.display='none'">VOLTAR</button>
-                    <button id="btn-logout" style="background:rgba(255,0,0,0.2); border:2px solid red; color:#fff; font-family:'Press Start 2P'; font-size:8px; cursor:pointer;">SAIR</button>
+                    <button id="btn-logout" class="btn-modal-action btn-logout-red">SAIR</button>
                 </div>
             </div>
         </div>
@@ -254,16 +251,11 @@
                 if (msgs) {
                     Object.entries(msgs).forEach(([id, m]) => {
                         if (m.uid !== currentUserUID && m.lida === false) temMensagemNovaParaMim = true;
-
                         const div = document.createElement('div');
                         const isMe = m.uid === currentUserUID;
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const data = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "";
-                        
-                        let checkHtml = "";
-                        if (isMe && m.lida === true) {
-                            checkHtml = `<span class="msg-status-neon">✓</span>`;
-                        }
+                        let checkHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
 
                         div.innerHTML = `
                             <span style="font-size:6px; opacity:0.7; display:block; margin-bottom:4px;">${m.nome}</span>
@@ -341,7 +333,12 @@
             const body = document.getElementById('leaderboard-body');
             const snap = await get(ref(db, 'usuarios'));
             const all = snap.val(); if(!all) return;
-            const games = [{k:'busca_estelar', l:'BUSCA', s:'V'}, {k:'minado_amorous', l:'MINADO', s:'V'}, {k:'guardiao_amor', l:'GUARDIÃO', s:'V'}, {k:'love_bird_max', l:'BIRD', s:'Pts'}];
+            const games = [
+                {k:'busca_estelar', l:'01. BUSCA ESTELAR', s:'V'}, 
+                {k:'minado_amorous', l:'02. MINADO AMOROUS', s:'V'}, 
+                {k:'guardiao_amor', l:'03. GUARDIÃO DO AMOR', s:'V'}, 
+                {k:'love_bird_max', l:'04. LOVE BIRD', s:'Pts'}
+            ];
             body.innerHTML = "";
             games.forEach(g => {
                 let scores = Object.values(all).map(u => ({n: u.nome || "---", s: (u.estatisticas && u.estatisticas[g.k]) || 0})).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
