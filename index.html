@@ -11,10 +11,9 @@
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             margin: 0; display: flex; align-items: center; justify-content: center; 
-            min-height: 100dvh; overflow: hidden; position: relative;
+            min-height: 100dvh; overflow: hidden;
         }
 
-        /* FUNDO */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
@@ -42,48 +41,127 @@
             }
         }
 
-        /* TELA LOGIN */
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
-        .arcade-logo { width: 150px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 10px #ff00ff); animation: pulse 2s infinite ease-in-out; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .arcade-title { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082, 0 0 15px #ff00ff; margin-bottom: 50px; }
-        .btn-google-login { background: #111; color: #fff; border: 4px solid #00ffff; padding: 25px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 6px 6px 0px #003366; }
-        .btn-google-login:hover { background: #00ffff; color: #000; transform: translate(-2px, -2px); }
+        h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; text-align: center;}
 
-        /* MENU */
-        #game-menu { display: none; width: 100%; text-align: center; }
+        #game-menu { display: none; width: 100%; }
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
-        .arcade-btn { padding: 20px; font-family: 'Press Start 2P'; font-size: 10px; text-align: center; background: #111; color: #00ffff; border: 4px solid #4a90e2; cursor: pointer; text-decoration: none; box-shadow: 6px 6px 0px #4b0082; display: block; }
+
+        .arcade-btn {
+            padding: 20px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center;
+            background: #111; color: #00ffff; border: 4px solid #4a90e2;
+            cursor: pointer; text-decoration: none; transition: 0.3s;
+            box-shadow: 6px 6px 0px #4b0082; position: relative; display: block;
+        }
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
 
-        /* CHAT */
-        #chat-trigger { position: absolute; bottom: 20px; left: 20px; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 10px; box-shadow: 4px 4px 0px #008f25; display: none; }
-        .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
-        #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
-        #chat-messages { flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
-        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; }
+        .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
+        .badge-novo {
+            position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff;
+            font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082;
+            animation: blink 1s infinite; transform: rotate(5deg);
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .btn-sound {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 50;
+            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
+            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
+        }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+
+        #auth-container { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 50; }
+        .btn-login {
+            background: #fff; color: #000; border: 3px solid #4a90e2; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; display: flex;
+            align-items: center; gap: 8px; box-shadow: 3px 3px 0px #4a90e2;
+        }
+
+        #profile-pic {
+            width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff;
+            cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
+        }
+
+        #chat-trigger {
+            position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 20px; z-index: 100;
+            background: #111; border: 3px solid #00ff41; color: #00ff41;
+            padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px;
+            box-shadow: 4px 4px 0px #008f25; display: none; 
+        }
+
+        .notification-dot {
+            position: absolute; top: -5px; right: -5px; width: 12px; height: 12px;
+            background: #ff0000; border: 2px solid #fff;
+            display: none; animation: blink 0.5s infinite;
+        }
+
+        #chat-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 0, 0.98); z-index: 300; display: none;
+            flex-direction: column; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px; box-sizing: border-box;
+        }
+
+        #chat-messages {
+            flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px;
+            margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;
+            background: rgba(0, 20, 0, 0.5);
+        }
+
+        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; position: relative;}
         .msg-me { align-self: flex-end; background: #003300; border: 1px solid #00ff41; color: #00ff41; text-align: right; }
         .msg-other { align-self: flex-start; background: #111; border: 1px solid #ff00ff; color: #ff00ff; text-align: left; }
-        .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 5px; }
-        .msg-status-neon { color: #00ffff; text-shadow: 0 0 5px #00ffff; font-weight: bold; font-size: 10px; }
-        #chat-input-container { display: flex; gap: 10px; }
-        #chat-input { flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41; padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; }
-        #chat-send { background: #00ff41; border: none; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; }
+        .msg-info { font-size: 6px; display: block; margin-bottom: 5px; opacity: 0.8; }
+        
+        /* FOOTER DA MENSAGEM (HORA + CHECK) */
+        .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 5px; }
+        .msg-time { font-size: 5px; color: #888; }
+        .msg-status { font-size: 8px; color: #888; }
+        .msg-status.read { color: #00ffff; }
 
-        /* PERFIL E STATS */
-        #profile-pic { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; }
-        #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; }
-        .stats-box { background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #ff00ff; }
-        .tab-btn { background: #222; color: #4a90e2; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 10px; cursor: pointer; flex: 1; }
+        #chat-input-container { display: flex; gap: 10px; }
+        #chat-input {
+            flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41;
+            padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; width: 100%; box-sizing: border-box;
+        }
+        #chat-send { background: #00ff41; border: none; color: #000; padding: 10px; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; }
+
+        #stats-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 200; display: none;
+            align-items: center; justify-content: center; flex-direction: column;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+        }
+
+        .stats-box {
+            background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px;
+            box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative;
+            display: flex; flex-direction: column; gap: 15px; box-sizing: border-box;
+        }
+
+        .modal-header-profile { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 5px; }
+        #modal-profile-pic { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #00ffff; box-shadow: 0 0 10px #00ffff; object-fit: cover; }
+        .profile-name-title { color: #fff; font-size: 14px; text-align: center; margin: 0;}
+
+        .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; flex: 1; text-align: center;}
         .tab-btn.active { background: #00ffff; color: #000; border-color: #fff; }
-        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 15px; }
-        .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff; }
-        .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333; }
-        .score-win { color: #00ff41; } 
-        .score-indiv { color: #00ffff; }
-        .btn-close-blue { background: #4a90e2; padding: 15px; border: none; color: #fff; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; width: 100%; margin-top: 20px; }
-        .btn-sound { position: absolute; top: 20px; left: 20px; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; height: 40px; display: none; }
-        .btn-sound.on { color: #00ff41; border-color: #008f25; }
+
+        .tab-content { display: none; min-height: 180px;}
+        .tab-content.active { display: block; }
+
+        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
+        .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
+        .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
+        
+        .score-win { color: #00ff41; }   
+        .score-draw { color: #ffd700; }  
+        .score-lose { color: #ff4444; }  
+        .score-indiv { color: #00ffff; } 
+
+        .modal-footer { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: none; box-sizing: border-box; text-decoration: none; text-align: center; }
+        .btn-close-blue { background: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
+        .btn-logout { background: rgba(255, 68, 68, 0.4); border: 4px solid #550000; box-shadow: 4px 4px 0px #550000; color: #ffcccc; }
     </style>
 </head>
 <body>
@@ -93,69 +171,80 @@
 
     <div id="app-wrapper">
 
-        <div id="login-screen">
-            <img src="assets/images/icon-512.png" alt="Logo" class="arcade-logo">
-            <h1 class="arcade-title">JOSY ARCADE</h1>
-            <button id="btn-login" class="btn-google-login">
-                <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                INSERT COIN
-            </button>
-        </div>
-
         <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
-        <img id="profile-pic" src="" alt="Perfil">
-
-        <div id="game-menu">
-            <h1>🎮 SELECT GAME 🎮</h1>
-            <div class="menu-container">
-                <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
-                <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
-                <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
-                <a href="love_bird.html" class="arcade-btn">04. LOVE BIRD</a>
-            </div>
-        </div>
-
-        <button id="chat-trigger" onclick="window.toggleChat(true)">
-            CHAT <div class="notification-dot" id="chat-notif"></div>
+        
+        <button id="chat-trigger">
+            CHAT
+            <div class="notification-dot" id="chat-notif"></div>
         </button>
 
+        <div id="auth-container">
+            <button id="btn-login" class="btn-login">
+                <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                ENTRAR
+            </button>
+            <img id="profile-pic" src="" alt="Perfil" title="Ver Menu de Perfil">
+        </div>
+
         <div id="chat-modal">
-            <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
-                <button onclick="window.toggleChat(false)" style="background:#111; border:2px solid #ff0000; color:#ff0000; font-family:'Press Start 2P'; padding:10px; cursor:pointer;">X</button>
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
+                <button onclick="toggleChat(false)" style="background: #111; border: 2px solid #ff0000; color: #ff0000; font-family: 'Press Start 2P'; font-size: 10px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">X</button>
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
-                <input type="text" id="chat-input" placeholder="DIGITE..." autocomplete="off">
-                <button id="chat-send">SEND</button>
+                <input type="text" id="chat-input" placeholder="DIGITE AQUI..." autocomplete="off">
+                <button id="chat-send">ENVIAR</button>
             </div>
         </div>
 
         <div id="stats-modal">
             <div class="stats-box">
-                <div style="text-align:center; margin-bottom:20px;">
-                    <img id="modal-profile-pic" src="" style="width:70px; border-radius:50%; border:3px solid #00ffff;">
-                    <h2 id="player-name-title" style="font-size:12px; margin-top:10px; color:#fff;">PLAYER</h2>
+                <div class="modal-header-profile">
+                    <img id="modal-profile-pic" src="" alt="Foto">
+                    <h2 class="profile-name-title" id="player-name-title">JOGADOR</h2>
                 </div>
-                <div style="display:flex; gap:5px;">
-                    <button id="btn-tab-stats" class="tab-btn active" onclick="window.openTab(event, 'tab-stats')">STATS</button>
-                    <button id="btn-tab-rank" class="tab-btn" onclick="window.openTab(event, 'tab-leaderboard')">RANK</button>
+                
+                <div class="modal-tabs">
+                    <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">INDIVIDUAL</button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">GERAL</button>
                 </div>
-                <div id="tab-stats" class="tab-content" style="display:block">
+
+                <div id="tab-stats" class="tab-content active">
                     <table class="leaderboard-table">
-                        <tr><td>01. BUSCA ESTELAR</td><td id="stat-busca" class="score-indiv" style="text-align:right">0V</td></tr>
-                        <tr><td>02. MINADO AMOROUS</td><td id="stat-minado" class="score-indiv" style="text-align:right">0V</td></tr>
-                        <tr><td>03. GUARDIÃO DO AMOR</td><td id="stat-guardiao" class="score-indiv" style="text-align:right">0V</td></tr>
-                        <tr><td>04. LOVE BIRD</td><td id="stat-bird" class="score-indiv" style="text-align:right">0Pts</td></tr>
+                        <thead><tr><th>JOGO</th><th style="text-align:right">PONTUAÇÃO</th></tr></thead>
+                        <tbody>
+                            <tr><td>01. BUSCA ESTELAR</td><td style="text-align:right" class="score-indiv" id="stat-busca">0V</td></tr>
+                            <tr><td>02. MINADO AMOROUS</td><td style="text-align:right" class="score-indiv" id="stat-minado">0V</td></tr>
+                            <tr><td>03. GUARDIÃO DO AMOR</td><td style="text-align:right" class="score-indiv" id="stat-guardiao">0V</td></tr>
+                            <tr><td>04. LOVE BIRD</td><td style="text-align:right" class="score-indiv" id="stat-bird">0Pts</td></tr>
+                        </tbody>
                     </table>
                 </div>
-                <div id="tab-leaderboard" class="tab-content" style="display:none">
+
+                <div id="tab-leaderboard" class="tab-content">
                     <table class="leaderboard-table">
-                        <thead><tr><th>GAME</th><th>TOP</th><th style="text-align:right">BEST</th></tr></thead>
+                        <thead><tr><th>JOGO</th><th>LÍDER</th><th style="text-align:right">RECORDE</th></tr></thead>
                         <tbody id="leaderboard-body"></tbody>
                     </table>
                 </div>
-                <button class="btn-close-blue" onclick="document.getElementById('stats-modal').style.display='none'">RESUME</button>
-                <button id="btn-logout" style="background:none; border:none; color:#ff4444; font-size:8px; margin-top:20px; cursor:pointer; width:100%;">EXIT ARCADE</button>
+
+                <div class="modal-footer">
+                    <button class="btn-modal-action btn-close-blue" id="btn-close-stats">FECHAR</button>
+                    <button class="btn-modal-action btn-logout" id="btn-logout">SAIR</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-menu">
+            <h1>🎮 JOSY ARCADE 🎮</h1>
+            <div class="menu-container">
+                <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
+                <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
+                <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
+                <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
+                    04. LOVE BIRD
+                    <span class="badge-novo">NOVO JOGO!</span>
+                </a>
             </div>
         </div>
     </div> 
@@ -172,8 +261,7 @@
             projectId: "josyarcade",
             storageBucket: "josyarcade.firebasestorage.app",
             messagingSenderId: "960445216740",
-            appId: "1:960445216740:web:d913dc274acdb1ffad39f1",
-            measurementId: "G-M8B8C89YZR"
+            appId: "1:960445216740:web:d913dc274acdb1ffad39f1"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -183,71 +271,73 @@
 
         const usuariosAutorizados = ["phsc1994@gmail.com", "johcat.barth@gmail.com"];
 
-        const loginScreen = document.getElementById('login-screen');
-        const gameMenu = document.getElementById('game-menu');
+        const btnLogin = document.getElementById('btn-login');
         const profilePic = document.getElementById('profile-pic');
-        const btnSound = document.getElementById('btn-sound');
-        const chatTrigger = document.getElementById('chat-trigger');
-        const chatMessages = document.getElementById('chat-messages');
-        const chatNotif = document.getElementById('chat-notif');
-        const chatModal = document.getElementById('chat-modal');
         const statsModal = document.getElementById('stats-modal');
-
+        const gameMenu = document.getElementById('game-menu');
+        const chatTrigger = document.getElementById('chat-trigger');
+        const chatModal = document.getElementById('chat-modal');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+        const chatNotif = document.getElementById('chat-notif');
+        
+        let currentUserName = "";
         let currentUserUID = "";
         let chatAberto = false;
 
-        // AUTH OBSERVER
+        const btnSound = document.getElementById('btn-sound');
+        const audioTrack = document.getElementById('bgTrack');
+        btnSound.addEventListener('click', () => {
+            if (audioTrack.paused) { audioTrack.play(); btnSound.innerHTML = "🔊 SOM ON"; btnSound.classList.add("on"); }
+            else { audioTrack.pause(); btnSound.innerHTML = "🔇 SOM OFF"; btnSound.classList.remove("on"); }
+        });
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                loginScreen.style.display = 'none';
-                gameMenu.style.display = 'block';
-                profilePic.style.display = 'block';
-                btnSound.style.display = 'block';
-                profilePic.src = user.photoURL;
-                currentUserUID = user.uid;
-                const name = user.displayName.split(" ")[0].toUpperCase();
-                document.getElementById('player-name-title').innerText = name;
+                btnLogin.style.display = 'none'; gameMenu.style.display = 'block'; profilePic.style.display = 'block';
+                profilePic.src = user.photoURL; currentUserUID = user.uid;
+                currentUserName = user.displayName.split(" ")[0].toUpperCase();
+                document.getElementById('player-name-title').innerText = currentUserName;
                 document.getElementById('modal-profile-pic').src = user.photoURL;
-                
-                if(usuariosAutorizados.includes(user.email)) {
-                    chatTrigger.style.display = 'block';
-                    iniciarEscutaChat();
-                }
-                set(ref(db, 'usuarios/' + user.uid + '/nome'), name);
-                carregarEstatisticas(user.uid); 
-                carregarPlacarGlobal();
+                if(usuariosAutorizados.includes(user.email)) { chatTrigger.style.display = 'block'; iniciarEscutaChat(); }
+                set(ref(db, 'usuarios/' + user.uid + '/nome'), currentUserName);
+                carregarEstatisticas(user.uid); carregarPlacarGlobal();
             } else {
-                loginScreen.style.display = 'flex';
-                gameMenu.style.display = 'none';
-                profilePic.style.display = 'none';
-                btnSound.style.display = 'none';
-                chatTrigger.style.display = 'none';
+                btnLogin.style.display = 'flex'; gameMenu.style.display = 'none'; profilePic.style.display = 'none'; chatTrigger.style.display = 'none';
             }
         });
 
-        // CHAT LISTENER
         function iniciarEscutaChat() {
             onValue(ref(db, 'chat_global'), (snapshot) => {
                 const msgs = snapshot.val();
                 chatMessages.innerHTML = "";
                 let temMensagemNovaParaMim = false;
+
                 if (msgs) {
                     Object.entries(msgs).forEach(([id, m]) => {
+                        // Notificação: mensagem de outro e não lida
                         if (m.uid !== currentUserUID && m.lida === false) temMensagemNovaParaMim = true;
+
                         const div = document.createElement('div');
                         const isMe = m.uid === currentUserUID;
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const data = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "";
                         
-                        let checkHtml = "";
-                        if (isMe && m.lida === true) checkHtml = `<span class="msg-status-neon">✓</span>`;
+                        // Lógica do Checkmark Azul (Estilo WhatsApp)
+                        let statusHtml = "";
+                        if (isMe) {
+                            const checkClass = m.lida ? "msg-status read" : "msg-status";
+                            const checks = m.lida ? "✓✓" : "✓";
+                            statusHtml = `<span class="${checkClass}">${checks}</span>`;
+                        }
 
                         div.innerHTML = `
-                            <span style="font-size:6px; opacity:0.7; display:block; margin-bottom:4px;">${m.nome}</span>
+                            <span class="msg-info">${m.nome}</span>
                             ${m.texto}
                             <div class="msg-footer">
-                                <span style="font-size:5px; color:#888;">${data}</span>
-                                ${checkHtml}
+                                <span class="msg-time">${data}</span>
+                                ${statusHtml}
                             </div>`;
                         chatMessages.appendChild(div);
                     });
@@ -257,8 +347,7 @@
             });
         }
 
-        // FUNÇÕES GLOBAIS (ANEXADAS AO WINDOW)
-        window.toggleChat = async (abrir) => {
+        async function toggleChat(abrir) {
             chatAberto = abrir;
             chatModal.style.display = abrir ? 'flex' : 'none';
             if (abrir) {
@@ -270,41 +359,29 @@
                     Object.entries(msgs).forEach(([id, m]) => {
                         if (m.uid !== currentUserUID && m.lida === false) updates[`chat_global/${id}/lida`] = true;
                     });
-                    update(ref(db), updates);
+                    update(ref(db), updates); // Marca todas como lidas de uma vez
                 }
             }
-        };
-
-        window.openTab = (evt, tabName) => {
-            const contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
-            const tabs = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.classList.add("active");
-        };
-
-        function enviarMensagem() {
-            const texto = document.getElementById('chat-input').value.trim();
-            if(!texto) return;
-            push(ref(db, 'chat_global'), { uid: currentUserUID, nome: document.getElementById('player-name-title').innerText, texto: texto, timestamp: serverTimestamp(), lida: false });
-            document.getElementById('chat-input').value = "";
         }
 
-        // EVENTOS
-        document.getElementById('btn-login').addEventListener('click', () => signInWithPopup(auth, provider));
+        function enviarMensagem() {
+            const texto = chatInput.value.trim();
+            if(!texto) return;
+            push(ref(db, 'chat_global'), { uid: currentUserUID, nome: currentUserName, texto: texto, timestamp: serverTimestamp(), lida: false });
+            chatInput.value = "";
+        }
+
+        btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
         document.getElementById('btn-logout').addEventListener('click', () => confirm("SAIR?") && signOut(auth).then(() => location.reload()));
-        document.getElementById('chat-send').addEventListener('click', enviarMensagem);
-        document.getElementById('chat-input').addEventListener('keypress', (e) => e.key === 'Enter' && enviarMensagem());
-        profilePic.addEventListener('click', () => statsModal.style.display = 'flex');
-
-        const audioTrack = document.getElementById('bgTrack');
-        btnSound.addEventListener('click', () => {
-            if (audioTrack.paused) { audioTrack.play(); btnSound.innerHTML = "🔊 SOM ON"; btnSound.classList.add("on"); }
-            else { audioTrack.pause(); btnSound.innerHTML = "🔇 SOM OFF"; btnSound.classList.remove("on"); }
-        });
-
-        // DATA LOADING
+        chatTrigger.addEventListener('click', () => toggleChat(true));
+        chatSend.addEventListener('click', enviarMensagem);
+        chatInput.addEventListener('keypress', (e) => e.key === 'Enter' && enviarMensagem());
+        window.openTab = (evt, tabName) => {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).style.display = 'block';
+            evt.currentTarget.classList.add('active');
+        };
         function carregarEstatisticas(uid) {
             onValue(ref(db, 'usuarios/' + uid + '/estatisticas'), (snap) => {
                 const d = snap.val() || {};
@@ -314,23 +391,26 @@
                 document.getElementById('stat-bird').innerText = (d.love_bird_max || 0) + "Pts";
             });
         }
-
         async function carregarPlacarGlobal() {
             const body = document.getElementById('leaderboard-body');
             const snap = await get(ref(db, 'usuarios'));
             const all = snap.val(); if(!all) return;
-            const games = [{k:'busca_estelar', l:'BUSCA', s:'V'}, {k:'minado_amorous', l:'MINADO', s:'V'}, {k:'guardiao_amor', l:'GUARDIÃO', s:'V'}, {k:'love_bird_max', l:'BIRD', s:'Pts'}];
+            const games = [{k:'busca_estelar', l:'01. BUSCA ESTELAR', s:'V'}, {k:'minado_amorous', l:'02. MINADO AMOROUS', s:'V'}, {k:'guardiao_amor', l:'03. GUARDIÃO DO AMOR', s:'V'}, {k:'love_bird_max', l:'04. LOVE BIRD', s:'Pts'}];
             body.innerHTML = "";
             games.forEach(g => {
-                let scores = Object.values(all).map(u => ({n: u.nome || "---", s: (u.estatisticas && u.estatisticas[g.k]) || 0})).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
-                let leader = "---", score = 0;
+                let scores = Object.values(all).map(u => ({n: u.nome || "ANÔNIMO", s: (u.estatisticas && u.estatisticas[g.k]) || 0})).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
+                let leader = "---", score = 0, cls = "score";
                 if(scores.length > 0) {
                     score = scores[0].s;
-                    leader = (scores.length > 1 && scores[1].s === score) ? "DRAW" : scores[0].n;
+                    if(scores.length > 1 && scores[1].s === score) { leader = "EMPATE!"; cls += " score-draw"; }
+                    else { leader = scores[0].n; cls += (leader === currentUserName) ? " score-win" : " score-lose"; }
                 }
-                body.innerHTML += `<tr><td>${g.l}</td><td style="color:#ff00ff">${leader}</td><td style="text-align:right; color:#00ff41">${score}${g.s}</td></tr>`;
+                body.innerHTML += `<tr><td>${g.l}</td><td style="color:#ff00ff">${leader}</td><td style="text-align:right" class="${cls}">${score}${g.s}</td></tr>`;
             });
         }
+        profilePic.addEventListener('click', () => statsModal.style.display = 'flex');
+        document.getElementById('btn-close-stats').addEventListener('click', () => statsModal.style.display = 'none');
+        window.toggleChat = toggleChat;
     </script>
 </body>
 </html>
