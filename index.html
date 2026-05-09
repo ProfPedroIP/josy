@@ -8,6 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        /* [ ... CSS original mantido ... ] */
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             text-align: center; display: flex; flex-direction: column; align-items: center; 
@@ -49,10 +50,8 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* --- NOVOS ESTILOS DO SISTEMA DE LOGIN E PERFIL --- */
-        #auth-container {
-            position: absolute; top: 20px; right: 20px; z-index: 50;
-        }
+        /* --- [ ESTILOS DO SISTEMA DE LOGIN E PERFIL ] --- */
+        #auth-container { position: absolute; top: 20px; right: 20px; z-index: 50; }
 
         .btn-login {
             background: #fff; color: #000; border: 3px solid #4a90e2; padding: 10px;
@@ -65,25 +64,62 @@
             cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
         }
 
-        /* --- MODAL DE ESTATÍSTICAS --- */
+        /* --- [ MODAL DE PERFIL E ESTATÍSTICAS ] --- */
         #stats-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 200; display: none;
+            background: rgba(0,0,0,0.95); z-index: 200; display: none;
             align-items: center; justify-content: center; flex-direction: column;
         }
 
         .stats-box {
-            background: #111; border: 4px solid #00ffff; padding: 30px; width: 85%; max-width: 350px;
-            box-shadow: 0 0 20px #00ffff; text-align: left; position: relative;
+            background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 450px;
+            box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
-        .stats-title { color: #00ffff; font-size: 14px; text-align: center; margin-bottom: 20px; }
-        .stat-line { font-size: 10px; color: #fff; margin: 15px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 5px;}
+        .stats-title { color: #fff; font-size: 14px; text-align: center; margin-bottom: 5px; }
+        
+        /* Menu de Abas Interno */
+        .modal-tabs {
+            display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: #222; color: #00ffff; border: 2px solid #4a90e2;
+            font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer;
+        }
+        .tab-btn.active { background: #00ffff; color: #000; border-color: #fff; }
+
+        /* Conteúdo das Abas */
+        .tab-content { display: none; min-height: 200px;}
+        .tab-content.active { display: block; }
+
+        .stat-line { font-size: 9px; color: #fff; margin: 12px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 5px;}
         .stat-value { color: #ff00ff; }
         
-        .btn-close {
-            background: #ff0000; color: #fff; border: 2px solid #fff; padding: 10px; width: 100%;
-            font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; margin-top: 20px;
+        /* Estilos do Placar Global */
+        .leaderboard-table { width: 100%; font-size: 8px; color: #fff; border-collapse: collapse; margin-top: 10px;}
+        .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
+        .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
+        .leaderboard-table .rank { color: #ff00ff; width: 30px;}
+        .leaderboard-table .score { color: #00ff41; text-align: right;}
+
+        /* [ NOVOS BOTÕES INFERIORES ] */
+        .modal-footer {
+            display: flex; gap: 10px; margin-top: 15px;
+        }
+        .btn-modal-action {
+            padding: 12px; font-family: 'Press Start 2P'; font-size: 10px;
+            color: white; cursor: pointer; flex: 1; border: none; box-sizing: border-box; text-decoration: none;
+            text-align: center;
+        }
+        .btn-close { background: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
+        
+        /* [ BOTÃO SAIR (VERMELHO FRACO) ] */
+        .btn-logout { 
+            background: rgba(255, 68, 68, 0.4); /* Vermelho fraco com opacidade */
+            border: 4px solid #550000; 
+            box-shadow: 4px 4px 0px #550000;
+            color: #ffcccc; /* Texto rosa claro */
         }
     </style>
 </head>
@@ -97,25 +133,58 @@
             <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
             ENTRAR
         </button>
-        <img id="profile-pic" src="" alt="Perfil" title="Ver Estatísticas">
+        <img id="profile-pic" src="" alt="Perfil" title="Ver Menu de Perfil">
     </div>
 
-    <!-- MODAL DE ESTATÍSTICAS -->
+    <!-- MODAL DE PERFIL (ATUALIZADO COM MENU) -->
     <div id="stats-modal">
         <div class="stats-box">
-            <h2 class="stats-title">ESTATÍSTICAS DE <span id="player-name">JOGADOR</span></h2>
+            <h2 class="stats-title">PERFIL DO USUÁRIO</h2>
             
-            <div class="stat-line"><span>01. BUSCA ESTELAR:</span> <span class="stat-value" id="stat-busca">0 Vitórias</span></div>
-            <div class="stat-line"><span>02. MINADO AMOROUS:</span> <span class="stat-value" id="stat-minado">0 Vitórias</span></div>
-            <div class="stat-line"><span>03. GUARDIÃO DO AMOR:</span> <span class="stat-value" id="stat-guardiao">0 Vitórias</span></div>
-            <div class="stat-line" style="border-color: #ff00ff; margin-top: 25px;"><span>04. LOVE BIRD MAX:</span> <span class="stat-value" id="stat-bird" style="color: #00ffff;">0 Pts</span></div>
+            <!-- Menu de Abas -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">ESTATÍSTICAS</button>
+                <button class="tab-btn" onclick="openTab(event, 'tab-leaderboard')">PLACAR GLOBAL</button>
+            </div>
 
-            <button class="btn-close" id="btn-close-stats">FECHAR</button>
+            <!-- Conteúdo 1: Minhas Estatísticas (Original) -->
+            <div id="tab-stats" class="tab-content active">
+                <p style="font-size: 10px; color: #00ffff; text-align: center;">Olá, <span id="player-name">JOGADOR</span>!</p>
+                <div class="stat-line"><span>01. BUSCA ESTELAR:</span> <span class="stat-value" id="stat-busca">0 Vitórias</span></div>
+                <div class="stat-line"><span>02. MINADO AMOROUS:</span> <span class="stat-value" id="stat-minado">0 Vitórias</span></div>
+                <div class="stat-line"><span>03. GUARDIÃO DO AMOR:</span> <span class="stat-value" id="stat-guardiao">0 Vitórias</span></div>
+                <div class="stat-line" style="border-color: #ff00ff; margin-top: 20px;"><span>04. LOVE BIRD MAX:</span> <span class="stat-value" id="stat-bird" style="color: #00ffff;">0 Pts</span></div>
+            </div>
+
+            <!-- Conteúdo 2: Placar Global (Novo) -->
+            <div id="tab-leaderboard" class="tab-content">
+                <p style="font-size: 10px; color: #ff00ff; text-align: center;">TOP RECORDES - LOVE BIRD</p>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank">#</th>
+                            <th>JOGADOR</th>
+                            <th class="score">PONTOS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- Dados carregados via JS -->
+                        <tr><td colspan="3" style="text-align: center;">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Rodapé com Botões -->
+            <div class="modal-footer">
+                <button class="btn-modal-action btn-close" id="btn-close-stats">FECHAR</button>
+                <!-- BOTÃO SAIR (VERMELHO FRACO) -->
+                <button class="btn-modal-action btn-logout" id="btn-logout">SAIR ⏻</button>
+            </div>
         </div>
     </div>
 
     <h1>🎮 JOSY ARCADE 🎮</h1>
-    <p style="font-size: 10px; margin-bottom: 30px; color: #fff;">Faça login para salvar seus recordes!</p>
+    <p style="font-size: 10px; margin-bottom: 30px; color: #fff;">Faça login para salvar seus recordes e competir!</p>
 
     <div class="menu-container">
         <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
@@ -128,11 +197,12 @@
     </div>
 
     <script type="module">
+        // [ Importações mantidas ]
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Chaves inseridas exatamente como você forneceu
+        // [ Chaves reais mantidas ]
         const firebaseConfig = {
             apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
             authDomain: "josyarcade.firebaseapp.com",
@@ -153,13 +223,22 @@
         const profilePic = document.getElementById('profile-pic');
         const statsModal = document.getElementById('stats-modal');
         const btnCloseStats = document.getElementById('btn-close-stats');
+        const btnLogout = document.getElementById('btn-logout'); // Novo
         const playerNameDisplay = document.getElementById('player-name');
 
+        // [ Lógica de Login mantida ]
         btnLogin.addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch((error) => {
-                console.error("Erro no login:", error);
-                alert("Erro ao tentar fazer login!");
-            });
+            signInWithPopup(auth, provider).catch((error) => { console.error("Erro:", error); alert("Erro ao logar!"); });
+        });
+
+        // [ LÓGICA DO BOTÃO SAIR ]
+        btnLogout.addEventListener('click', () => {
+            if (confirm("Deseja realmente sair do Arcade?")) {
+                signOut(auth).then(() => {
+                    statsModal.style.display = 'none'; // Fecha o modal
+                    // A página vai atualizar via onAuthStateChanged
+                }).catch((error) => { console.error("Erro ao sair:", error); });
+            }
         });
 
         onAuthStateChanged(auth, (user) => {
@@ -172,37 +251,108 @@
                 playerNameDisplay.innerText = primeiroNome;
 
                 carregarEstatisticas(user.uid);
+                carregarPlacarGlobal(); // Carrega o placar sempre que loga
             } else {
                 btnLogin.style.display = 'flex';
                 profilePic.style.display = 'none';
             }
         });
 
-        profilePic.addEventListener('click', () => {
-            statsModal.style.display = 'flex';
-        });
-        
-        btnCloseStats.addEventListener('click', () => {
-            statsModal.style.display = 'none';
-        });
+        // [ Lógica do Modal mantida ]
+        profilePic.addEventListener('click', () => { statsModal.style.display = 'flex'; });
+        btnCloseStats.addEventListener('click', () => { statsModal.style.display = 'none'; });
 
+        // [ Lógica de Carregar Estatísticas Pessoais mantida ]
         function carregarEstatisticas(uid) {
             const statsRef = ref(db, 'usuarios/' + uid + '/estatisticas');
-            
             onValue(statsRef, (snapshot) => {
-                const dados = snapshot.val() || {
-                    busca_estelar: 0,
-                    minado_amorous: 0,
-                    guardiao_amor: 0,
-                    love_bird_max: 0
-                };
-
+                const dados = snapshot.val() || {};
                 document.getElementById('stat-busca').innerText = (dados.busca_estelar || 0) + " Vitórias";
                 document.getElementById('stat-minado').innerText = (dados.minado_amorous || 0) + " Vitórias";
                 document.getElementById('stat-guardiao').innerText = (dados.guardiao_amor || 0) + " Vitórias";
                 document.getElementById('stat-bird').innerText = (dados.love_bird_max || 0) + " Pts";
             });
         }
+
+        // --- [ NOVA LÓGICA: CARREGAR PLACAR GLOBAL ] ---
+        async function carregarPlacarGlobal() {
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Buscando recordes...</td></tr>';
+
+            try {
+                // Busca todos os usuários
+                const usersRef = ref(db, 'usuarios');
+                const snapshot = await get(usersRef);
+                const allUsersData = snapshot.val();
+
+                if (!allUsersData) {
+                    leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhum recorde ainda!</td></tr>';
+                    return;
+                }
+
+                let leaderboard = [];
+
+                // Percorre cada usuário e pega o recorde do Love Bird
+                for (const uid in allUsersData) {
+                    const userData = allUsersData[uid];
+                    const score = (userData.estatisticas && userData.estatisticas.love_bird_max) || 0;
+                    
+                    if (score > 0) {
+                        leaderboard.push({
+                            name: (userData.nome || "Anônimo").toUpperCase(),
+                            score: score
+                        });
+                    }
+                }
+
+                // Ordena do maior para o menor
+                leaderboard.sort((a, b) => b.score - a.score);
+
+                // Mostra apenas os top 5
+                const top5 = leaderboard.slice(0, 5);
+
+                // Monta o HTML da tabela
+                leaderboardBody.innerHTML = '';
+                top5.forEach((entry, index) => {
+                    const row = `
+                        <tr>
+                            <td class="rank">${index + 1}º</td>
+                            <td>${entry.name}</td>
+                            <td class="score">${entry.score}</td>
+                        </tr>
+                    `;
+                    leaderboardBody.innerHTML += row;
+                });
+
+                if(top5.length === 0) {
+                    leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhum recorde ainda!</td></tr>';
+                }
+
+            } catch (error) {
+                console.error("Erro ao carregar placar:", error);
+                leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #ff0000;">Erro ao carregar.</td></tr>';
+            }
+        }
+
+        // --- [ LÓGICA DAS ABAS (Navegação interna do Modal) ] ---
+        // Torna a função global para o HTML acessar
+        window.openTab = function(evt, tabName) {
+            var i, tabcontent, tablinks;
+            // Esconde todo o conteúdo
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            // Tira a classe 'active' de todos os botões
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            // Mostra o conteúdo da aba atual e adiciona 'active' no botão
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
     </script>
 </body>
 </html>
