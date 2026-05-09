@@ -24,7 +24,7 @@
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.06));
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
@@ -41,28 +41,27 @@
             }
         }
 
-        /* --- TELA DE LOGIN --- */
+        /* --- ESTÉTICA DA TELA DE LOGIN (Splash) --- */
         #login-screen {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; text-align: center; z-index: 100;
+            width: 100%; text-align: center;
         }
         .login-logo { width: 150px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 15px #ff00ff); animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .login-title { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; }
-        .btn-google-login {
-            background: #111; color: #00ffff; border: 4px solid #00ffff; padding: 20px 30px;
+        .login-title { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 50px; }
+        .btn-login-large {
+            background: #111; color: #00ffff; border: 4px solid #00ffff; padding: 25px 35px;
             font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer;
-            display: flex; align-items: center; gap: 15px; box-shadow: 6px 6px 0px #003366; transition: 0.2s;
+            display: flex; align-items: center; gap: 15px; box-shadow: 8px 8px 0px #003366; transition: 0.2s;
         }
-        .btn-google-login:hover { background: #00ffff; color: #000; transform: scale(1.05); }
+        .btn-login-large:hover { background: #00ffff; color: #000; transform: scale(1.05); }
 
-        /* --- INTERFACE LOGADA --- */
+        /* --- MENU PRINCIPAL (Versão Original) --- */
         #game-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
         
         h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; text-align: center;}
-        #game-menu { width: 100%; }
+        
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
-
         .arcade-btn {
             padding: 20px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center;
             background: #111; color: #00ffff; border: 4px solid #4a90e2;
@@ -71,12 +70,22 @@
         }
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
 
+        /* NOVO JOGO BADGE */
+        .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
+        .badge-novo {
+            position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff;
+            font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082;
+            animation: blink 1s infinite; transform: rotate(5deg);
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* BOTÕES DE TOPO */
         .btn-sound { position: absolute; top: 20px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
 
         #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 20px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
 
-        /* --- CHAT --- */
+        /* --- CHAT MODAL & MSG --- */
         #chat-trigger { position: absolute; bottom: 20px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
         .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
         #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
@@ -87,7 +96,6 @@
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 5px; }
         .msg-time { font-size: 5px; color: #888; }
         .msg-status-neon { font-size: 10px; color: #00ffff; text-shadow: 0 0 5px #00ffff; font-weight: bold; }
-
         #chat-input-container { display: flex; gap: 10px; }
         #chat-input { flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41; padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; width: 100%; box-sizing: border-box; }
         #chat-send { background: #00ff41; border: none; color: #000; padding: 10px; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; }
@@ -102,9 +110,12 @@
         .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
         .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
         
-        .score-win { color: #00ff41; } .score-indiv { color: #00ffff; }
-        
-        /* BOTÕES DO MODAL */
+        /* RANKING COLORS */
+        .score-win { color: #00ff41; }   /* Verde */
+        .score-draw { color: #ffd700; }  /* Amarelo */
+        .score-lose { color: #ff4444; }  /* Vermelho */
+        .score-indiv { color: #00ffff; } /* Ciano */
+
         .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: 4px solid; box-sizing: border-box; text-decoration: none; text-align: center; }
         .btn-close-blue { background: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
         .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: #550000; box-shadow: 4px 4px 0px #550000; color: #fff; }
@@ -121,7 +132,7 @@
         <div id="login-screen">
             <img src="assets/images/icon-512.png" class="login-logo" alt="Logo">
             <div class="login-title">JOSY ARCADE</div>
-            <button id="btn-login-google" class="btn-google-login">
+            <button id="btn-login-google" class="btn-login-large">
                 <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
                 LOGIN FOR INSERT COIN
             </button>
@@ -136,7 +147,10 @@
                     <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
                     <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
                     <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
-                    <a href="love_bird.html" class="arcade-btn">04. LOVE BIRD</a>
+                    <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
+                        04. LOVE BIRD
+                        <span class="badge-novo">NOVO!</span>
+                    </a>
                 </div>
             </div>
 
@@ -255,14 +269,18 @@
                         const isMe = m.uid === currentUserUID;
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const data = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "";
-                        let checkHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
+                        
+                        let statusHtml = "";
+                        if (isMe && m.lida === true) {
+                            statusHtml = `<span class="msg-status-neon">✓</span>`;
+                        }
 
                         div.innerHTML = `
                             <span style="font-size:6px; opacity:0.7; display:block; margin-bottom:4px;">${m.nome}</span>
                             ${m.texto}
                             <div class="msg-footer">
                                 <span class="msg-time">${data}</span>
-                                ${checkHtml}
+                                ${statusHtml}
                             </div>`;
                         chatContainer.appendChild(div);
                     });
@@ -333,20 +351,34 @@
             const body = document.getElementById('leaderboard-body');
             const snap = await get(ref(db, 'usuarios'));
             const all = snap.val(); if(!all) return;
+            
             const games = [
                 {k:'busca_estelar', l:'01. BUSCA ESTELAR', s:'V'}, 
                 {k:'minado_amorous', l:'02. MINADO AMOROUS', s:'V'}, 
                 {k:'guardiao_amor', l:'03. GUARDIÃO DO AMOR', s:'V'}, 
                 {k:'love_bird_max', l:'04. LOVE BIRD', s:'Pts'}
             ];
+
             body.innerHTML = "";
             games.forEach(g => {
-                let scores = Object.values(all).map(u => ({n: u.nome || "---", s: (u.estatisticas && u.estatisticas[g.k]) || 0})).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
-                let leader = "---", score = 0, cls = "score-win";
+                let scores = Object.values(all).map(u => ({
+                    n: u.nome || "---", 
+                    s: (u.estatisticas && u.estatisticas[g.k]) || 0
+                })).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
+                
+                let leader = "---", score = 0, cls = "";
+                
                 if(scores.length > 0) {
                     score = scores[0].s;
-                    leader = (scores.length > 1 && scores[1].s === score) ? "EMPATE" : scores[0].n;
+                    if(scores.length > 1 && scores[1].s === score) {
+                        leader = "EMPATE";
+                        cls = "score-draw"; 
+                    } else {
+                        leader = scores[0].n;
+                        cls = (leader === currentUserName) ? "score-win" : "score-lose"; 
+                    }
                 }
+                
                 body.innerHTML += `<tr><td>${g.l}</td><td style="color:#ff00ff">${leader}</td><td style="text-align:right" class="${cls}">${score}${g.s}</td></tr>`;
             });
         }
