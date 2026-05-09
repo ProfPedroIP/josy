@@ -67,14 +67,11 @@
             box-shadow: 8px 8px 0px #003366; transition: 0.2s;
             text-transform: uppercase;
         }
-
-        .btn-google-login:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #003366; background: #00ffff; color: #000; }
-        .btn-google-login:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px; }
+        .btn-google-login:hover { background: #00ffff; color: #000; transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #003366; }
 
         /* --- MENU PRINCIPAL --- */
         #game-menu { display: none; width: 100%; text-align: center; }
         h1 { font-size: 20px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin-bottom: 40px; }
-
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
         .arcade-btn {
             padding: 20px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center;
@@ -83,44 +80,22 @@
             box-shadow: 6px 6px 0px #4b0082; position: relative; display: block;
         }
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
+        .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         /* --- CHAT E NOTIFICAÇÕES --- */
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 5px; }
         .msg-status-neon { font-size: 10px; color: #00ffff; text-shadow: 0 0 5px #00ffff; font-weight: bold; }
-
-        #chat-trigger {
-            position: absolute; bottom: 20px; left: 20px; z-index: 100;
-            background: #111; border: 3px solid #00ff41; color: #00ff41;
-            padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px;
-            box-shadow: 4px 4px 0px #008f25; display: none; 
-        }
-
-        .notification-dot {
-            position: absolute; top: -5px; right: -5px; width: 12px; height: 12px;
-            background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite;
-        }
+        #chat-trigger { position: absolute; bottom: 20px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
+        .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
 
         /* --- BOTÕES DE TOPO --- */
-        .btn-sound {
-            position: absolute; top: 20px; left: 20px; z-index: 50;
-            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
-            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; height: 40px;
-        }
+        .btn-sound { position: absolute; top: 20px; left: 20px; z-index: 50; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; height: 40px; }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+        #profile-pic { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; }
 
-        #profile-pic {
-            position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; 
-            border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; display: none; 
-            box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50;
-        }
-
-        /* MODAIS REUTILIZADOS */
-        #chat-modal, #stats-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 5, 0, 0.98); z-index: 300; display: none;
-            flex-direction: column; padding: 20px; box-sizing: border-box;
-        }
-
+        /* MODAIS */
+        #chat-modal, #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
         #chat-messages { flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
         .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; }
         .msg-me { align-self: flex-end; background: #003300; border: 1px solid #00ff41; color: #00ff41; }
@@ -146,9 +121,9 @@
 
     <div id="app-wrapper">
 
-        <!-- TELA DE LOGIN -->
+        <!-- TELA DE LOGIN ATUALIZADA COM ICON-512 -->
         <div id="login-screen">
-            <img src="assets/images/logo.png" alt="Josy Arcade Logo" class="arcade-logo">
+            <img src="assets/images/icon-512.png" alt="Josy Arcade Logo" class="arcade-logo">
             <h1 class="arcade-title">JOSY ARCADE</h1>
             <button id="btn-login" class="btn-google-login">
                 <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.2-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -200,15 +175,15 @@
                 </div>
                 <div id="tab-stats" class="tab-content" style="display:block">
                     <table class="leaderboard-table">
-                        <tr><td>01. BUSCA</td><td id="stat-busca" class="score-indiv">0V</td></tr>
-                        <tr><td>02. MINADO</td><td id="stat-minado" class="score-indiv">0V</td></tr>
-                        <tr><td>03. GUARDIÃO</td><td id="stat-guardiao" class="score-indiv">0V</td></tr>
-                        <tr><td>04. BIRD</td><td id="stat-bird" class="score-indiv">0Pts</td></tr>
+                        <tr><td>01. BUSCA</td><td id="stat-busca" class="score-indiv" style="text-align:right">0V</td></tr>
+                        <tr><td>02. MINADO</td><td id="stat-minado" class="score-indiv" style="text-align:right">0V</td></tr>
+                        <tr><td>03. GUARDIÃO</td><td id="stat-guardiao" class="score-indiv" style="text-align:right">0V</td></tr>
+                        <tr><td>04. BIRD</td><td id="stat-bird" class="score-indiv" style="text-align:right">0Pts</td></tr>
                     </table>
                 </div>
                 <div id="tab-leaderboard" class="tab-content" style="display:none">
                     <table class="leaderboard-table">
-                        <thead><tr><th>GAME</th><th>TOP</th><th>BEST</th></tr></thead>
+                        <thead><tr><th>GAME</th><th>TOP</th><th style="text-align:right">BEST</th></tr></thead>
                         <tbody id="leaderboard-body"></tbody>
                     </table>
                 </div>
@@ -252,12 +227,9 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                loginScreen.style.display = 'none';
-                gameMenu.style.display = 'block';
-                profilePic.style.display = 'block';
-                btnSound.style.display = 'block';
-                profilePic.src = user.photoURL;
-                currentUserUID = user.uid;
+                loginScreen.style.display = 'none'; gameMenu.style.display = 'block';
+                profilePic.style.display = 'block'; btnSound.style.display = 'block';
+                profilePic.src = user.photoURL; currentUserUID = user.uid;
                 currentUserName = user.displayName.split(" ")[0].toUpperCase();
                 document.getElementById('player-name-title').innerText = currentUserName;
                 document.getElementById('modal-profile-pic').src = user.photoURL;
@@ -265,11 +237,8 @@
                 set(ref(db, 'usuarios/' + user.uid + '/nome'), currentUserName);
                 carregarEstatisticas(user.uid); carregarPlacarGlobal();
             } else {
-                loginScreen.style.display = 'flex';
-                gameMenu.style.display = 'none';
-                profilePic.style.display = 'none';
-                btnSound.style.display = 'none';
-                chatTrigger.style.display = 'none';
+                loginScreen.style.display = 'flex'; gameMenu.style.display = 'none';
+                profilePic.style.display = 'none'; btnSound.style.display = 'none'; chatTrigger.style.display = 'none';
             }
         });
 
@@ -285,10 +254,7 @@
                         const isMe = m.uid === currentUserUID;
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const data = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "";
-                        
-                        // CHECK NEON APENAS SE LIDO E SE FOR MINHA
-                        let checkHtml = "";
-                        if (isMe && m.lida === true) checkHtml = `<span class="msg-status-neon">✓</span>`;
+                        let checkHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
 
                         div.innerHTML = `
                             <span class="msg-info">${m.nome}</span>
@@ -334,14 +300,12 @@
         chatTrigger.addEventListener('click', () => toggleChat(true));
         chatSend.addEventListener('click', enviarMensagem);
         chatInput.addEventListener('keypress', (e) => e.key === 'Enter' && enviarMensagem());
-        
         window.openTab = (evt, tabName) => {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabName).style.display = 'block';
             evt.currentTarget.classList.add('active');
         };
-        
         function carregarEstatisticas(uid) {
             onValue(ref(db, 'usuarios/' + uid + '/estatisticas'), (snap) => {
                 const d = snap.val() || {};
@@ -351,7 +315,6 @@
                 document.getElementById('stat-bird').innerText = (d.love_bird_max || 0) + "Pts";
             });
         }
-
         async function carregarPlacarGlobal() {
             const body = document.getElementById('leaderboard-body');
             const snap = await get(ref(db, 'usuarios'));
@@ -365,10 +328,9 @@
                     score = scores[0].s;
                     leader = (scores.length > 1 && scores[1].s === score) ? "EMPATE" : scores[0].n;
                 }
-                body.innerHTML += `<tr><td>${g.l}</td><td style="color:#ff00ff">${leader}</td><td style="text-align:right" class="score-win">${score}${g.s}</td></tr>`;
+                body.innerHTML += `<tr><td>${g.l}</td><td style="color:#ff00ff">${leader}</td><td style="text-align:right; color:#00ff41">${score}${g.s}</td></tr>`;
             });
         }
-
         profilePic.addEventListener('click', () => statsModal.style.display = 'flex');
         document.getElementById('btn-close-stats').addEventListener('click', () => statsModal.style.display = 'none');
         window.toggleChat = toggleChat;
