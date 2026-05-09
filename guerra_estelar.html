@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
@@ -18,19 +18,20 @@
     <style>
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; height: 100vh; overflow: hidden; background-color: #000;
+            margin: 0; display: flex; align-items: center; justify-content: center; 
+            min-height: 100dvh; overflow: hidden; position: relative;
         }
 
-        /* Estrelas do Fundo */
+        /* FUNDO DE ESTRELAS PIXELADAS */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
-            animation: spaceMove 50s linear infinite; z-index: 1;
+            animation: spaceMove 50s linear infinite; z-index: -1;
         }
+
         @keyframes spaceMove { from { transform: translateY(-100vh); } to { transform: translateY(100vh); } }
 
-        /* CRT Effect */
+        /* EFEITO CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -38,96 +39,163 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        /* O Canvas do Jogo */
+        /* --- CÁPSULA RESPONSIVA PADRÃO --- */
+        #app-wrapper {
+            position: relative; width: 100%; max-width: 450px; height: 100dvh;   
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            overflow: hidden; z-index: 20; padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px; box-sizing: border-box;
+        }
+
+        @media (min-width: 451px) {
+            #app-wrapper {
+                height: 90dvh; border: 2px solid #003300; border-radius: 15px;
+                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
+                justify-content: center;
+            }
+        }
+
+        /* --- CONTROLES SUPERIORES --- */
+        .top-controls {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; z-index: 50;
+        }
+
+        .btn-sound {
+            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
+            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
+        }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+
+        .btn-close {
+            background: #111; color: #ff0000; border: 3px solid #ff0000; 
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
+            box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
+        }
+        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
+
+        /* --- PLACAR CAIXA AMARELA --- */
+        .score-board {
+            background: #111; border: 3px solid #ffd700; padding: 10px 20px;
+            font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
+            margin-bottom: 15px; text-align: center; width: 100%; box-sizing: border-box;
+            z-index: 50;
+        }
+
+        /* --- O CANVAS DO JOGO --- */
         canvas {
             background: rgba(0, 0, 0, 0.8);
             border: 4px solid #4a90e2;
-            box-shadow: 0 0 20px #4a90e2;
-            max-width: 100%;
-            max-height: 100%;
-            z-index: 5;
-            touch-action: none; /* Previne o scroll da tela ao arrastar a nave */
+            box-shadow: 0 0 15px #4a90e2;
+            width: 100%; max-height: calc(100vh - 160px);
+            object-fit: contain;
+            z-index: 5; touch-action: none;
         }
 
-        /* Overlays */
-        #ui-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        /* --- OVERLAY INICIAL --- */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 100;
+            padding: 20px; box-sizing: border-box;
         }
 
-        .panel {
-            background: #111; border: 4px solid #ff00ff; padding: 30px;
-            box-shadow: 0 0 20px #ff00ff; max-width: 350px; text-align: center;
+        .popup-start {
+            border: 4px solid #ff00ff; padding: 30px; background: #111;
+            box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center;
         }
+
+        .start-btn {
+            margin-top: 20px; padding: 15px; background: #00ff41; color: #000; width: 100%;
+            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25; font-size: 10px;
+        }
+
+        /* --- MENSAGENS DE FIM DE JOGO --- */
+        #message, #game-over { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.95); 
+            width: 85%; max-width: 350px; animation: fadeIn 0.5s; z-index: 60; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 77, 109, 0.5);
+        }
+
+        #game-over { border-color: #ff0000; box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); }
+
+        .msg-title { color: #ff4d6d; font-size: 16px; margin-bottom: 15px; }
+        .msg-title-lose { color: #ff0000; font-size: 16px; margin-bottom: 15px; }
+        .msg-white { color: #ffffff; font-size: 10px; line-height: 1.6; margin-bottom: 10px; }
+        .msg-blue  { color: #00ffff; font-size: 10px; line-height: 1.6; margin-bottom: 15px; }
+        .msg-red   { color: #ff0000; font-size: 14px; margin-bottom: 20px; text-shadow: 2px 2px #550000; }
 
         .btn {
-            margin-top: 20px; padding: 15px; background: #00ff41; color: #000;
-            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25;
-            width: 100%; display: block; text-decoration: none; box-sizing: border-box; font-size: 12px;
+            padding: 15px 20px; font-family: 'Press Start 2P', cursive;
+            font-size: 10px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center;
         }
-        .btn-blue { background: #4a90e2; box-shadow: 4px 4px 0px #003366; color: white; margin-top: 10px; }
 
-        .hidden { display: none !important; }
-
-        #score-display {
-            position: absolute; top: 20px; left: 20px; z-index: 50; font-size: 14px; text-shadow: 2px 2px #000;
-        }
+        .btn-restart { background: #ff00ff; border: 4px solid #4b0082; box-shadow: 4px 4px 0px #4b0082; }
+        .btn-restart-lose { background: #444; border: 4px solid #000; box-shadow: 4px 4px 0px #222; }
+        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
 
         /* Estilo da Foto Polaroid */
         .polaroid {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border: 6px solid #fff;
-            border-bottom: 20px solid #fff;
-            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
-            margin: 15px auto;
-            display: block;
-            background-color: #fff;
-            transform: rotate(-3deg);
+            width: 120px; height: 120px; object-fit: cover;
+            border: 6px solid #fff; border-bottom: 20px solid #fff;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5); margin: 10px auto 20px auto;
+            display: block; background-color: #fff; transform: rotate(-3deg);
         }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="stars"></div>
-    <div id="score-display">PONTOS: 0</div>
 
-    <!-- Canvas HTML5 -->
-    <canvas id="gameCanvas" width="360" height="600"></canvas>
+    <div id="app-wrapper">
 
-    <!-- UI Overlay (Telas de Início, Vitória e Derrota) -->
-    <div id="ui-layer">
-        
-        <!-- Tela Inicial -->
-        <div id="start-screen" class="panel">
-            <h2 style="color: #ff00ff; font-size: 16px;">GUARDIÃO DO AMOR</h2>
-            <p style="font-size: 10px; line-height: 1.6; color: #fff;">Arraste para mover a nave. O tiro é automático!</p>
-            <p style="font-size: 10px; color: #00ffff;">Destrua os invasores e alcance 1000 pontos!</p>
-            <button class="btn" onclick="startGame()">DECOLAR 🚀</button>
+        <!-- CONTROLES SUPERIORES -->
+        <div class="top-controls">
+            <button id="btn-sound" class="btn-sound">🔇</button>
+            <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
         </div>
 
-        <!-- Tela de Vitória -->
-        <div id="win-screen" class="panel hidden" style="border-color: #ff4d6d; box-shadow: 0 0 20px #ff4d6d;">
-            <h2 style="color: #ff4d6d; font-size: 18px;">VITÓRIA! 💖</h2>
-            <p style="color: #fff; font-size: 12px; line-height: 1.6;">O universo está a salvo, mas a minha maior conquista já foi feita...</p>
-            <p style="color: #00ffff; font-size: 12px;">Ganhar o seu coração!</p>
-            <p style="font-size: 14px;"><strong>PEDRO AMA JOSY!</strong></p>
+        <!-- PLACAR PADRONIZADO -->
+        <div class="score-board" id="score-display">
+            PONTOS: 0
+        </div>
+
+        <!-- CANVAS DO JOGO -->
+        <canvas id="gameCanvas" width="360" height="600"></canvas>
+
+        <!-- OVERLAY DE INÍCIO -->
+        <div id="overlay">
+            <div class="popup-start">
+                <h2 style="color: #ff00ff; font-size: 16px; margin-bottom: 15px;">GUARDIÃO DO AMOR</h2>
+                <p style="font-size: 10px; line-height: 1.6; color: #fff;">Arraste para mover a nave. O tiro é automático!</p>
+                <p style="font-size: 10px; color: #00ffff; margin-top: 10px;">Destrua os invasores e alcance 1000 pontos!</p>
+                <button class="start-btn" onclick="iniciarMissao()">DECOLAR 🚀</button>
+            </div>
+        </div>
+
+        <!-- MENSAGEM FINAL: VITÓRIA -->
+        <div id="message">
+            <h2 class="msg-title">VITÓRIA! 💖</h2>
+            <p class="msg-white">O universo está a salvo, mas a minha maior conquista já foi feita...</p>
+            <p class="msg-blue">Ganhar o seu coração!</p>
+            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
             
-            <!-- Foto estilo Polaroid -->
             <img src="assets/images/guerra_estelar_photo.png" class="polaroid" alt="Pedro e Josy">
 
-            <button class="btn" style="background: #ff4d6d; box-shadow: 4px 4px 0px #800020; color: white;" onclick="resetGame()">JOGAR DE NOVO</button>
-            <a href="index.html" class="btn btn-blue">VOLTAR AO MENU</a>
+            <button class="btn btn-restart" onclick="resetGame()">JOGAR DE NOVO</button>
+            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
         </div>
 
-        <!-- Tela de Derrota -->
-        <div id="lose-screen" class="panel hidden" style="border-color: #ff0000;">
-            <h2 style="color: #ff0000; font-size: 18px;">NAVE DESTRUÍDA! 💥</h2>
-            <p style="color: #fff; font-size: 10px;">Os invasores passaram nossa defesa...</p>
-            <button class="btn" onclick="resetGame()">TENTAR NOVAMENTE</button>
-            <a href="index.html" class="btn btn-blue">VOLTAR AO MENU</a>
+        <!-- MENSAGEM FINAL: DERROTA -->
+        <div id="game-over">
+            <h2 class="msg-title-lose">NAVE DESTRUÍDA! 💥</h2>
+            <p class="msg-white">Os invasores passaram nossa defesa...</p>
+            <button class="btn btn-restart-lose" onclick="resetGame()">TENTAR NOVAMENTE</button>
+            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
         </div>
 
     </div>
@@ -144,42 +212,53 @@
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('score-display');
         
-        // Elementos UI
-        const uiLayer = document.getElementById('ui-layer');
-        const startScreen = document.getElementById('start-screen');
-        const winScreen = document.getElementById('win-screen');
-        const loseScreen = document.getElementById('lose-screen');
+        const overlay = document.getElementById('overlay');
+        const messageDiv = document.getElementById('message');
+        const gameOverDiv = document.getElementById('game-over');
+        const btnSound = document.getElementById('btn-sound');
 
-        // Áudio
         const track = document.getElementById('bgTrack');
-        
-        // Ajuste dos volumes individuais
         document.getElementById('soundLaser').volume = 0.33;
         document.getElementById('soundExplosion').volume = 0.67;
         
+        // Lógica do Som
+        track.volume = 0.5;
+        btnSound.addEventListener('click', () => {
+            if (track.paused) {
+                track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
+            } else {
+                track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on");
+            }
+        });
+
         function playSound(id) {
             const sound = document.getElementById(id);
             sound.currentTime = 0;
             sound.play().catch(e => {});
         }
 
-        // Variáveis do Jogo
+        function iniciarMissao() {
+            overlay.style.display = 'none';
+            track.play(); 
+            btnSound.innerHTML = "🔊"; 
+            btnSound.classList.add("on");
+            startGame();
+        }
+
         let animationId;
         let isPlaying = false;
         let score = 0;
         let frames = 0;
         let spawnRate = 100;
 
-        // Entidades
-        const player = { x: 160, y: 500, width: 40, height: 40 };
+        // Foguete posicionado mais para baixo (y de 500 para 540)
+        const player = { x: 160, y: 540, width: 40, height: 40 };
         let bullets = [];
         let enemies = [];
 
-        // Controle Mobile / Mouse (Atualizado para fluidez total)
         function movePlayer(e) {
             if(!isPlaying) return;
             
-            // Impede a tela do celular de rolar ou dar zoom acidental
             if(e.type === 'touchmove' || e.type === 'touchstart') {
                 e.preventDefault();
             }
@@ -189,41 +268,38 @@
             let scaleX = canvas.width / rect.width;
             player.x = (clientX - rect.left) * scaleX - (player.width / 2);
             
-            // Limites da tela
             if(player.x < 0) player.x = 0;
             if(player.x + player.width > canvas.width) player.x = canvas.width - player.width;
         }
 
-        // Adicionados os eventos de clique inicial (mousedown e touchstart)
         canvas.addEventListener('mousemove', movePlayer);
         canvas.addEventListener('mousedown', movePlayer);
         canvas.addEventListener('touchmove', movePlayer, {passive: false});
         canvas.addEventListener('touchstart', movePlayer, {passive: false});
 
-        // Loop Principal do Jogo
         function loop() {
             if(!isPlaying) return;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             frames++;
 
-            // 1. DESENHA O JOGADOR (Nave reta!)
-            ctx.save(); // Salva o estado atual da tela
-            ctx.translate(player.x + player.width / 2, player.y + player.height / 2); // Move o eixo para o centro da nave
-            ctx.rotate(-45 * Math.PI / 180); // Rotaciona -45 graus (para alinhar o foguete)
+            // NAVE
+            ctx.save(); 
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2); 
+            ctx.rotate(-45 * Math.PI / 180); 
             ctx.font = "40px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText("🚀", 0, 0); // Desenha a nave rotacionada no centro
-            ctx.restore(); // Restaura o eixo da tela para não bugar o resto
+            ctx.fillText("🚀", 0, 0); 
+            ctx.restore(); 
 
-            // 2. ATIRAR AUTOMATICAMENTE
+            // ATIRAR AUTOMATICAMENTE
             if (frames % 15 === 0) {
                 bullets.push({ x: player.x + 18, y: player.y, width: 4, height: 15, color: '#00ffff' });
-                playSound('soundLaser');
+                if(btnSound.classList.contains("on")) playSound('soundLaser');
             }
 
-            // 3. ATUALIZA E DESENHA TIROS
+            // ATUALIZA TIROS
             bullets.forEach((bullet, index) => {
                 bullet.y -= 10;
                 ctx.fillStyle = bullet.color;
@@ -231,7 +307,7 @@
                 if (bullet.y < 0) bullets.splice(index, 1);
             });
 
-            // 4. SPAWN DE INIMIGOS
+            // SPAWN DE INIMIGOS
             if (frames % spawnRate === 0) {
                 let type = Math.random();
                 let x = Math.random() * (canvas.width - 40);
@@ -245,22 +321,20 @@
                 }
             }
 
-            // 5. ATUALIZA E DESENHA INIMIGOS
+            // ATUALIZA INIMIGOS E COLISÕES
             enemies.forEach((enemy, eIndex) => {
                 enemy.y += enemy.speed;
                 ctx.font = enemy.hp > 3 ? "50px Arial" : "40px Arial";
-                ctx.textAlign = "left"; // Resetando caso tenha mudado
-                ctx.textBaseline = "alphabetic"; // Resetando caso tenha mudado
+                ctx.textAlign = "left"; 
+                ctx.textBaseline = "alphabetic"; 
                 ctx.fillText(enemy.type, enemy.x, enemy.y + 35);
 
-                // Game Over se o inimigo tocar no chão ou na nave
                 if (enemy.y > canvas.height || 
                    (enemy.x < player.x + player.width && enemy.x + enemy.width > player.x &&
                     enemy.y < player.y + player.height && enemy.y + enemy.height > player.y)) {
                     endGame(false);
                 }
 
-                // COLISÃO: Tiro vs Inimigo
                 bullets.forEach((bullet, bIndex) => {
                     if (bullet.x < enemy.x + enemy.width && bullet.x + bullet.width > enemy.x &&
                         bullet.y < enemy.y + enemy.height && bullet.y + bullet.height > enemy.y) {
@@ -269,7 +343,7 @@
                         enemy.hp--;
                         
                         if (enemy.hp <= 0) {
-                            playSound('soundExplosion');
+                            if(btnSound.classList.contains("on")) playSound('soundExplosion');
                             score += enemy.points;
                             scoreDisplay.innerText = `PONTOS: ${score}`;
                             enemies.splice(eIndex, 1);
@@ -286,17 +360,16 @@
         }
 
         function startGame() {
-            uiLayer.classList.add('hidden');
-            startScreen.classList.add('hidden');
-            
             score = 0; frames = 0; spawnRate = 80;
             bullets = []; enemies = [];
             scoreDisplay.innerText = `PONTOS: 0`;
-            
             player.x = 160;
+            player.y = 540; // Garantindo que o reset mantenha ele mais embaixo
             
-            track.volume = 1.0; // Música de fundo em 100%
-            track.play();
+            if(btnSound.classList.contains("on")) {
+                track.volume = 1.0; 
+                track.play();
+            }
             
             isPlaying = true;
             loop();
@@ -307,29 +380,26 @@
             cancelAnimationFrame(animationId);
             track.pause();
             
-            uiLayer.classList.remove('hidden');
-            
             if (isWin) {
-                playSound('soundWin');
-                winScreen.classList.remove('hidden');
+                if(btnSound.classList.contains("on")) playSound('soundWin');
+                messageDiv.style.display = 'block';
                 
-                // GATILHO FIREBASE: SALVA A VITÓRIA
                 if(window.registrarVitoria) window.registrarVitoria('guardiao_amor');
                 
             } else {
-                playSound('soundLose');
-                loseScreen.classList.remove('hidden');
+                if(btnSound.classList.contains("on")) playSound('soundLose');
+                gameOverDiv.style.display = 'block';
             }
         }
 
         function resetGame() {
-            winScreen.classList.add('hidden');
-            loseScreen.classList.add('hidden');
+            messageDiv.style.display = 'none';
+            gameOverDiv.style.display = 'none';
             startGame();
         }
     </script>
 
-    <!-- MOTOR DO FIREBASE (Adicionado antes do fechamento do body) -->
+    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -350,28 +420,25 @@
         const db = getDatabase(app);
         let userUID = null;
 
-        // Fica de olho se o jogador está logado
         onAuthStateChanged(auth, (user) => {
             if (user) userUID = user.uid;
         });
 
-        // Função para somar vitórias
         window.registrarVitoria = async function(nomeDoJogo) {
-            if (!userUID) return; // Se não fez login, não salva
+            if (!userUID) return; 
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const atual = snapshot.val() || 0;
-            set(dbRef, atual + 1); // Soma +1 vitória
+            set(dbRef, atual + 1); 
         };
 
-        // Função para salvar pontuação máxima (Recordes)
         window.registrarRecorde = async function(pontos, nomeDoJogo) {
             if (!userUID) return;
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const recordeAntigo = snapshot.val() || 0;
             if (pontos > recordeAntigo) {
-                set(dbRef, pontos); // Só salva se o ponto novo for maior que o antigo
+                set(dbRef, pontos); 
             }
         };
     </script>
