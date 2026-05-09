@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
@@ -12,35 +12,24 @@
     </script>
     <title>Minado Amorous: Josy & Pedro</title>
     
-    <!-- Favicon de Estrela -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
-    
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            text-align: center; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
-            /* overflow: hidden; Removido anteriormente para permitir rolar a tela no final */
-            position: relative;
+            margin: 0; display: flex; align-items: center; justify-content: center; 
+            min-height: 100dvh; overflow: hidden; position: relative;
         }
 
-        /* FUNDO DE ESTRELAS PIXELADAS */
+        /* FUNDO DE ESTRELAS PIXELADAS FORA DA CÁPSULA */
         .stars {
-            position: fixed;
-            top: 0; left: 0; width: 2px; height: 2px;
-            background: transparent;
+            position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
-            animation: spaceMove 100s linear infinite;
-            z-index: -1;
+            animation: spaceMove 100s linear infinite; z-index: -1;
         }
 
-        @keyframes spaceMove {
-            from { transform: translateY(0); }
-            to { transform: translateY(-100vh); }
-        }
+        @keyframes spaceMove { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
 
-        /* Scanlines CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -48,9 +37,41 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        /* Overlay Inicial */
+        /* --- CÁPSULA RESPONSIVA PADRÃO --- */
+        #app-wrapper {
+            position: relative; width: 100%; max-width: 450px; height: 100dvh;   
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; z-index: 20; padding: 20px; box-sizing: border-box;
+        }
+
+        @media (min-width: 451px) {
+            #app-wrapper {
+                height: 90dvh; border: 2px solid #003300; border-radius: 15px;
+                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
+            }
+        }
+
+        /* --- CONTROLES SUPERIORES --- */
+        .btn-sound {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 50;
+            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
+            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
+        }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+
+        .btn-close {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 50;
+            background: #111; color: #ff0000; border: 3px solid #ff0000; 
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
+            box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
+        }
+        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
+
+        /* --- OVERLAY INICIAL (Mantido, mas ajustado para a cápsula) --- */
         #overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 20px; box-sizing: border-box;
@@ -58,73 +79,79 @@
 
         .popup-start {
             border: 4px solid #ff00ff; padding: 30px; background: #111;
-            box-shadow: 0 0 20px #ff00ff; max-width: 400px; position: relative; z-index: 101;
+            box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center;
         }
 
-        /* Estilos dos Botões de Modo */
-        .mode-selection {
-            display: flex; flex-direction: column; gap: 15px; margin-top: 25px;
-        }
-
+        .mode-selection { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
         .start-game-btn {
             padding: 15px; font-family: 'Press Start 2P'; cursor: pointer;
             border: 4px solid; color: #000; font-size: 10px;
             box-shadow: 4px 4px 0px; transition: 0.2s;
         }
-
         .start-game-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px; }
-
         .btn-easy { background: #00ff41; border-color: #008f25; box-shadow: 4px 4px 0px #008f25; }
         .btn-medium { background: #ffd700; border-color: #b89b00; box-shadow: 4px 4px 0px #b89b00; }
         .btn-hard { background: #ff0000; border-color: #a00000; box-shadow: 4px 4px 0px #a00000; color: white;}
 
-        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 15px 0; z-index: 5; }
-        .status { font-size: 10px; color: #00ffff; margin-bottom: 10px; height: 20px; z-index: 5; }
+        /* --- ESTÉTICA DO TÍTULO E PLACAR --- */
+        .game-header { margin-top: 40px; margin-bottom: 20px; text-align: center; width: 100%; }
+        h1 { font-size: 16px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 0 0 10px 0; }
+        .subtitle { font-size: 10px; color: #00ffff; }
 
+        .score-board {
+            background: #111; border: 3px solid #ffd700; padding: 10px 20px;
+            font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
+            margin-bottom: 20px; text-align: center;
+        }
+
+        /* --- GRID DO JOGO --- */
         .grid { 
-            display: grid; grid-template-columns: repeat(5, 62px); gap: 8px; 
+            display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; 
             background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2;
-            z-index: 5;
-            margin-bottom: 20px;
+            z-index: 5; margin-bottom: 20px;
         }
 
         .cell { 
-            width: 62px; height: 62px; background: #000; border: 2px solid #333; 
+            width: 60px; height: 60px; background: #000; border: 2px solid #333; 
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
             font-size: 20px; color: #ffd700; transition: 0.2s; -webkit-tap-highlight-color: transparent;
         }
 
         .cell.revealed { background: #1a1a1a; border-color: #444; cursor: default; }
         .cell.heart { background: #220022; border-color: #ff4d6d; color: #ff4d6d; animation: blink 0.5s infinite; }
-        /* Estilo para mostrar corações não encontrados no fim */
         .cell.heart-revealed { background: #1a1a1a; border-color: #ff4d6d; color: #ff4d6d; opacity: 0.7; animation: none; }
         .cell.blackhole { background: #000; border-color: #ff0000; color: #fff; text-shadow: 0 0 8px #ff0000; }
         .cell.number { color: #00ffff; }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+        /* --- MENSAGENS DE FIM DE JOGO (PADRONIZADAS) --- */
         #message, #game-over { 
-            display: none; padding: 20px; border: 4px double #ff4d6d; margin-top: 20px;
-            background: rgba(255, 77, 109, 0.1); width: 90%; max-width: 350px; animation: fadeIn 0.5s; z-index: 20;
-            margin-bottom: 30px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.95); 
+            width: 85%; max-width: 350px; animation: fadeIn 0.5s; z-index: 60; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 77, 109, 0.5);
         }
 
-        #game-over { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
+        .msg-title { color: #ff4d6d; font-size: 16px; margin-bottom: 15px; }
+        .msg-white { color: #ffffff; font-size: 10px; line-height: 1.6; margin-bottom: 10px; }
+        .msg-blue  { color: #00ffff; font-size: 10px; line-height: 1.6; margin-bottom: 15px; }
+        .msg-red   { color: #ff0000; font-size: 14px; margin-bottom: 20px; text-shadow: 2px 2px #550000; }
 
         .btn {
-            margin-top: 15px; padding: 12px; font-family: 'Press Start 2P'; font-size: 10px;
-            color: white; cursor: pointer; width: 100%; display: block; text-decoration: none;
-            box-sizing: border-box;
+            padding: 15px 20px; font-family: 'Press Start 2P', cursive;
+            font-size: 10px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center;
         }
 
         .btn-restart { background: #ff00ff; border: 4px solid #4b0082; box-shadow: 4px 4px 0px #4b0082; }
-        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; margin-top: 10px; }
+        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         @media (max-width: 380px) {
-            .grid { grid-template-columns: repeat(5, 55px); gap: 5px; }
-            .cell { width: 55px; height: 55px; font-size: 18px; }
+            .grid { grid-template-columns: repeat(5, 50px); gap: 5px; }
+            .cell { width: 50px; height: 50px; font-size: 18px; }
+            h1 { font-size: 14px; }
         }
     </style>
 </head>
@@ -132,66 +159,95 @@
 
     <div class="stars"></div>
 
-    <!-- Overlay de Início Atualizado -->
-    <div id="overlay">
-        <div class="popup-start">
-            <p style="line-height: 1.6; font-size: 10px;">SISTEMA DE RADAR PRONTO. SELECIONE A DIFICULDADE DA MISSÃO:</p>
-            <div class="mode-selection">
-                <button class="start-game-btn btn-easy" onclick="iniciarMissao(3)">FÁCIL (3 🌑)</button>
-                <button class="start-game-btn btn-medium" onclick="iniciarMissao(4)">MÉDIO (4 🌑)</button>
-                <button class="start-game-btn btn-hard" onclick="iniciarMissao(5)">DIFÍCIL (5 🌑)</button>
+    <div id="app-wrapper">
+
+        <!-- OVERLAY DE INÍCIO -->
+        <div id="overlay">
+            <div class="popup-start">
+                <p style="line-height: 1.6; font-size: 10px; color: #00ff41;">SISTEMA DE RADAR PRONTO. SELECIONE A DIFICULDADE DA MISSÃO:</p>
+                <div class="mode-selection">
+                    <button class="start-game-btn btn-easy" onclick="iniciarMissao(3)">FÁCIL (3 🌑)</button>
+                    <button class="start-game-btn btn-medium" onclick="iniciarMissao(4)">MÉDIO (4 🌑)</button>
+                    <button class="start-game-btn btn-hard" onclick="iniciarMissao(5)">DIFÍCIL (5 🌑)</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Áudios Atualizados -->
-    <audio id="bgTrack" loop><source src="assets/sounds/campo_minado.mp3" type="audio/mpeg"></audio>
-    <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
-    <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
-    <audio id="soundLose"><source src="assets/sounds/lose.wav" type="audio/wav"></audio>
+        <!-- CONTROLES -->
+        <button id="btn-sound" class="btn-sound">🔇</button>
+        <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
 
-    <h1>> MINADO AMOROUS</h1>
-    <div class="status" id="status">ENCONTRE OS 3 ❤️</div>
-    
-    <div class="grid" id="grid"></div>
-    
-    <div id="message">
-        <h2 style="color: #ff4d6d; font-size: 16px;">SISTEMA RESTAURADO! 🏆</h2>
-        <p style="color: #fff; font-size: 12px;">Você desviou de todos os buracos negros para me encontrar.</p>
-        <p style="color: #00ffff; font-size: 12px;">Sorte a minha ter te encontrado nesse universo!</p>
-        <p style="font-size: 14px;"><strong>PEDRO AMA JOSY!</strong></p>
-        <button class="btn btn-restart" onclick="startGame()">JOGAR NOVAMENTE</button>
-        <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
-    </div>
+        <audio id="bgTrack" loop><source src="assets/sounds/campo_minado.mp3" type="audio/mpeg"></audio>
+        <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
+        <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
+        <audio id="soundLose"><source src="assets/sounds/lose.wav" type="audio/wav"></audio>
 
-    <div id="game-over">
-        <h2 style="color: #ff0000; font-size: 16px;">OPS! 🌑</h2>
-        <p style="color: #fff; font-size: 12px;">Você caiu em um buraco negro!</p>
-        <p style="color: #00ffff; font-size: 12px;">O amor vence o tempo e o espaço. Tente de novo!</p>
-        <button class="btn btn-restart" onclick="startGame()" style="background:#444; border-color:#000; box-shadow: 4px 4px 0px #222;">REINICIAR MISSÃO</button>
-        <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+        <!-- HEADER PADRONIZADO -->
+        <div class="game-header">
+            <h1>> 02. MINADO AMOROUS</h1>
+            <div class="subtitle">PLAYER 1: JOSY</div>
+        </div>
+
+        <!-- PLACAR FLUTUANTE -->
+        <div class="score-board" id="score-display">
+            CORAÇÕES: 0 / 3
+        </div>
+        
+        <div class="grid" id="grid"></div>
+        
+        <!-- MENSAGEM FINAL: VITÓRIA -->
+        <div id="message">
+            <h2 class="msg-title">SISTEMA RESTAURADO! 🏆</h2>
+            <p class="msg-white">Você desviou de todos os buracos negros para me encontrar.</p>
+            <p class="msg-blue">Sorte a minha ter te encontrado nesse universo!</p>
+            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
+            <button class="btn btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
+            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+        </div>
+
+        <!-- MENSAGEM FINAL: DERROTA -->
+        <div id="game-over">
+            <h2 class="msg-title">OPS! 🌑</h2>
+            <p class="msg-white">Você caiu em um buraco negro!</p>
+            <p class="msg-blue">O amor vence o tempo e o espaço. Tente de novo!</p>
+            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
+            <button class="btn btn-restart" onclick="startGame()" style="background:#444; border-color:#000; box-shadow: 4px 4px 0px #222;">REINICIAR MISSÃO</button>
+            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+        </div>
+
     </div>
 
     <script>
         const grid = document.getElementById('grid');
         const messageDiv = document.getElementById('message');
         const gameOverDiv = document.getElementById('game-over');
-        const statusText = document.getElementById('status');
+        const scoreDisplay = document.getElementById('score-display');
         const track = document.getElementById('bgTrack');
+        const btnSound = document.getElementById('btn-sound');
         const size = 5;
         let hearts = [];
         let blackholes = [];
         let foundHearts = 0;
-        let gameActive = false; // Começa como false
-        let numBlackholes = 3; // Padrão
+        let gameActive = false;
+        let numBlackholes = 3;
 
-        // Nova função para iniciar com dificuldade
+        // Lógica do Som
+        track.volume = 0.5;
+        btnSound.addEventListener('click', () => {
+            if (track.paused) {
+                track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
+            } else {
+                track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on");
+            }
+        });
+
         function iniciarMissao(dificuldade) {
-            numBlackholes = dificuldade; // Salva a escolha
-            track.volume = 0.5; 
-            track.play();
+            numBlackholes = dificuldade; 
+            track.play(); 
+            btnSound.innerHTML = "🔊"; 
+            btnSound.classList.add("on");
             document.getElementById('overlay').style.display = 'none';
-            startGame(); // Inicia o jogo de fato
+            startGame();
         }
 
         function playClick() {
@@ -207,35 +263,28 @@
             grid.innerHTML = '';
             messageDiv.style.display = 'none';
             gameOverDiv.style.display = 'none';
-            statusText.innerText = 'ENCONTRE OS 3 ❤️';
+            scoreDisplay.innerText = 'CORAÇÕES: 0 / 3';
             foundHearts = 0;
             hearts = [];
             blackholes = [];
             gameActive = true;
             
-            // Reinicia a música se ela tiver parado na rodada anterior
-            if(track.paused && document.getElementById('overlay').style.display === 'none') {
-                track.currentTime = 0;
-                track.play();
-            }
+            if(btnSound.classList.contains("on")) track.play();
 
             let positions = Array.from({length: 25}, (_, i) => i);
             positions.sort(() => Math.random() - 0.5);
             
             hearts = positions.slice(0, 3);
-            // Modificação para usar o número dinâmico de buracos negros
             blackholes = positions.slice(3, 3 + numBlackholes);
 
             for (let i = 0; i < size * size; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
                 cell.innerHTML = "★";
-                cell.id = 'cell-' + i; // Adiciona ID para facilitar revelação no final
+                cell.id = 'cell-' + i; 
                 cell.onclick = () => revealCell(cell, i);
                 grid.appendChild(cell);
             }
-            // Rola para o topo ao iniciar
-            window.scrollTo(0, 0);
         }
 
         function revealCell(cell, index) {
@@ -244,7 +293,7 @@
             cell.classList.add('revealed');
             
             if (blackholes.includes(index)) {
-                track.pause(); // Pára a música no Game Over
+                track.pause(); 
                 playLose(); 
                 cell.innerHTML = "🌑";
                 cell.classList.add('blackhole');
@@ -254,9 +303,9 @@
                 cell.innerHTML = "❤️";
                 cell.classList.add('heart');
                 foundHearts++;
-                statusText.innerText = `CORAÇÕES: ${foundHearts}/3`;
+                scoreDisplay.innerText = `CORAÇÕES: ${foundHearts} / 3`;
                 if (foundHearts === 3) {
-                    track.pause(); // Pára a música na Vitória
+                    track.pause(); 
                     playWin(); 
                     endGame(true);
                 }
@@ -286,58 +335,43 @@
 
         function endGame(isWin) {
             gameActive = false;
-            const cells = document.querySelectorAll('.cell');
 
             if (isWin) {
                 messageDiv.style.display = 'block';
-                statusText.innerText = 'MISSÃO CUMPRIDA!';
+                scoreDisplay.innerText = 'MISSÃO CUMPRIDA!';
                 
-                // GATILHO FIREBASE: SALVA A VITÓRIA
                 if(window.registrarVitoria) window.registrarVitoria('minado_amorous');
                 
-                // Modificação 2: Revelar buracos negros ao ganhar
                 blackholes.forEach(idx => {
                     const targetCell = document.getElementById('cell-' + idx);
                     if (!targetCell.classList.contains('revealed')) {
                         targetCell.innerHTML = "🌑";
                         targetCell.classList.add('revealed', 'blackhole');
-                        targetCell.style.opacity = '0.5'; // Fica semi-transparente para diferenciar
+                        targetCell.style.opacity = '0.5'; 
                     }
                 });
-
             } else {
                 gameOverDiv.style.display = 'block';
-                statusText.innerText = 'SISTEMA OFFLINE';
+                scoreDisplay.innerText = 'SISTEMA OFFLINE';
                 
-                // Revela todos os buracos negros (lógica original melhorada)
                 blackholes.forEach(idx => {
                     const targetCell = document.getElementById('cell-' + idx);
                     targetCell.innerHTML = "🌑";
                     targetCell.classList.add('revealed', 'blackhole');
                 });
 
-                // Modificação 1: Revelar corações ao perder
                 hearts.forEach(idx => {
                     const targetCell = document.getElementById('cell-' + idx);
                     if (!targetCell.classList.contains('revealed')) {
                         targetCell.innerHTML = "❤️";
-                        // Usa uma classe diferente para não piscar
                         targetCell.classList.add('revealed', 'heart-revealed'); 
                     }
                 });
             }
-
-            // Modificação 3: O scroll automático continua, mas a trava foi tirada no CSS
-            setTimeout(() => {
-                const target = isWin ? messageDiv : gameOverDiv;
-                target.scrollIntoView({ behavior: 'smooth' });
-            }, 300);
         }
-
-        // Removido startGame() automático do final
     </script>
 
-    <!-- MOTOR DO FIREBASE (Adicionado antes do fechamento do body) -->
+    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -358,28 +392,25 @@
         const db = getDatabase(app);
         let userUID = null;
 
-        // Fica de olho se o jogador está logado
         onAuthStateChanged(auth, (user) => {
             if (user) userUID = user.uid;
         });
 
-        // Função para somar vitórias
         window.registrarVitoria = async function(nomeDoJogo) {
-            if (!userUID) return; // Se não fez login, não salva
+            if (!userUID) return; 
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const atual = snapshot.val() || 0;
-            set(dbRef, atual + 1); // Soma +1 vitória
+            set(dbRef, atual + 1); 
         };
 
-        // Função para salvar pontuação máxima (Recordes)
         window.registrarRecorde = async function(pontos, nomeDoJogo) {
             if (!userUID) return;
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const recordeAntigo = snapshot.val() || 0;
             if (pontos > recordeAntigo) {
-                set(dbRef, pontos); // Só salva se o ponto novo for maior que o antigo
+                set(dbRef, pontos); 
             }
         };
     </script>
