@@ -31,6 +31,9 @@
 
         h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; position: relative; z-index: 5; }
 
+        /* Oculta o menu por padrão */
+        #game-menu { display: none; }
+
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 300px; position: relative; z-index: 5; }
 
         .arcade-btn {
@@ -49,17 +52,13 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* --- BOTÃO DE SOM ALINHADO --- */
         .btn-sound {
             position: absolute; top: 25px; left: 20px; z-index: 50;
             background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
             font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
-            box-shadow: 3px 3px 0px #a00000; transition: 0.3s;
-            height: 40px; /* Altura para alinhar com a foto */
+            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
         }
-        .btn-sound.on {
-            color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25;
-        }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
 
         #auth-container { position: absolute; top: 20px; right: 20px; z-index: 50; }
 
@@ -74,7 +73,6 @@
             cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
         }
 
-        /* --- MODAL DE PERFIL AJUSTADO --- */
         #stats-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 200; display: none;
@@ -87,15 +85,8 @@
             display: flex; flex-direction: column; gap: 15px;
         }
 
-        .modal-header-profile {
-            display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 5px;
-        }
-        
-        #modal-profile-pic {
-            width: 70px; height: 70px; border-radius: 50%; border: 3px solid #00ffff;
-            box-shadow: 0 0 10px #00ffff; object-fit: cover;
-        }
-
+        .modal-header-profile { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 5px; }
+        #modal-profile-pic { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #00ffff; box-shadow: 0 0 10px #00ffff; object-fit: cover; }
         .profile-name-title { color: #fff; font-size: 14px; text-align: center; }
 
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -108,10 +99,11 @@
         .stat-line { font-size: 9px; color: #fff; margin: 12px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 5px;}
         .stat-value { color: #ff00ff; }
         
-        .leaderboard-table { width: 100%; font-size: 8px; color: #fff; border-collapse: collapse; margin-top: 10px;}
+        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
         .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
         .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
-        .leaderboard-table .rank { color: #ff00ff; width: 30px;}
+        .leaderboard-table .game-name { color: #fff; width: 45%; }
+        .leaderboard-table .top-player { color: #ff00ff; width: 35%; }
         .leaderboard-table .score { color: #00ff41; text-align: right;}
 
         .modal-footer { display: flex; gap: 10px; margin-top: 15px; }
@@ -138,7 +130,6 @@
 
     <div id="stats-modal">
         <div class="stats-box">
-            <!-- CABEÇALHO COM FOTO E NOME -->
             <div class="modal-header-profile">
                 <img id="modal-profile-pic" src="" alt="Foto">
                 <h2 class="profile-name-title" id="player-name-title">JOGADOR</h2>
@@ -157,11 +148,11 @@
             </div>
 
             <div id="tab-leaderboard" class="tab-content">
-                <p style="font-size: 10px; color: #ff00ff; text-align: center;">TOP RECORDES - LOVE BIRD</p>
+                <p style="font-size: 9px; color: #ff00ff; text-align: center; margin-bottom: 10px;">QUADRO DE CAMPEÕES</p>
                 <table class="leaderboard-table">
-                    <thead><tr><th class="rank">#</th><th>JOGADOR</th><th class="score">PONTOS</th></tr></thead>
+                    <thead><tr><th class="game-name">JOGO</th><th class="top-player">LÍDER</th><th class="score">RECORD</th></tr></thead>
                     <tbody id="leaderboard-body">
-                        <tr><td colspan="3" style="text-align: center;">Buscando recordes...</td></tr>
+                        <!-- Carregado dinamicamente -->
                     </tbody>
                 </table>
             </div>
@@ -173,17 +164,18 @@
         </div>
     </div>
 
-    <h1>🎮 JOSY ARCADE 🎮</h1>
-    <p style="font-size: 10px; margin-bottom: 30px; color: #fff;">Faça login para salvar seus recordes e competir!</p>
-
-    <div class="menu-container">
-        <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
-        <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
-        <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
-        <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
-            04. LOVE BIRD
-            <span class="badge-novo">NOVO JOGO!</span>
-        </a>
+    <!-- Div envolta para controle de visibilidade -->
+    <div id="game-menu">
+        <h1>🎮 JOSY ARCADE 🎮</h1>
+        <div class="menu-container">
+            <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
+            <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
+            <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
+            <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
+                04. LOVE BIRD
+                <span class="badge-novo">NOVO JOGO!</span>
+            </a>
+        </div>
     </div>
 
     <script type="module">
@@ -210,13 +202,14 @@
         const btnLogin = document.getElementById('btn-login');
         const profilePic = document.getElementById('profile-pic');
         const statsModal = document.getElementById('stats-modal');
+        const gameMenu = document.getElementById('game-menu');
         const btnCloseStats = document.getElementById('btn-close-stats');
         const btnLogout = document.getElementById('btn-logout'); 
         const playerNameTitle = document.getElementById('player-name-title');
         const modalProfilePic = document.getElementById('modal-profile-pic');
-        
         const btnSound = document.getElementById('btn-sound');
         const audioTrack = document.getElementById('bgTrack');
+        
         audioTrack.volume = 0.5;
 
         btnSound.addEventListener('click', () => {
@@ -239,6 +232,7 @@
             if (confirm("Deseja realmente sair do Arcade?")) {
                 signOut(auth).then(() => {
                     statsModal.style.display = 'none'; 
+                    location.reload(); // Recarrega para esconder o menu
                 }).catch((error) => { console.error("Erro ao sair:", error); });
             }
         });
@@ -246,10 +240,9 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 btnLogin.style.display = 'none';
+                gameMenu.style.display = 'block'; // MOSTRA OS JOGOS
                 profilePic.style.display = 'block';
                 profilePic.src = user.photoURL; 
-                
-                // ATUALIZA FOTO E NOME NO PERFIL
                 modalProfilePic.src = user.photoURL;
                 const primeiroNome = user.displayName.split(" ")[0].toUpperCase();
                 playerNameTitle.innerText = primeiroNome;
@@ -260,6 +253,7 @@
                 carregarPlacarGlobal(); 
             } else {
                 btnLogin.style.display = 'flex';
+                gameMenu.style.display = 'none'; // ESCONDE OS JOGOS
                 profilePic.style.display = 'none';
             }
         });
@@ -283,50 +277,49 @@
             leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Buscando recordes...</td></tr>';
 
             try {
-                const usersRef = ref(db, 'usuarios');
-                const snapshot = await get(usersRef);
-                const allUsersData = snapshot.val();
+                const snapshot = await get(ref(db, 'usuarios'));
+                const allUsers = snapshot.val();
 
-                if (!allUsersData) {
+                if (!allUsers) {
                     leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Ainda não há resultados.</td></tr>';
                     return;
                 }
 
-                let leaderboard = [];
-
-                for (const uid in allUsersData) {
-                    const userData = allUsersData[uid];
-                    const score = (userData.estatisticas && userData.estatisticas.love_bird_max) || 0;
-                    
-                    if (score > 0) {
-                        leaderboard.push({
-                            name: (userData.nome || "ANÔNIMO").toUpperCase(),
-                            score: score
-                        });
-                    }
-                }
-
-                leaderboard.sort((a, b) => b.score - a.score);
-                const top5 = leaderboard.slice(0, 5);
+                // Jogos na ordem correta
+                const games = [
+                    { key: 'busca_estelar', label: 'BUSCA ESTELAR', suffix: 'V' },
+                    { key: 'minado_amorous', label: 'MINADO AMOROUS', suffix: 'V' },
+                    { key: 'guardiao_amor', label: 'GUARDIÃO DO AMOR', suffix: 'V' },
+                    { key: 'love_bird_max', label: 'LOVE BIRD', suffix: 'Pts' }
+                ];
 
                 leaderboardBody.innerHTML = '';
-                top5.forEach((entry, index) => {
+
+                games.forEach(game => {
+                    let topPlayer = "---";
+                    let topScore = 0;
+
+                    for (const uid in allUsers) {
+                        const user = allUsers[uid];
+                        const score = (user.estatisticas && user.estatisticas[game.key]) || 0;
+                        if (score > topScore) {
+                            topScore = score;
+                            topPlayer = user.nome || "Anônimo";
+                        }
+                    }
+
                     const row = `
                         <tr>
-                            <td class="rank">${index + 1}º</td>
-                            <td>${entry.name}</td>
-                            <td class="score">${entry.score}</td>
+                            <td class="game-name">${game.label}</td>
+                            <td class="top-player">${topPlayer}</td>
+                            <td class="score">${topScore}${game.suffix}</td>
                         </tr>
                     `;
                     leaderboardBody.innerHTML += row;
                 });
 
-                if(top5.length === 0) {
-                    leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Ainda não há resultados.</td></tr>';
-                }
-
             } catch (error) {
-                console.error("Erro ao carregar placar:", error);
+                console.error("Erro no placar:", error);
                 leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Ainda não há resultados.</td></tr>';
             }
         }
