@@ -49,12 +49,13 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* --- BOTÃO DE SOM --- */
+        /* --- BOTÃO DE SOM ALINHADO --- */
         .btn-sound {
-            position: absolute; top: 20px; left: 20px; z-index: 50;
+            position: absolute; top: 25px; left: 20px; z-index: 50;
             background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
             font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
             box-shadow: 3px 3px 0px #a00000; transition: 0.3s;
+            height: 40px; /* Altura para alinhar com a foto */
         }
         .btn-sound.on {
             color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25;
@@ -73,6 +74,7 @@
             cursor: pointer; display: none; box-shadow: 0 0 15px #ff00ff; object-fit: cover;
         }
 
+        /* --- MODAL DE PERFIL AJUSTADO --- */
         #stats-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 200; display: none;
@@ -85,8 +87,17 @@
             display: flex; flex-direction: column; gap: 15px;
         }
 
-        .stats-title { color: #fff; font-size: 14px; text-align: center; margin-bottom: 5px; }
+        .modal-header-profile {
+            display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 5px;
+        }
         
+        #modal-profile-pic {
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid #00ffff;
+            box-shadow: 0 0 10px #00ffff; object-fit: cover;
+        }
+
+        .profile-name-title { color: #fff; font-size: 14px; text-align: center; }
+
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; }
         .tab-btn.active { background: #00ffff; color: #000; border-color: #fff; }
@@ -113,10 +124,8 @@
 
     <div class="stars"></div>
 
-    <!-- BOTÃO DE SOM NO CANTO SUPERIOR ESQUERDO -->
     <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
 
-    <!-- Áudio de Fundo -->
     <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
 
     <div id="auth-container">
@@ -129,7 +138,11 @@
 
     <div id="stats-modal">
         <div class="stats-box">
-            <h2 class="stats-title">PERFIL DO USUÁRIO</h2>
+            <!-- CABEÇALHO COM FOTO E NOME -->
+            <div class="modal-header-profile">
+                <img id="modal-profile-pic" src="" alt="Foto">
+                <h2 class="profile-name-title" id="player-name-title">JOGADOR</h2>
+            </div>
             
             <div class="modal-tabs">
                 <button class="tab-btn active" onclick="openTab(event, 'tab-stats')">ESTATÍSTICAS</button>
@@ -137,7 +150,6 @@
             </div>
 
             <div id="tab-stats" class="tab-content active">
-                <p style="font-size: 10px; color: #00ffff; text-align: center;">Olá, <span id="player-name">JOGADOR</span>!</p>
                 <div class="stat-line"><span>01. BUSCA ESTELAR:</span> <span class="stat-value" id="stat-busca">0 Vitórias</span></div>
                 <div class="stat-line"><span>02. MINADO AMOROUS:</span> <span class="stat-value" id="stat-minado">0 Vitórias</span></div>
                 <div class="stat-line"><span>03. GUARDIÃO DO AMOR:</span> <span class="stat-value" id="stat-guardiao">0 Vitórias</span></div>
@@ -149,7 +161,7 @@
                 <table class="leaderboard-table">
                     <thead><tr><th class="rank">#</th><th>JOGADOR</th><th class="score">PONTOS</th></tr></thead>
                     <tbody id="leaderboard-body">
-                        <tr><td colspan="3" style="text-align: center;">Carregando...</td></tr>
+                        <tr><td colspan="3" style="text-align: center;">Buscando recordes...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -177,7 +189,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        // [ COMANDO SET ADICIONADO ABAIXO ]
         import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -201,14 +212,13 @@
         const statsModal = document.getElementById('stats-modal');
         const btnCloseStats = document.getElementById('btn-close-stats');
         const btnLogout = document.getElementById('btn-logout'); 
-        const playerNameDisplay = document.getElementById('player-name');
+        const playerNameTitle = document.getElementById('player-name-title');
+        const modalProfilePic = document.getElementById('modal-profile-pic');
         
-        // Elementos do Botão de Som
         const btnSound = document.getElementById('btn-sound');
         const audioTrack = document.getElementById('bgTrack');
         audioTrack.volume = 0.5;
 
-        // Lógica do Som
         btnSound.addEventListener('click', () => {
             if (audioTrack.paused) {
                 audioTrack.play().catch(e => console.log("Erro ao tocar:", e));
@@ -239,10 +249,11 @@
                 profilePic.style.display = 'block';
                 profilePic.src = user.photoURL; 
                 
+                // ATUALIZA FOTO E NOME NO PERFIL
+                modalProfilePic.src = user.photoURL;
                 const primeiroNome = user.displayName.split(" ")[0].toUpperCase();
-                playerNameDisplay.innerText = primeiroNome;
+                playerNameTitle.innerText = primeiroNome;
 
-                // SALVA O NOME DO USUÁRIO NO BANCO PARA APARECER NO PLACAR
                 set(ref(db, 'usuarios/' + user.uid + '/nome'), primeiroNome);
 
                 carregarEstatisticas(user.uid);
@@ -333,7 +344,6 @@
             document.getElementById(tabName).style.display = "block";
             evt.currentTarget.className += " active";
         }
-
     </script>
 </body>
 </html>
