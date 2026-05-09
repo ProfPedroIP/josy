@@ -113,7 +113,6 @@
         </div>
     </div>
 
-    <!-- Áudio alterado para .mp3 -->
     <audio id="bgTrack" loop><source src="assets/sounds/batalha_estelar.mp3" type="audio/mpeg"></audio>
     <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
     <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
@@ -162,7 +161,6 @@
             found = 0;
             targets = [];
             
-            // Se estiver reiniciando após vencer, toca a música de novo
             if(track.paused) track.play();
 
             while(targets.length < 3){
@@ -184,8 +182,12 @@
                         cell.classList.add('hit');
                         found++;
                         if (found === 3) {
-                            track.pause(); // PÁRA A MÚSICA AO VENCER
-                            playWin(); // Toca o som de vitória
+                            track.pause();
+                            playWin();
+                            
+                            // GATILHO FIREBASE: SALVA A VITÓRIA
+                            if(window.registrarVitoria) window.registrarVitoria('busca_estelar');
+
                             messageDiv.style.display = 'block';
                             setTimeout(() => { messageDiv.scrollIntoView({ behavior: 'smooth' }); }, 300);
                         }
@@ -199,6 +201,53 @@
             }
         }
         startGame();
+    </script>
+
+    <!-- MOTOR DO FIREBASE (Sempre antes do fechamento do body) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
+            authDomain: "josyarcade.firebaseapp.com",
+            databaseURL: "https://josyarcade-default-rtdb.firebaseio.com",
+            projectId: "josyarcade",
+            storageBucket: "josyarcade.firebasestorage.app",
+            messagingSenderId: "960445216740",
+            appId: "1:960445216740:web:d913dc274acdb1ffad39f1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        let userUID = null;
+
+        // Fica de olho se o jogador está logado
+        onAuthStateChanged(auth, (user) => {
+            if (user) userUID = user.uid;
+        });
+
+        // Função para somar vitórias
+        window.registrarVitoria = async function(nomeDoJogo) {
+            if (!userUID) return; // Se não fez login, não salva
+            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
+            const snapshot = await get(dbRef);
+            const atual = snapshot.val() || 0;
+            set(dbRef, atual + 1); // Soma +1 vitória
+        };
+
+        // Função para salvar pontuação máxima (Recordes)
+        window.registrarRecorde = async function(pontos, nomeDoJogo) {
+            if (!userUID) return;
+            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
+            const snapshot = await get(dbRef);
+            const recordeAntigo = snapshot.val() || 0;
+            if (pontos > recordeAntigo) {
+                set(dbRef, pontos); // Só salva se o ponto novo for maior que o antigo
+            }
+        };
     </script>
 </body>
 </html>
