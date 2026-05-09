@@ -21,7 +21,7 @@
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
             text-align: center; display: flex; flex-direction: column; align-items: center; 
             justify-content: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box;
-            overflow: hidden; /* Mantém as estrelas no fundo sem rolar */
+            /* overflow: hidden; Removido anteriormente para permitir rolar a tela no final */
             position: relative;
         }
 
@@ -61,11 +61,22 @@
             box-shadow: 0 0 20px #ff00ff; max-width: 400px; position: relative; z-index: 101;
         }
 
-        .start-game-btn {
-            margin-top: 20px; padding: 15px; background: #00ff41; color: #000;
-            border: none; font-family: 'Press Start 2P'; cursor: pointer;
-            box-shadow: 4px 4px 0px #008f25;
+        /* Estilos dos Botões de Modo */
+        .mode-selection {
+            display: flex; flex-direction: column; gap: 15px; margin-top: 25px;
         }
+
+        .start-game-btn {
+            padding: 15px; font-family: 'Press Start 2P'; cursor: pointer;
+            border: 4px solid; color: #000; font-size: 10px;
+            box-shadow: 4px 4px 0px; transition: 0.2s;
+        }
+
+        .start-game-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px; }
+
+        .btn-easy { background: #00ff41; border-color: #008f25; box-shadow: 4px 4px 0px #008f25; }
+        .btn-medium { background: #ffd700; border-color: #b89b00; box-shadow: 4px 4px 0px #b89b00; }
+        .btn-hard { background: #ff0000; border-color: #a00000; box-shadow: 4px 4px 0px #a00000; color: white;}
 
         h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 15px 0; z-index: 5; }
         .status { font-size: 10px; color: #00ffff; margin-bottom: 10px; height: 20px; z-index: 5; }
@@ -74,6 +85,7 @@
             display: grid; grid-template-columns: repeat(5, 62px); gap: 8px; 
             background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2;
             z-index: 5;
+            margin-bottom: 20px;
         }
 
         .cell { 
@@ -84,6 +96,8 @@
 
         .cell.revealed { background: #1a1a1a; border-color: #444; cursor: default; }
         .cell.heart { background: #220022; border-color: #ff4d6d; color: #ff4d6d; animation: blink 0.5s infinite; }
+        /* Estilo para mostrar corações não encontrados no fim */
+        .cell.heart-revealed { background: #1a1a1a; border-color: #ff4d6d; color: #ff4d6d; opacity: 0.7; animation: none; }
         .cell.blackhole { background: #000; border-color: #ff0000; color: #fff; text-shadow: 0 0 8px #ff0000; }
         .cell.number { color: #00ffff; }
 
@@ -92,6 +106,7 @@
         #message, #game-over { 
             display: none; padding: 20px; border: 4px double #ff4d6d; margin-top: 20px;
             background: rgba(255, 77, 109, 0.1); width: 90%; max-width: 350px; animation: fadeIn 0.5s; z-index: 20;
+            margin-bottom: 30px;
         }
 
         #game-over { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
@@ -117,11 +132,15 @@
 
     <div class="stars"></div>
 
-    <!-- Overlay de Início -->
+    <!-- Overlay de Início Atualizado -->
     <div id="overlay">
         <div class="popup-start">
-            <p style="line-height: 1.6; font-size: 12px;">SISTEMA DE RADAR PRONTO. CUIDADO COM OS BURACOS NEGROS!</p>
-            <button class="start-game-btn" onclick="iniciarMissao()">INICIAR RADAR</button>
+            <p style="line-height: 1.6; font-size: 10px;">SISTEMA DE RADAR PRONTO. SELECIONE A DIFICULDADE DA MISSÃO:</p>
+            <div class="mode-selection">
+                <button class="start-game-btn btn-easy" onclick="iniciarMissao(3)">FÁCIL (3 🌑)</button>
+                <button class="start-game-btn btn-medium" onclick="iniciarMissao(4)">MÉDIO (4 🌑)</button>
+                <button class="start-game-btn btn-hard" onclick="iniciarMissao(5)">DIFÍCIL (5 🌑)</button>
+            </div>
         </div>
     </div>
 
@@ -163,12 +182,16 @@
         let hearts = [];
         let blackholes = [];
         let foundHearts = 0;
-        let gameActive = true;
+        let gameActive = false; // Começa como false
+        let numBlackholes = 3; // Padrão
 
-        function iniciarMissao() {
+        // Nova função para iniciar com dificuldade
+        function iniciarMissao(dificuldade) {
+            numBlackholes = dificuldade; // Salva a escolha
             track.volume = 0.5; 
             track.play();
             document.getElementById('overlay').style.display = 'none';
+            startGame(); // Inicia o jogo de fato
         }
 
         function playClick() {
@@ -200,15 +223,19 @@
             positions.sort(() => Math.random() - 0.5);
             
             hearts = positions.slice(0, 3);
-            blackholes = positions.slice(3, 6);
+            // Modificação para usar o número dinâmico de buracos negros
+            blackholes = positions.slice(3, 3 + numBlackholes);
 
             for (let i = 0; i < size * size; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
                 cell.innerHTML = "★";
+                cell.id = 'cell-' + i; // Adiciona ID para facilitar revelação no final
                 cell.onclick = () => revealCell(cell, i);
                 grid.appendChild(cell);
             }
+            // Rola para o topo ao iniciar
+            window.scrollTo(0, 0);
         }
 
         function revealCell(cell, index) {
@@ -259,25 +286,52 @@
 
         function endGame(isWin) {
             gameActive = false;
+            const cells = document.querySelectorAll('.cell');
+
             if (isWin) {
                 messageDiv.style.display = 'block';
                 statusText.innerText = 'MISSÃO CUMPRIDA!';
+                
+                // Modificação 2: Revelar buracos negros ao ganhar
+                blackholes.forEach(idx => {
+                    const targetCell = document.getElementById('cell-' + idx);
+                    if (!targetCell.classList.contains('revealed')) {
+                        targetCell.innerHTML = "🌑";
+                        targetCell.classList.add('revealed', 'blackhole');
+                        targetCell.style.opacity = '0.5'; // Fica semi-transparente para diferenciar
+                    }
+                });
+
             } else {
                 gameOverDiv.style.display = 'block';
                 statusText.innerText = 'SISTEMA OFFLINE';
-                const cells = document.querySelectorAll('.cell');
+                
+                // Revela todos os buracos negros (lógica original melhorada)
                 blackholes.forEach(idx => {
-                    cells[idx].innerHTML = "🌑";
-                    cells[idx].classList.add('blackhole');
+                    const targetCell = document.getElementById('cell-' + idx);
+                    targetCell.innerHTML = "🌑";
+                    targetCell.classList.add('revealed', 'blackhole');
+                });
+
+                // Modificação 1: Revelar corações ao perder
+                hearts.forEach(idx => {
+                    const targetCell = document.getElementById('cell-' + idx);
+                    if (!targetCell.classList.contains('revealed')) {
+                        targetCell.innerHTML = "❤️";
+                        // Usa uma classe diferente para não piscar
+                        targetCell.classList.add('revealed', 'heart-revealed'); 
+                    }
                 });
             }
+
+            // Modificação 3: O scroll automático continua, mas a trava foi tirada no CSS
             setTimeout(() => {
                 const target = isWin ? messageDiv : gameOverDiv;
                 target.scrollIntoView({ behavior: 'smooth' });
             }, 300);
         }
 
-        startGame();
+        // Removido startGame() automático do final
     </script>
 </body>
 </html>
