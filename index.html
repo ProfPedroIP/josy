@@ -32,12 +32,15 @@
             position: relative; width: 100%; max-width: 450px; height: 100dvh;   
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             overflow: hidden; z-index: 20;
+            /* Garante que o conteúdo não cole na barra do Android */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         @media (min-width: 451px) {
             #app-wrapper {
                 height: 90dvh; border: 2px solid #003300; border-radius: 15px;
                 box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
+                padding-bottom: 0;
             }
         }
 
@@ -61,25 +64,48 @@
         .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
         .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
         .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* --- BOTÕES --- */
-        .btn-sound { position: absolute; top: 20px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
+        /* --- BOTÕES FIXOS COM SAFE AREA --- */
+        .btn-sound { 
+            position: absolute; 
+            top: calc(20px + env(safe-area-inset-top)); 
+            left: 20px; 
+            z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; 
+        }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
-        #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 20px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
+        
+        #profile-pic { 
+            width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; 
+            position: absolute; 
+            top: calc(20px + env(safe-area-inset-top)); 
+            right: 20px; 
+            box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; 
+        }
 
-        /* --- CHAT (AUMENTADO EM 20%) --- */
-        #chat-trigger { position: absolute; bottom: 20px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
+        #chat-trigger { 
+            position: absolute; 
+            bottom: calc(20px + env(safe-area-inset-bottom)); 
+            left: 20px; 
+            z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; 
+        }
         .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
-        #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
+
+        /* --- MODAL CHAT REFINADO --- */
+        #chat-modal { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; 
+            flex-direction: column; 
+            padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px; 
+            box-sizing: border-box; 
+        }
         #chat-messages { flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
         
-        .msg { max-width: 80%; padding: 12px; font-size: 10px; line-height: 1.6; position: relative;} /* +20% (Era 8px) */
+        .msg { max-width: 80%; padding: 12px; font-size: 10px; line-height: 1.6; position: relative;}
         .msg-me { align-self: flex-end; background: #003300; border: 1px solid #00ff41; color: #00ff41; text-align: right; }
         .msg-other { align-self: flex-start; background: #111; border: 1px solid #ff00ff; color: #ff00ff; text-align: left; }
         .msg-info { font-size: 7.5px; display: block; margin-bottom: 6px; opacity: 0.8; }
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 6px; }
-        .msg-time { font-size: 6.5px; color: #888; white-space: nowrap; } /* Aumentado proporcionalmente */
+        .msg-time { font-size: 6.5px; color: #888; white-space: nowrap; }
         .msg-status-neon { font-size: 11px; color: #00ffff; text-shadow: 0 0 5px #00ffff; font-weight: bold; }
 
         #chat-input-container { display: flex; gap: 10px; }
@@ -249,7 +275,6 @@
                         const isMe = m.uid === currentUserUID;
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         
-                        // FORMATAÇÃO DE DATA E HORA
                         const dateObj = m.timestamp ? new Date(m.timestamp) : null;
                         const formattedDate = dateObj ? dateObj.toLocaleString('pt-BR', {
                             day: '2-digit', 
