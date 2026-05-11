@@ -8,19 +8,12 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        :root {
-            /* Variável mágica que o JS vai atualizar */
-            --vh: 1vh;
-        }
+        :root { --vh: 1vh; }
 
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; padding: 0;
-            display: flex; align-items: center; justify-content: center; 
-            /* Usa a variável --vh para altura real */
-            height: calc(var(--vh, 1vh) * 100);
-            width: 100vw;
-            overflow: hidden;
+            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; 
+            height: calc(var(--vh, 1vh) * 100); width: 100vw; overflow: hidden;
         }
 
         .stars {
@@ -38,63 +31,64 @@
         }
 
         #app-wrapper {
-            position: relative; width: 100%; max-width: 450px; 
-            height: 100%; /* Segue o body que já está controlado pelo JS */
+            position: relative; width: 100%; max-width: 450px; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden; z-index: 20;
-            box-sizing: border-box;
-            /* Padding de segurança para a barra do Android */
+            overflow: hidden; z-index: 20; box-sizing: border-box;
             padding-bottom: calc(20px + env(safe-area-inset-bottom));
         }
 
         @media (min-width: 451px) {
-            #app-wrapper {
-                height: 90%; border: 2px solid #003300; border-radius: 15px;
-                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
-            }
+            #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
         }
 
         /* --- LOGIN --- */
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-        .login-logo { width: 130px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 15px #ff00ff); animation: pulse 2s infinite; }
+        .login-logo { width: 150px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 15px #ff00ff); animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .login-title { font-size: 20px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin-bottom: 40px; }
-        .btn-login-large { background: #111; color: #00ffff; border: 4px solid #00ffff; padding: 20px 25px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 6px 6px 0px #003366; }
+        .login-title { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; }
+        .btn-login-large { background: #111; color: #00ffff; border: 4px solid #00ffff; padding: 25px 35px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 8px 8px 0px #003366; }
 
-        /* --- GAME CONTENT --- */
+        /* --- CONTEÚDO --- */
         #game-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
-        h1 { font-size: 18px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin-bottom: 25px; text-align: center;}
-        .menu-container { display: flex; flex-direction: column; gap: 15px; width: 85%; margin: 0 auto; max-width: 320px; }
-        .arcade-btn { padding: 18px; font-family: 'Press Start 2P'; font-size: 11px; text-align: center; background: #111; color: #00ffff; border: 4px solid #4a90e2; cursor: pointer; text-decoration: none; box-shadow: 5px 5px 0px #4b0082; position: relative; display: block; }
+        h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; text-align: center;}
+        .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
+        .arcade-btn { padding: 20px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center; background: #111; color: #00ffff; border: 4px solid #4a90e2; cursor: pointer; text-decoration: none; transition: 0.3s; box-shadow: 6px 6px 0px #4b0082; position: relative; display: block; }
+        .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
         .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
-        .badge-novo { position: absolute; top: -10px; right: -12px; background: #ff00ff; color: #fff; font-size: 7px; padding: 5px 7px; border: 2px solid #fff; animation: blink 1s infinite; transform: rotate(5deg); }
+        .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
 
-        /* --- BOTÕES FLUTUANTES --- */
+        /* --- BOTÕES FIXOS --- */
         .btn-sound { position: absolute; top: 25px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
-        #profile-pic { width: 45px; height: 45px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
+        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+        #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
 
-        #chat-trigger { 
-            position: absolute; 
-            bottom: 30px; /* Mantive um respiro fixo */
-            left: 20px; 
-            z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 11px; box-shadow: 4px 4px 0px #008f25; display: none; 
-        }
+        /* --- CHAT (FONTE ORIGINAL) --- */
+        #chat-trigger { position: absolute; bottom: 25px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
         .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
-
-        /* --- MODAIS --- */
         #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 40px 20px 40px 20px; box-sizing: border-box; }
         #chat-messages { flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
-        .msg { max-width: 80%; padding: 12px; font-size: 10px; line-height: 1.6; }
+        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; position: relative;}
+        .msg-me { align-self: flex-end; background: #003300; border: 1px solid #00ff41; color: #00ff41; text-align: right; }
+        .msg-other { align-self: flex-start; background: #111; border: 1px solid #ff00ff; color: #ff00ff; text-align: left; }
+        .msg-info { font-size: 6px; display: block; margin-bottom: 5px; opacity: 0.8; }
+        .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 5px; }
+        .msg-time { font-size: 5px; color: #888; }
+        .msg-status-neon { font-size: 10px; color: #00ffff; text-shadow: 0 0 5px #00ffff; font-weight: bold; }
         #chat-input-container { display: flex; gap: 10px; }
-        #chat-input { flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41; padding: 12px; font-family: 'Press Start 2P'; font-size: 12px; }
+        #chat-input { flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41; padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; width: 100%; box-sizing: border-box; }
+        #chat-send { background: #00ff41; border: none; color: #000; padding: 10px; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; }
 
-        #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; }
-        .stats-box { background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #ff00ff; display: flex; flex-direction: column; gap: 15px; }
-        .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; flex: 1; }
-        .tab-btn.active { background: #00ffff; color: #000; }
-        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; }
+        /* --- STATS MODAL (ORIGINAL) --- */
+        #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .stats-box { background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
+        .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; flex: 1; text-align: center;}
+        .tab-btn.active { background: #00ffff; color: #000; border-color: #fff; }
+        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
+        .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
+        .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
         .score-win { color: #00ff41; } .score-draw { color: #ffd700; } .score-lose { color: #ff4444; } .score-indiv { color: #00ffff; }
-        .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: 4px solid; text-align: center; }
+        .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: 4px solid; box-sizing: border-box; text-decoration: none; text-align: center; }
         .btn-close-blue { background: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
         .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: #550000; box-shadow: 4px 4px 0px #550000; color: #fff; }
         
@@ -126,10 +120,7 @@
                     <a href="batalha_estelar.html" class="arcade-btn">01. BUSCA ESTELAR</a>
                     <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
                     <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
-                    <a href="love_bird.html" class="arcade-btn arcade-btn-novo">
-                        04. LOVE BIRD
-                        <span class="badge-novo">NOVO!</span>
-                    </a>
+                    <a href="love_bird.html" class="arcade-btn arcade-btn-novo">04. LOVE BIRD <span class="badge-novo">NOVO!</span></a>
                 </div>
             </div>
             <button id="chat-trigger" onclick="window.toggleChat(true)">
@@ -188,13 +179,10 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, onValue, get, set, push, serverTimestamp, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // CONFIGURAÇÃO DO VIEWPORT PARA MOBILE
         const fixHeight = () => {
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         };
-        
-        // Roda ao carregar, ao redimensionar e ao voltar do histórico
         window.addEventListener('resize', fixHeight);
         window.addEventListener('pageshow', fixHeight);
         fixHeight();
@@ -256,8 +244,8 @@
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const dateObj = m.timestamp ? new Date(m.timestamp) : null;
                         const formattedDate = dateObj ? dateObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : "";
-                        let checkHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
-                        div.innerHTML = `<span style="font-size:7px; opacity:0.8; display:block; margin-bottom:5px;">${m.nome}</span>${m.texto}<div class="msg-footer"><span style="font-size:6.5px; color:#888;">${formattedDate}</span>${checkHtml}</div>`;
+                        let statusHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
+                        div.innerHTML = `<span class="msg-info">${m.nome}</span>${m.texto}<div class="msg-footer"><span class="msg-time">${formattedDate}</span>${statusHtml}</div>`;
                         chatContainer.appendChild(div);
                     });
                     chatContainer.scrollTop = chatContainer.scrollHeight;
