@@ -41,14 +41,12 @@
             #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
         }
 
-        /* --- LOGIN --- */
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
         .login-logo { width: 150px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 15px #ff00ff); animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .login-title { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; }
         .btn-login-large { background: #111; color: #00ffff; border: 4px solid #00ffff; padding: 25px 35px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 8px 8px 0px #003366; }
 
-        /* --- CONTEÚDO --- */
         #game-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
         h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; text-align: center;}
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
@@ -57,12 +55,10 @@
         .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
         .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
 
-        /* --- BOTÕES FIXOS --- */
         .btn-sound { position: absolute; top: 25px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
         #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
 
-        /* --- CHAT (FONTE ORIGINAL) --- */
         #chat-trigger { position: absolute; bottom: 25px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
         .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
         #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 40px 20px 40px 20px; box-sizing: border-box; }
@@ -78,7 +74,6 @@
         #chat-input { flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41; padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; width: 100%; box-sizing: border-box; }
         #chat-send { background: #00ff41; border: none; color: #000; padding: 10px; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; }
 
-        /* --- STATS MODAL (ORIGINAL) --- */
         #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .stats-box { background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -244,10 +239,11 @@
                         div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
                         const dateObj = m.timestamp ? new Date(m.timestamp) : null;
                         const formattedDate = dateObj ? dateObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : "";
-                        let statusHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
-                        div.innerHTML = `<span class="msg-info">${m.nome}</span>${m.texto}<div class="msg-footer"><span class="msg-time">${formattedDate}</span>${statusHtml}</div>`;
+                        let checkHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
+                        div.innerHTML = `<span class="msg-info">${m.nome}</span>${m.texto}<div class="msg-footer"><span class="msg-time">${formattedDate}</span>${checkHtml}</div>`;
                         chatContainer.appendChild(div);
                     });
+                    // Força o scroll para baixo quando novas mensagens chegam
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                     document.getElementById('chat-notif').style.display = (!chatAberto && temMensagemNovaParaMim) ? 'block' : 'none';
                 }
@@ -256,9 +252,18 @@
 
         window.toggleChat = async (abrir) => {
             chatAberto = abrir;
-            document.getElementById('chat-modal').style.display = abrir ? 'flex' : 'none';
+            const modal = document.getElementById('chat-modal');
+            const chatContainer = document.getElementById('chat-messages');
+            modal.style.display = abrir ? 'flex' : 'none';
+            
             if (abrir) {
                 document.getElementById('chat-notif').style.display = 'none';
+                
+                // --- A MÁGICA DO AUTO-SCROLL ---
+                setTimeout(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 100);
+
                 const snapshot = await get(ref(db, 'chat_global'));
                 const msgs = snapshot.val();
                 if (msgs) {
