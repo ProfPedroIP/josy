@@ -4,30 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log("Service Worker registrado!"));
-      }
-    </script>
     <title>Minado Amorous: Josy & Pedro</title>
-    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        :root { --vh: 1vh; }
+
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; display: flex; align-items: center; justify-content: center; 
-            min-height: 100dvh; overflow: hidden; position: relative;
+            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; 
+            height: calc(var(--vh, 1vh) * 100); width: 100vw; overflow: hidden;
         }
 
-        /* FUNDO DE ESTRELAS PIXELADAS FORA DA CÁPSULA */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
             animation: spaceMove 100s linear infinite; z-index: -1;
         }
-
         @keyframes spaceMove { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
 
         body::before {
@@ -37,122 +30,57 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        /* --- CÁPSULA RESPONSIVA PADRÃO --- */
         #app-wrapper {
-            position: relative; width: 100%; max-width: 450px; height: 100dvh;   
+            position: relative; width: 100%; max-width: 450px; height: 100%;   
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden; z-index: 20; padding: 20px; box-sizing: border-box;
+            overflow: hidden; z-index: 20; box-sizing: border-box;
+            padding-bottom: calc(30px + env(safe-area-inset-bottom));
         }
 
         @media (min-width: 451px) {
-            #app-wrapper {
-                height: 90dvh; border: 2px solid #003300; border-radius: 15px;
-                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
-            }
+            #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
         }
 
-        /* --- CONTROLES SUPERIORES --- */
-        .btn-sound {
-            position: absolute; top: max(20px, env(safe-area-inset-top)); left: 20px; z-index: 50;
-            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
-            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
-            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
-        }
+        .btn-sound { position: absolute; top: 30px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+        .btn-close { position: absolute; top: 30px; right: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #ff0000; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer; box-shadow: 3px 3px 0px #ff0000; }
 
-        .btn-close {
-            position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; z-index: 50;
-            background: #111; color: #ff0000; border: 3px solid #ff0000; 
-            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
-            box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
-        }
-        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
-
-        /* --- OVERLAY INICIAL (Mantido, mas ajustado para a cápsula) --- */
-        #overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 100;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; box-sizing: border-box;
-        }
-
-        .popup-start {
-            border: 4px solid #ff00ff; padding: 30px; background: #111;
-            box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center;
-        }
+        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .popup-start { border: 4px solid #ff00ff; padding: 30px; background: #111; box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center; }
 
         .mode-selection { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
-        .start-game-btn {
-            padding: 15px; font-family: 'Press Start 2P'; cursor: pointer;
-            border: 4px solid; color: #000; font-size: 10px;
-            box-shadow: 4px 4px 0px; transition: 0.2s;
-        }
-        .start-game-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px; }
+        .start-game-btn { padding: 15px; font-family: 'Press Start 2P'; cursor: pointer; border: 4px solid; color: #000; font-size: 10px; box-shadow: 4px 4px 0px; transition: 0.2s; }
         .btn-easy { background: #00ff41; border-color: #008f25; box-shadow: 4px 4px 0px #008f25; }
         .btn-medium { background: #ffd700; border-color: #b89b00; box-shadow: 4px 4px 0px #b89b00; }
         .btn-hard { background: #ff0000; border-color: #a00000; box-shadow: 4px 4px 0px #a00000; color: white;}
 
-        /* --- ESTÉTICA DO TÍTULO E PLACAR --- */
-        .game-header { margin-top: 40px; margin-bottom: 20px; text-align: center; width: 100%; }
-        h1 { font-size: 16px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 0 0 10px 0; }
-        .subtitle { font-size: 10px; color: #00ffff; }
+        .game-header { margin-top: 40px; margin-bottom: 15px; text-align: center; width: 100%; }
+        h1 { font-size: 14px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 0 0 8px 0; }
+        .subtitle { font-size: 8px; color: #00ffff; }
 
-        .score-board {
-            background: #111; border: 3px solid #ffd700; padding: 10px 20px;
-            font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
-            margin-bottom: 20px; text-align: center;
-        }
+        .score-board { background: #111; border: 3px solid #ffd700; padding: 12px; font-size: 9px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508; margin-bottom: 15px; text-align: center; line-height: 1.5; }
 
-        /* --- GRID DO JOGO --- */
-        .grid { 
-            display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; 
-            background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2;
-            z-index: 5; margin-bottom: 20px;
-        }
-
-        .cell { 
-            width: 60px; height: 60px; background: #000; border: 2px solid #333; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; color: #ffd700; transition: 0.2s; -webkit-tap-highlight-color: transparent;
-        }
-
+        .grid { display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2; z-index: 5; margin-bottom: 15px; }
+        .cell { width: 60px; height: 60px; background: #000; border: 2px solid #333; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #ffd700; transition: 0.2s; -webkit-tap-highlight-color: transparent; }
         .cell.revealed { background: #1a1a1a; border-color: #444; cursor: default; }
         .cell.heart { background: #220022; border-color: #ff4d6d; color: #ff4d6d; animation: blink 0.5s infinite; }
         .cell.heart-revealed { background: #1a1a1a; border-color: #ff4d6d; color: #ff4d6d; opacity: 0.7; animation: none; }
         .cell.blackhole { background: #000; border-color: #ff0000; color: #fff; text-shadow: 0 0 8px #ff0000; }
         .cell.number { color: #00ffff; }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        /* --- MENSAGENS DE FIM DE JOGO (PADRONIZADAS) --- */
-        #message, #game-over { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.95); 
-            width: 85%; max-width: 350px; animation: fadeIn 0.5s; z-index: 60; text-align: center;
-            box-shadow: 0 0 30px rgba(255, 77, 109, 0.5);
-        }
-
+        #message, #game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.98); width: 85%; max-width: 350px; z-index: 200; text-align: center; box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); }
         .msg-title { color: #ff4d6d; font-size: 16px; margin-bottom: 15px; }
-        .msg-white { color: #ffffff; font-size: 10px; line-height: 1.6; margin-bottom: 10px; }
-        .msg-blue  { color: #00ffff; font-size: 10px; line-height: 1.6; margin-bottom: 15px; }
-        .msg-red   { color: #ff0000; font-size: 14px; margin-bottom: 20px; text-shadow: 2px 2px #550000; }
+        .msg-text { color: #ffffff; font-size: 9px; line-height: 1.6; margin-bottom: 10px; }
 
-        .btn {
-            padding: 15px 20px; font-family: 'Press Start 2P', cursive;
-            font-size: 10px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center;
-        }
-
-        .btn-restart { background: #ff00ff; border: 4px solid #4b0082; box-shadow: 4px 4px 0px #4b0082; }
-        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .btn { padding: 15px; font-family: 'Press Start 2P', cursive; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center; border: 4px solid; }
+        .btn-restart { background: #ff00ff; border-color: #4b0082; box-shadow: 4px 4px 0px #4b0082; }
+        .btn-menu { background-color: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
 
         @media (max-width: 380px) {
-            .grid { grid-template-columns: repeat(5, 50px); gap: 5px; }
-            .cell { width: 50px; height: 50px; font-size: 18px; }
-            h1 { font-size: 14px; }
+            .grid { grid-template-columns: repeat(5, 52px); gap: 5px; }
+            .cell { width: 52px; height: 52px; font-size: 18px; }
         }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -160,11 +88,9 @@
     <div class="stars"></div>
 
     <div id="app-wrapper">
-
-        <!-- OVERLAY DE INÍCIO -->
         <div id="overlay">
             <div class="popup-start">
-                <p style="line-height: 1.6; font-size: 10px; color: #00ff41;">SISTEMA DE RADAR PRONTO. SELECIONE A DIFICULDADE DA MISSÃO:</p>
+                <p style="line-height: 1.6; font-size: 9px; color: #00ff41;">SISTEMA DE RADAR PRONTO. SELECIONE A DIFICULDADE DA MISSÃO:</p>
                 <div class="mode-selection">
                     <button class="start-game-btn btn-easy" onclick="iniciarMissao(3)">FÁCIL (3 🌑)</button>
                     <button class="start-game-btn btn-medium" onclick="iniciarMissao(4)">MÉDIO (4 🌑)</button>
@@ -173,7 +99,6 @@
             </div>
         </div>
 
-        <!-- CONTROLES -->
         <button id="btn-sound" class="btn-sound">🔇</button>
         <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
 
@@ -182,39 +107,33 @@
         <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
         <audio id="soundLose"><source src="assets/sounds/lose.wav" type="audio/wav"></audio>
 
-        <!-- HEADER PADRONIZADO -->
         <div class="game-header">
             <h1>> 02. MINADO AMOROUS</h1>
             <div class="subtitle">PLAYER 1: JOSY</div>
         </div>
 
-        <!-- PLACAR FLUTUANTE -->
         <div class="score-board" id="score-display">
-            CORAÇÕES: 0 / 3
+            CORAÇÕES: 0 / 3<br>PONTOS: 1000
         </div>
         
         <div class="grid" id="grid"></div>
         
-        <!-- MENSAGEM FINAL: VITÓRIA -->
         <div id="message">
-            <h2 class="msg-title">SISTEMA RESTAURADO! 🏆</h2>
-            <p class="msg-white">Você desviou de todos os buracos negros para me encontrar.</p>
-            <p class="msg-blue">Sorte a minha ter te encontrado nesse universo!</p>
-            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
+            <h2 class="msg-title">SYSTEM RESTORED! 🏆</h2>
+            <p class="msg-text">Você desviou de todos os buracos negros para me encontrar.</p>
+            <p id="win-score-msg" style="color:#ffd700; font-size:10px; margin:10px 0;"></p>
+            <p class="msg-text" style="color:#ff0000; font-size:12px;"><strong>PEDRO AMA JOSY!</strong></p>
             <button class="btn btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
             <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
         </div>
 
-        <!-- MENSAGEM FINAL: DERROTA -->
         <div id="game-over">
-            <h2 class="msg-title">OPS! 🌑</h2>
-            <p class="msg-white">Você caiu em um buraco negro!</p>
-            <p class="msg-blue">O amor vence o tempo e o espaço. Tente de novo!</p>
-            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
-            <button class="btn btn-restart" onclick="startGame()" style="background:#444; border-color:#000; box-shadow: 4px 4px 0px #222;">REINICIAR MISSÃO</button>
+            <h2 class="msg-title">SYSTEM OFFLINE! 🌑</h2>
+            <p class="msg-text">Você caiu em um buraco negro!</p>
+            <p class="msg-text" style="color:#00ffff;">O amor vence o tempo e o espaço. Tente de novo!</p>
+            <button class="btn btn-restart" onclick="startGame()" style="background:#444; border-color:#000; box-shadow: 4px 4px 0px #222;">REINICIAR</button>
             <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
         </div>
-
     </div>
 
     <script>
@@ -230,8 +149,16 @@
         let foundHearts = 0;
         let gameActive = false;
         let numBlackholes = 3;
+        let currentScore = 1000;
 
-        // Lógica do Som
+        const fixHeight = () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        window.addEventListener('resize', fixHeight);
+        window.addEventListener('pageshow', fixHeight);
+        fixHeight();
+
         track.volume = 0.5;
         btnSound.addEventListener('click', () => {
             if (track.paused) {
@@ -243,37 +170,29 @@
 
         function iniciarMissao(dificuldade) {
             numBlackholes = dificuldade; 
-            track.play(); 
-            btnSound.innerHTML = "🔊"; 
-            btnSound.classList.add("on");
+            track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
             document.getElementById('overlay').style.display = 'none';
             startGame();
         }
 
         function playClick() {
             const s = document.getElementById('soundClick');
-            s.currentTime = 0;
-            s.play();
+            s.currentTime = 0; s.play();
         }
-
-        function playWin() { document.getElementById('soundWin').play(); }
-        function playLose() { document.getElementById('soundLose').play(); }
 
         function startGame() {
             grid.innerHTML = '';
             messageDiv.style.display = 'none';
             gameOverDiv.style.display = 'none';
-            scoreDisplay.innerText = 'CORAÇÕES: 0 / 3';
             foundHearts = 0;
+            currentScore = 1000;
+            scoreDisplay.innerHTML = 'CORAÇÕES: 0 / 3<br>PONTOS: 1000';
             hearts = [];
             blackholes = [];
             gameActive = true;
             
-            if(btnSound.classList.contains("on")) track.play();
-
             let positions = Array.from({length: 25}, (_, i) => i);
             positions.sort(() => Math.random() - 0.5);
-            
             hearts = positions.slice(0, 3);
             blackholes = positions.slice(3, 3 + numBlackholes);
 
@@ -294,7 +213,7 @@
             
             if (blackholes.includes(index)) {
                 track.pause(); 
-                playLose(); 
+                document.getElementById('soundLose').play(); 
                 cell.innerHTML = "🌑";
                 cell.classList.add('blackhole');
                 endGame(false);
@@ -303,10 +222,10 @@
                 cell.innerHTML = "❤️";
                 cell.classList.add('heart');
                 foundHearts++;
-                scoreDisplay.innerText = `CORAÇÕES: ${foundHearts} / 3`;
+                scoreDisplay.innerHTML = `CORAÇÕES: ${foundHearts} / 3<br>PONTOS: ${currentScore}`;
                 if (foundHearts === 3) {
                     track.pause(); 
-                    playWin(); 
+                    document.getElementById('soundWin').play(); 
                     endGame(true);
                 }
             } else {
@@ -314,7 +233,10 @@
                 const count = countNeighborHearts(index);
                 cell.classList.add('number');
                 cell.innerHTML = count > 0 ? count : "";
-                cell.style.color = "#444";
+                cell.style.color = "#00ffff";
+                // Lógica de perda de pontos (Mínimo 120)
+                if (currentScore > 120) currentScore -= 40;
+                scoreDisplay.innerHTML = `CORAÇÕES: ${foundHearts} / 3<br>PONTOS: ${currentScore}`;
             }
         }
 
@@ -337,10 +259,9 @@
             gameActive = false;
 
             if (isWin) {
+                document.getElementById('win-score-msg').innerText = `SCORE: ${currentScore} PTS`;
                 messageDiv.style.display = 'block';
-                scoreDisplay.innerText = 'MISSÃO CUMPRIDA!';
-                
-                if(window.registrarVitoria) window.registrarVitoria('minado_amorous');
+                if(window.registrarRecorde) window.registrarRecorde(currentScore, 'minado_amorous_max');
                 
                 blackholes.forEach(idx => {
                     const targetCell = document.getElementById('cell-' + idx);
@@ -352,14 +273,11 @@
                 });
             } else {
                 gameOverDiv.style.display = 'block';
-                scoreDisplay.innerText = 'SISTEMA OFFLINE';
-                
                 blackholes.forEach(idx => {
                     const targetCell = document.getElementById('cell-' + idx);
                     targetCell.innerHTML = "🌑";
                     targetCell.classList.add('revealed', 'blackhole');
                 });
-
                 hearts.forEach(idx => {
                     const targetCell = document.getElementById('cell-' + idx);
                     if (!targetCell.classList.contains('revealed')) {
@@ -371,7 +289,6 @@
         }
     </script>
 
-    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -392,26 +309,14 @@
         const db = getDatabase(app);
         let userUID = null;
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) userUID = user.uid;
-        });
-
-        window.registrarVitoria = async function(nomeDoJogo) {
-            if (!userUID) return; 
-            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
-            const snapshot = await get(dbRef);
-            const atual = snapshot.val() || 0;
-            set(dbRef, atual + 1); 
-        };
+        onAuthStateChanged(auth, (user) => { if (user) userUID = user.uid; });
 
         window.registrarRecorde = async function(pontos, nomeDoJogo) {
             if (!userUID) return;
             const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
             const snapshot = await get(dbRef);
             const recordeAntigo = snapshot.val() || 0;
-            if (pontos > recordeAntigo) {
-                set(dbRef, pontos); 
-            }
+            if (pontos > recordeAntigo) { set(dbRef, pontos); }
         };
     </script>
 </body>
