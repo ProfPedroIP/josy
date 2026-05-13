@@ -33,36 +33,39 @@
             position: relative; width: 100%; max-width: 450px; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 20; box-sizing: border-box;
-            padding-bottom: calc(30px + env(safe-area-inset-bottom));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
         }
 
         @media (min-width: 451px) {
-            #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
+            #app-wrapper { height: 95%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
         }
 
-        .top-controls { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; margin-bottom: 10px; z-index: 50; position: absolute; top: 30px;}
-        .btn-ctrl { background: #111; border: 3px solid; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; transition: 0.3s; height: 40px; display: flex; align-items: center; justify-content: center;}
+        .top-controls { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; box-sizing: border-box; margin-bottom: 5px; z-index: 50; }
+        .btn-ctrl { background: #111; border: 3px solid; padding: 8px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; height: 38px; display: flex; align-items: center; justify-content: center;}
         .btn-sound { color: #ff0000; border-color: #a00000; box-shadow: 3px 3px 0px #a00000; width: 45px;}
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
         .btn-pause { color: #ffd700; border-color: #b89b00; box-shadow: 3px 3px 0px #b89b00; width: 80px;}
         .btn-close { color: #ff0000; border-color: #ff0000; box-shadow: 3px 3px 0px #ff0000; width: 45px; font-size: 12px;}
 
-        .score-board { background: #111; border: 3px solid #ffd700; padding: 10px; font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508; margin-top: 60px; margin-bottom: 10px; text-align: center; width: 80%; z-index: 50;}
+        .score-board { background: #111; border: 3px solid #ffd700; padding: 10px; font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508; margin-bottom: 8px; text-align: center; width: 90%; z-index: 50;}
 
-        canvas { background: rgba(0, 0, 0, 0.8); border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2; width: 90%; max-width: 360px; aspect-ratio: 360 / 520; z-index: 5; touch-action: none; }
+        canvas { background: rgba(0, 0, 0, 0.9); border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2; width: 95%; max-width: 360px; height: 65vh; z-index: 5; touch-action: none; cursor: crosshair; }
 
-        .life-counter { position: absolute; bottom: calc(60px + env(safe-area-inset-bottom)); left: 25px; color: #ff4d6d; font-size: 10px; z-index: 100; text-shadow: 2px 2px #000; display: none;}
+        .life-counter { position: absolute; bottom: 35px; left: 25px; color: #ff4d6d; font-size: 10px; z-index: 100; text-shadow: 2px 2px #000;}
 
         #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .popup-start { border: 4px solid #ff00ff; padding: 20px; background: #111; box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center; }
-        .mode-btn { padding: 15px; margin-top: 15px; border: none; font-family: 'Press Start 2P'; cursor: pointer; font-size: 9px; width: 100%; box-shadow: 4px 4px 0px; text-align: left; line-height: 1.4;}
+        .mode-btn { padding: 15px; margin-top: 15px; border: none; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; width: 100%; box-shadow: 4px 4px 0px; text-align: left; line-height: 1.4;}
         .btn-classic { background: #00ffff; color: #000; box-shadow: 4px 4px 0px #008b8b; }
         .btn-infinite { background: #ff00ff; color: #fff; box-shadow: 4px 4px 0px #8b008b; }
 
-        #message, #game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.98); width: 85%; max-width: 350px; z-index: 200; text-align: center; box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); }
-        .btn-restart { padding: 15px; font-family: 'Press Start 2P'; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; margin-top: 15px; border: 4px solid #4b0082; background: #ff00ff; }
-        .btn-menu { padding: 15px; font-family: 'Press Start 2P'; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; margin-top: 10px; border: 4px solid #003366; background: #4a90e2; text-decoration: none; }
-        .polaroid { width: 120px; height: 120px; object-fit: cover; border: 6px solid #fff; border-bottom: 20px solid #fff; margin: 10px auto; transform: rotate(-3deg); }
+        #message, #game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.98); width: 85%; max-width: 350px; z-index: 200; text-align: center; box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); box-sizing: border-box;}
+        
+        .game-btn { padding: 15px; font-family: 'Press Start 2P'; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; margin-top: 10px; text-align: center; border: 4px solid; text-decoration: none; box-sizing: border-box;}
+        .btn-restart { border-color: #4b0082; background: #ff00ff; box-shadow: 4px 4px 0px #4b0082;}
+        .btn-menu { border-color: #003366; background: #4a90e2; box-shadow: 4px 4px 0px #003366;}
+        
+        .polaroid { width: 100px; height: 100px; object-fit: cover; border: 5px solid #fff; border-bottom: 18px solid #fff; margin: 10px auto; transform: rotate(-3deg); box-shadow: 3px 3px 10px rgba(0,0,0,0.5);}
     </style>
 </head>
 <body>
@@ -77,19 +80,19 @@
         </div>
 
         <div class="score-board" id="score-display">PONTOS: 0</div>
-        <canvas id="gameCanvas" width="360" height="520"></canvas>
-        <div id="life-display" class="life-counter">VIDAS: 3</div>
+        <canvas id="gameCanvas" width="360" height="580"></canvas>
+        <div id="life-display" class="life-counter">VIDAS: 1</div>
 
         <div id="overlay">
             <div class="popup-start">
-                <h2 style="color: #ff00ff; font-size: 14px; margin-bottom: 10px;">ESCOLHA SEU MODO</h2>
+                <h2 style="color: #ff00ff; font-size: 14px; margin-bottom: 10px;">ESCOLHA O MODO</h2>
                 <button class="mode-btn btn-classic" onclick="iniciarJogo('classic')">
                     MODO CLÁSSICO<br>
-                    <span style="font-size: 7px;">- Chegue a 1000 pontos<br>- 10% mais veloz</span>
+                    <span style="font-size: 7px;">- Chegue a 1000 pontos<br>- Ritmo: 1.1x</span>
                 </button>
                 <button class="mode-btn btn-infinite" onclick="iniciarJogo('infinite')">
-                    MODO SEM LIMITE<br>
-                    <span style="font-size: 7px;">- Recorde Máximo<br>- Vidas e Power-ups</span>
+                    MODO RECORDE<br>
+                    <span style="font-size: 7px;">- Recorde Máximo<br>- Vidas e Tiro Especial (5 direções)</span>
                 </button>
             </div>
         </div>
@@ -97,18 +100,18 @@
         <div id="message">
             <h2 style="color:#ff4d6d; font-size:16px;">VITÓRIA! 💖</h2>
             <img src="assets/images/guerra_estelar_photo.png" class="polaroid" alt="Pedro e Josy">
-            <p style="font-size: 9px; color:#fff;">Minha maior conquista é você!</p>
-            <p style="color:#ff0000; font-size:12px;"><strong>PEDRO AMA JOSY!</strong></p>
-            <button class="btn-restart" onclick="resetGame()">JOGAR DE NOVO</button>
-            <a href="index.html" class="btn-menu">VOLTAR AO MENU</a>
+            <p style="font-size: 9px; color:#fff; line-height:1.4;">O universo está a salvo, mas a minha maior conquista já foi feita... Ganhar o seu coração!</p>
+            <p style="color:#ff0000; font-size:11px; margin-top:10px;"><strong>PEDRO AMA JOSY!</strong></p>
+            <button class="game-btn btn-restart" onclick="resetGame()">JOGAR DE NOVO</button>
+            <a href="index.html" class="game-btn btn-menu">VOLTAR AO MENU</a>
         </div>
 
         <div id="game-over">
             <h2 id="go-title" style="color:#ff0000; font-size:16px;">FIM DE JOGO</h2>
             <p id="go-text" style="font-size: 9px; color:#fff; line-height:1.4;"></p>
             <p style="color:#ff0000; font-size:11px; margin-top:10px;"><strong>PEDRO AMA JOSY!</strong></p>
-            <button class="btn-restart" onclick="resetGame()">TENTAR DE NOVO</button>
-            <a href="index.html" class="btn-menu">VOLTAR AO MENU</a>
+            <button class="game-btn btn-restart" onclick="resetGame()">JOGAR DE NOVO</button>
+            <a href="index.html" class="game-btn btn-menu">VOLTAR AO MENU</a>
         </div>
     </div>
 
@@ -129,10 +132,10 @@
         let isPaused = false;
         let isPlaying = false;
         let score = 0;
-        let lives = 3;
+        let lives = 1;
         let frames = 0;
         let spawnRate = 80;
-        let player = { x: 160, y: 440, width: 40, height: 40 };
+        let player = { x: 160, y: 520, width: 40, height: 40 };
         let bullets = [], enemies = [], items = [];
         let specialShotTimer = 0;
         let animationId;
@@ -145,10 +148,18 @@
         window.addEventListener('pageshow', fixHeight);
         fixHeight();
 
-        btnSound.addEventListener('click', () => {
-            if (track.paused) { track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on"); }
-            else { track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on"); }
-        });
+        function handleInput(e) {
+            if (!isPlaying || isPaused) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            player.x = (clientX - rect.left) * scaleX - 20;
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - 40) player.x = canvas.width - 40;
+        }
+
+        canvas.addEventListener('mousemove', handleInput);
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
 
         function togglePause() {
             if (!isPlaying) return;
@@ -160,16 +171,11 @@
 
         function iniciarJogo(mode) {
             gameMode = mode;
+            lives = (mode === 'infinite') ? 3 : 1;
             document.getElementById('overlay').style.display = 'none';
-            lifeDisplay.style.display = (mode === 'infinite') ? 'block' : 'none';
-            track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
+            lifeDisplay.innerText = `VIDAS: ${lives}`;
+            if (btnSound.classList.contains("on")) track.play();
             resetGame();
-        }
-
-        function spawnItem() {
-            if (gameMode !== 'infinite') return;
-            let type = Math.random() > 0.5 ? '⭐' : '⚡'; // Estrela (Vida) ou Raio (Tiro Especial)
-            items.push({ x: Math.random() * (canvas.width - 30), y: -30, type, speed: 2 });
         }
 
         function loop() {
@@ -190,8 +196,10 @@
             if (frames % (gameMode === 'classic' ? 12 : 15) === 0) {
                 bullets.push({ x: player.x + 18, y: player.y, vx: 0, vy: -10 });
                 if (specialShotTimer > 0) {
-                    bullets.push({ x: player.x + 18, y: player.y, vx: -5, vy: -7 });
-                    bullets.push({ x: player.x + 18, y: player.y, vx: 5, vy: -7 });
+                    bullets.push({ x: player.x + 18, y: player.y, vx: -3, vy: -9.5 });
+                    bullets.push({ x: player.x + 18, y: player.y, vx: 3, vy: -9.5 });
+                    bullets.push({ x: player.x + 18, y: player.y, vx: -6, vy: -8 });
+                    bullets.push({ x: player.x + 18, y: player.y, vx: 6, vy: -8 });
                 }
                 document.getElementById('soundLaser').currentTime = 0;
                 document.getElementById('soundLaser').play();
@@ -205,39 +213,44 @@
             });
 
             // ITENS
-            if (frames % 600 === 0) spawnItem();
+            if (gameMode === 'infinite' && frames % 500 === 0) {
+                items.push({ x: Math.random() * 320, y: -30, type: Math.random() > 0.5 ? '⭐' : '⚡', speed: 2 });
+            }
             items.forEach((item, i) => {
                 item.y += item.speed;
                 ctx.fillText(item.type, item.x + 15, item.y + 15);
                 if (item.x < player.x + 40 && item.x + 30 > player.x && item.y < player.y + 40 && item.y + 30 > player.y) {
                     document.getElementById('soundPower').play();
                     if (item.type === '⭐') lives++;
-                    else specialShotTimer = 300;
+                    else specialShotTimer = 400;
                     lifeDisplay.innerText = `VIDAS: ${lives}`;
                     items.splice(i, 1);
                 }
-                if (item.y > canvas.height) items.splice(i, 1);
             });
 
             // INIMIGOS
             if (frames % Math.floor(spawnRate) === 0) {
-                let x = Math.random() * (canvas.width - 40);
-                enemies.push({ x, y: -40, hp: 1, type: '🛸', points: 10, speed: 2 });
+                let r = Math.random();
+                let x = Math.random() * 320;
+                if (r < 0.6) enemies.push({ x, y: -40, hp: 1, type: '🛸', pts: 10, speed: 2 });
+                else if (r < 0.85) enemies.push({ x, y: -40, hp: 2, type: '👾', pts: 30, speed: 3 });
+                else enemies.push({ x, y: -40, hp: 5, type: '☄️', pts: 50, speed: 1.5 });
             }
 
             enemies.forEach((e, ei) => {
                 e.y += e.speed;
                 ctx.fillText(e.type, e.x + 20, e.y + 20);
 
-                if (e.y > canvas.height) {
-                    if (gameMode === 'infinite') {
-                        lives--; lifeDisplay.innerText = `VIDAS: ${lives}`;
-                        if (lives <= 0) endGame(false);
-                    } else { endGame(false); }
+                if (e.y > canvas.height || (e.x < player.x + 35 && e.x + 35 > player.x && e.y < player.y + 35 && e.y + 35 > player.y)) {
+                    lives--;
+                    lifeDisplay.innerText = `VIDAS: ${lives}`;
                     enemies.splice(ei, 1);
+                    if (lives <= 0) endGame(false);
+                    else {
+                        document.getElementById('soundExplosion').play();
+                        ctx.fillStyle = "rgba(255,0,0,0.5)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+                    }
                 }
-
-                if (e.x < player.x + 40 && e.x + 40 > player.x && e.y < player.y + 40 && e.y + 40 > player.y) endGame(false);
 
                 bullets.forEach((b, bi) => {
                     if (b.x < e.x + 40 && b.x + 4 > e.x && b.y < e.y + 40 && b.y + 12 > e.y) {
@@ -245,10 +258,10 @@
                         if (e.hp <= 0) {
                             document.getElementById('soundExplosion').currentTime = 0;
                             document.getElementById('soundExplosion').play();
-                            score += e.points; scoreDisplay.innerText = `PONTOS: ${score}`;
+                            score += e.pts; scoreDisplay.innerText = `PONTOS: ${score}`;
                             enemies.splice(ei, 1);
-                            let growth = gameMode === 'classic' ? 1.1 : 0.8;
-                            if (spawnRate > 20) spawnRate -= growth;
+                            let mod = (gameMode === 'classic' ? 1.1 : 0.8);
+                            if (spawnRate > 15) spawnRate -= mod;
                             if (gameMode === 'classic' && score >= 1000) endGame(true);
                         }
                     }
@@ -267,17 +280,16 @@
                 document.getElementById('game-over').style.display = 'block';
                 document.getElementById('go-title').innerText = (gameMode === 'infinite') ? "MISSÃO CONCLUÍDA!" : "SISTEMA FALHOU!";
                 document.getElementById('go-text').innerText = (gameMode === 'infinite') ? 
-                    `Que bom que você chegou até aqui!\nPontuação final: ${score}` : 
+                    `Que bom que você chegou até aqui! Suas vidas acabaram.\nPontuação final: ${score}` : 
                     "A barreira foi rompida. Tente novamente!";
                 if (gameMode === 'infinite' && window.registrarRecorde) window.registrarRecorde(score, 'guerra_estelar_max');
             }
         }
 
         function resetGame() {
-            score = 0; lives = 3; frames = 0; spawnRate = 80;
+            score = 0; frames = 0; spawnRate = 80;
             bullets = []; enemies = []; items = []; specialShotTimer = 0;
             scoreDisplay.innerText = "PONTOS: 0";
-            lifeDisplay.innerText = "VIDAS: 3";
             document.getElementById('message').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
             isPlaying = true; isPaused = false;
@@ -285,13 +297,10 @@
             loop();
         }
 
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            let rect = canvas.getBoundingClientRect();
-            player.x = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width) - 20;
-            if (player.x < 0) player.x = 0;
-            if (player.x > canvas.width - 40) player.x = canvas.width - 40;
-        }, {passive: false});
+        btnSound.addEventListener('click', () => {
+            if (track.paused) { track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on"); }
+            else { track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on"); }
+        });
     </script>
 
     <script type="module">
