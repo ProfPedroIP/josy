@@ -4,35 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log("Service Worker registrado!"));
-      }
-    </script>
     <title>Guardião Estelar: Josy & Pedro</title>
-    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    
     <style>
+        :root { --vh: 1vh; }
         body { 
             background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; display: flex; align-items: center; justify-content: center; 
-            min-height: 100dvh; overflow-y: auto; /* Permite rolagem segura no PC */
-            position: relative; padding: 20px 0; box-sizing: border-box;
+            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; 
+            height: calc(var(--vh, 1vh) * 100); width: 100vw; overflow: hidden;
         }
 
-        /* FUNDO DE ESTRELAS PIXELADAS */
         .stars {
             position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
             box-shadow: 10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff, 20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff, 45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
             animation: spaceMove 50s linear infinite; z-index: -1;
         }
-
         @keyframes spaceMove { from { transform: translateY(-100vh); } to { transform: translateY(100vh); } }
 
-        /* EFEITO CRT */
         body::before {
             content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -40,112 +29,40 @@
             z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
         }
 
-        /* --- CÁPSULA RESPONSIVA PADRÃO --- */
         #app-wrapper {
-            position: relative; width: 100%; max-width: 450px; min-height: 90dvh; height: auto;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            z-index: 20; padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px; box-sizing: border-box;
+            position: relative; width: 100%; max-width: 450px; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20; box-sizing: border-box;
+            padding-bottom: calc(30px + env(safe-area-inset-bottom));
         }
 
         @media (min-width: 451px) {
-            #app-wrapper {
-                border: 2px solid #003300; border-radius: 15px;
-                box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8);
-                margin: 20px 0; /* Descola do topo/fundo da tela no PC */
-            }
+            #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
         }
 
-        /* --- CONTROLES SUPERIORES --- */
-        .top-controls {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; z-index: 50;
-        }
-
-        .btn-sound {
-            background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px;
-            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
-            box-shadow: 3px 3px 0px #a00000; transition: 0.3s; height: 40px;
-        }
+        .top-controls { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; margin-bottom: 10px; z-index: 50; position: absolute; top: 30px;}
+        .btn-ctrl { background: #111; border: 3px solid; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; transition: 0.3s; height: 40px; display: flex; align-items: center; justify-content: center;}
+        .btn-sound { color: #ff0000; border-color: #a00000; box-shadow: 3px 3px 0px #a00000; width: 45px;}
         .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
+        .btn-pause { color: #ffd700; border-color: #b89b00; box-shadow: 3px 3px 0px #b89b00; width: 80px;}
+        .btn-close { color: #ff0000; border-color: #ff0000; box-shadow: 3px 3px 0px #ff0000; width: 45px; font-size: 12px;}
 
-        .btn-close {
-            background: #111; color: #ff0000; border: 3px solid #ff0000; 
-            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
-            box-shadow: 3px 3px 0px #ff0000; transition: 0.3s;
-        }
-        .btn-close:hover { background: #ff0000; color: #fff; transform: scale(1.05); }
+        .score-board { background: #111; border: 3px solid #ffd700; padding: 10px; font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508; margin-top: 60px; margin-bottom: 10px; text-align: center; width: 80%; z-index: 50;}
 
-        /* --- PLACAR CAIXA AMARELA --- */
-        .score-board {
-            background: #111; border: 3px solid #ffd700; padding: 10px 20px;
-            font-size: 10px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508;
-            margin-bottom: 15px; text-align: center; width: 100%; box-sizing: border-box;
-            z-index: 50;
-        }
+        canvas { background: rgba(0, 0, 0, 0.8); border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2; width: 90%; max-width: 360px; aspect-ratio: 360 / 520; z-index: 5; touch-action: none; }
 
-        /* --- O CANVAS DO JOGO --- */
-        canvas {
-            background: rgba(0, 0, 0, 0.8);
-            border: 4px solid #4a90e2;
-            box-shadow: 0 0 15px #4a90e2;
-            width: 100%; max-width: 360px; height: auto; aspect-ratio: 360 / 600;
-            object-fit: contain;
-            z-index: 5; touch-action: none;
-        }
+        .life-counter { position: absolute; bottom: calc(60px + env(safe-area-inset-bottom)); left: 25px; color: #ff4d6d; font-size: 10px; z-index: 100; text-shadow: 2px 2px #000; display: none;}
 
-        /* --- OVERLAY INICIAL --- */
-        #overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 100; border-radius: 13px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; box-sizing: border-box;
-        }
+        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .popup-start { border: 4px solid #ff00ff; padding: 20px; background: #111; box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center; }
+        .mode-btn { padding: 15px; margin-top: 15px; border: none; font-family: 'Press Start 2P'; cursor: pointer; font-size: 9px; width: 100%; box-shadow: 4px 4px 0px; text-align: left; line-height: 1.4;}
+        .btn-classic { background: #00ffff; color: #000; box-shadow: 4px 4px 0px #008b8b; }
+        .btn-infinite { background: #ff00ff; color: #fff; box-shadow: 4px 4px 0px #8b008b; }
 
-        .popup-start {
-            border: 4px solid #ff00ff; padding: 30px; background: #111;
-            box-shadow: 0 0 20px #ff00ff; max-width: 400px; text-align: center;
-        }
-
-        .start-btn {
-            margin-top: 20px; padding: 15px; background: #00ff41; color: #000; width: 100%;
-            border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25; font-size: 10px;
-        }
-
-        /* --- MENSAGENS DE FIM DE JOGO --- */
-        #message, #game-over { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.95); 
-            width: 85%; max-width: 350px; animation: fadeIn 0.5s; z-index: 60; text-align: center;
-            box-shadow: 0 0 30px rgba(255, 77, 109, 0.5);
-        }
-
-        #game-over { border-color: #ff0000; box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); }
-
-        .msg-title { color: #ff4d6d; font-size: 16px; margin-bottom: 15px; }
-        .msg-title-lose { color: #ff0000; font-size: 16px; margin-bottom: 15px; }
-        .msg-white { color: #ffffff; font-size: 10px; line-height: 1.6; margin-bottom: 10px; }
-        .msg-blue  { color: #00ffff; font-size: 10px; line-height: 1.6; margin-bottom: 15px; }
-        .msg-red   { color: #ff0000; font-size: 14px; margin-bottom: 20px; text-shadow: 2px 2px #550000; }
-
-        .btn {
-            padding: 15px 20px; font-family: 'Press Start 2P', cursive;
-            font-size: 10px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center;
-        }
-
-        .btn-restart { background: #ff00ff; border: 4px solid #4b0082; box-shadow: 4px 4px 0px #4b0082; }
-        .btn-restart-lose { background: #444; border: 4px solid #000; box-shadow: 4px 4px 0px #222; }
-        .btn-menu { background-color: #4a90e2; border: 4px solid #003366; box-shadow: 4px 4px 0px #003366; }
-
-        /* Estilo da Foto Polaroid */
-        .polaroid {
-            width: 120px; height: 120px; object-fit: cover;
-            border: 6px solid #fff; border-bottom: 20px solid #fff;
-            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5); margin: 10px auto 20px auto;
-            display: block; background-color: #fff; transform: rotate(-3deg);
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #message, #game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.98); width: 85%; max-width: 350px; z-index: 200; text-align: center; box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); }
+        .btn-restart { padding: 15px; font-family: 'Press Start 2P'; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; margin-top: 15px; border: 4px solid #4b0082; background: #ff00ff; }
+        .btn-menu { padding: 15px; font-family: 'Press Start 2P'; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; margin-top: 10px; border: 4px solid #003366; background: #4a90e2; text-decoration: none; }
+        .polaroid { width: 120px; height: 120px; object-fit: cover; border: 6px solid #fff; border-bottom: 20px solid #fff; margin: 10px auto; transform: rotate(-3deg); }
     </style>
 </head>
 <body>
@@ -153,205 +70,186 @@
     <div class="stars"></div>
 
     <div id="app-wrapper">
-
-        <!-- CONTROLES SUPERIORES -->
         <div class="top-controls">
-            <button id="btn-sound" class="btn-sound">🔇</button>
-            <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
+            <button id="btn-sound" class="btn-ctrl btn-sound">🔇</button>
+            <button id="btn-pause" class="btn-ctrl btn-pause" onclick="togglePause()">PAUSE</button>
+            <button class="btn-ctrl btn-close" onclick="window.location.href='index.html'">X</button>
         </div>
 
-        <!-- PLACAR PADRONIZADO -->
-        <div class="score-board" id="score-display">
-            PONTOS: 0
-        </div>
+        <div class="score-board" id="score-display">PONTOS: 0</div>
+        <canvas id="gameCanvas" width="360" height="520"></canvas>
+        <div id="life-display" class="life-counter">VIDAS: 3</div>
 
-        <!-- CANVAS DO JOGO -->
-        <canvas id="gameCanvas" width="360" height="600"></canvas>
-
-        <!-- OVERLAY DE INÍCIO -->
         <div id="overlay">
             <div class="popup-start">
-                <h2 style="color: #ff00ff; font-size: 16px; margin-bottom: 15px;">GUARDIÃO DO AMOR</h2>
-                <p style="font-size: 10px; line-height: 1.6; color: #fff;">Arraste para mover a nave. O tiro é automático!</p>
-                <p style="font-size: 10px; color: #00ffff; margin-top: 10px;">Destrua os invasores e alcance 1000 pontos!</p>
-                <button class="start-btn" onclick="iniciarMissao()">DECOLAR 🚀</button>
+                <h2 style="color: #ff00ff; font-size: 14px; margin-bottom: 10px;">ESCOLHA SEU MODO</h2>
+                <button class="mode-btn btn-classic" onclick="iniciarJogo('classic')">
+                    MODO CLÁSSICO<br>
+                    <span style="font-size: 7px;">- Chegue a 1000 pontos<br>- 10% mais veloz</span>
+                </button>
+                <button class="mode-btn btn-infinite" onclick="iniciarJogo('infinite')">
+                    MODO SEM LIMITE<br>
+                    <span style="font-size: 7px;">- Recorde Máximo<br>- Vidas e Power-ups</span>
+                </button>
             </div>
         </div>
 
-        <!-- MENSAGEM FINAL: VITÓRIA -->
         <div id="message">
-            <h2 class="msg-title">VITÓRIA! 💖</h2>
-            <p class="msg-white">O universo está a salvo, mas a minha maior conquista já foi feita...</p>
-            <p class="msg-blue">Ganhar o seu coração!</p>
-            <p class="msg-red"><strong>PEDRO AMA JOSY!</strong></p>
-            
+            <h2 style="color:#ff4d6d; font-size:16px;">VITÓRIA! 💖</h2>
             <img src="assets/images/guerra_estelar_photo.png" class="polaroid" alt="Pedro e Josy">
-
-            <button class="btn btn-restart" onclick="resetGame()">JOGAR DE NOVO</button>
-            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+            <p style="font-size: 9px; color:#fff;">Minha maior conquista é você!</p>
+            <p style="color:#ff0000; font-size:12px;"><strong>PEDRO AMA JOSY!</strong></p>
+            <button class="btn-restart" onclick="resetGame()">JOGAR DE NOVO</button>
+            <a href="index.html" class="btn-menu">VOLTAR AO MENU</a>
         </div>
 
-        <!-- MENSAGEM FINAL: DERROTA -->
         <div id="game-over">
-            <h2 class="msg-title-lose">NAVE DESTRUÍDA! 💥</h2>
-            <p class="msg-white">Os invasores passaram nossa defesa...</p>
-            <button class="btn btn-restart-lose" onclick="resetGame()">TENTAR NOVAMENTE</button>
-            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
+            <h2 id="go-title" style="color:#ff0000; font-size:16px;">FIM DE JOGO</h2>
+            <p id="go-text" style="font-size: 9px; color:#fff; line-height:1.4;"></p>
+            <p style="color:#ff0000; font-size:11px; margin-top:10px;"><strong>PEDRO AMA JOSY!</strong></p>
+            <button class="btn-restart" onclick="resetGame()">TENTAR DE NOVO</button>
+            <a href="index.html" class="btn-menu">VOLTAR AO MENU</a>
         </div>
-
     </div>
 
-    <!-- Áudios -->
     <audio id="bgTrack" loop><source src="assets/sounds/guerra_estelar.mp3" type="audio/mpeg"></audio>
     <audio id="soundLaser"><source src="assets/sounds/laser.wav" type="audio/wav"></audio>
     <audio id="soundExplosion"><source src="assets/sounds/explosao.wav" type="audio/wav"></audio>
-    <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
-    <audio id="soundLose"><source src="assets/sounds/lose.wav" type="audio/wav"></audio>
+    <audio id="soundPower"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('score-display');
-        
-        const overlay = document.getElementById('overlay');
-        const messageDiv = document.getElementById('message');
-        const gameOverDiv = document.getElementById('game-over');
-        const btnSound = document.getElementById('btn-sound');
-
+        const lifeDisplay = document.getElementById('life-display');
         const track = document.getElementById('bgTrack');
-        document.getElementById('soundLaser').volume = 0.33;
-        document.getElementById('soundExplosion').volume = 0.67;
+        const btnSound = document.getElementById('btn-sound');
         
-        // Lógica do Som
-        track.volume = 0.5;
-        btnSound.addEventListener('click', () => {
-            if (track.paused) {
-                track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
-            } else {
-                track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on");
-            }
-        });
-
-        function playSound(id) {
-            const sound = document.getElementById(id);
-            sound.currentTime = 0;
-            sound.play().catch(e => {});
-        }
-
-        function iniciarMissao() {
-            overlay.style.display = 'none';
-            track.play(); 
-            btnSound.innerHTML = "🔊"; 
-            btnSound.classList.add("on");
-            startGame();
-        }
-
-        let animationId;
+        let gameMode = 'classic';
+        let isPaused = false;
         let isPlaying = false;
         let score = 0;
+        let lives = 3;
         let frames = 0;
-        let spawnRate = 100;
+        let spawnRate = 80;
+        let player = { x: 160, y: 440, width: 40, height: 40 };
+        let bullets = [], enemies = [], items = [];
+        let specialShotTimer = 0;
+        let animationId;
 
-        // Foguete posicionado para 520
-        const player = { x: 160, y: 520, width: 40, height: 40 };
-        let bullets = [];
-        let enemies = [];
+        const fixHeight = () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        window.addEventListener('resize', fixHeight);
+        window.addEventListener('pageshow', fixHeight);
+        fixHeight();
 
-        function movePlayer(e) {
-            if(!isPlaying) return;
-            
-            if(e.type === 'touchmove' || e.type === 'touchstart') {
-                e.preventDefault();
-            }
+        btnSound.addEventListener('click', () => {
+            if (track.paused) { track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on"); }
+            else { track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on"); }
+        });
 
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let rect = canvas.getBoundingClientRect();
-            let scaleX = canvas.width / rect.width;
-            player.x = (clientX - rect.left) * scaleX - (player.width / 2);
-            
-            if(player.x < 0) player.x = 0;
-            if(player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        function togglePause() {
+            if (!isPlaying) return;
+            isPaused = !isPaused;
+            document.getElementById('btn-pause').innerText = isPaused ? "RESUME" : "PAUSE";
+            if (isPaused) track.pause();
+            else if (btnSound.classList.contains("on")) track.play();
         }
 
-        canvas.addEventListener('mousemove', movePlayer);
-        canvas.addEventListener('mousedown', movePlayer);
-        canvas.addEventListener('touchmove', movePlayer, {passive: false});
-        canvas.addEventListener('touchstart', movePlayer, {passive: false});
+        function iniciarJogo(mode) {
+            gameMode = mode;
+            document.getElementById('overlay').style.display = 'none';
+            lifeDisplay.style.display = (mode === 'infinite') ? 'block' : 'none';
+            track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
+            resetGame();
+        }
+
+        function spawnItem() {
+            if (gameMode !== 'infinite') return;
+            let type = Math.random() > 0.5 ? '⭐' : '⚡'; // Estrela (Vida) ou Raio (Tiro Especial)
+            items.push({ x: Math.random() * (canvas.width - 30), y: -30, type, speed: 2 });
+        }
 
         function loop() {
-            if(!isPlaying) return;
-            
+            if (!isPlaying || isPaused) {
+                if (isPlaying) animationId = requestAnimationFrame(loop);
+                return;
+            }
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             frames++;
 
             // NAVE
-            ctx.save(); 
-            ctx.translate(player.x + player.width / 2, player.y + player.height / 2); 
-            ctx.rotate(-45 * Math.PI / 180); 
-            ctx.font = "40px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("🚀", 0, 0); 
-            ctx.restore(); 
+            ctx.font = "40px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.save(); ctx.translate(player.x + 20, player.y + 20); ctx.rotate(-45 * Math.PI / 180);
+            ctx.fillText("🚀", 0, 0); ctx.restore();
 
-            // ATIRAR AUTOMATICAMENTE
-            if (frames % 15 === 0) {
-                bullets.push({ x: player.x + 18, y: player.y, width: 4, height: 15, color: '#00ffff' });
-                if(btnSound.classList.contains("on")) playSound('soundLaser');
+            // TIROS
+            if (frames % (gameMode === 'classic' ? 12 : 15) === 0) {
+                bullets.push({ x: player.x + 18, y: player.y, vx: 0, vy: -10 });
+                if (specialShotTimer > 0) {
+                    bullets.push({ x: player.x + 18, y: player.y, vx: -5, vy: -7 });
+                    bullets.push({ x: player.x + 18, y: player.y, vx: 5, vy: -7 });
+                }
+                document.getElementById('soundLaser').currentTime = 0;
+                document.getElementById('soundLaser').play();
             }
+            if (specialShotTimer > 0) specialShotTimer--;
 
-            // ATUALIZA TIROS
-            bullets.forEach((bullet, index) => {
-                bullet.y -= 10;
-                ctx.fillStyle = bullet.color;
-                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-                if (bullet.y < 0) bullets.splice(index, 1);
+            bullets.forEach((b, i) => {
+                b.x += b.vx; b.y += b.vy;
+                ctx.fillStyle = "#00ffff"; ctx.fillRect(b.x, b.y, 4, 12);
+                if (b.y < 0 || b.x < 0 || b.x > canvas.width) bullets.splice(i, 1);
             });
 
-            // SPAWN DE INIMIGOS
-            if (frames % spawnRate === 0) {
-                let type = Math.random();
-                let x = Math.random() * (canvas.width - 40);
-                
-                if (type < 0.6) {
-                    enemies.push({ x: x, y: -50, width: 40, height: 40, speed: 2, hp: 1, type: '🛸', points: 10 });
-                } else if (type < 0.9) {
-                    enemies.push({ x: x, y: -50, width: 40, height: 40, speed: 1.5, hp: 3, type: '👾', points: 30 });
-                } else {
-                    enemies.push({ x: x, y: -50, width: 50, height: 50, speed: 1, hp: 6, type: '☄️', points: 50 });
+            // ITENS
+            if (frames % 600 === 0) spawnItem();
+            items.forEach((item, i) => {
+                item.y += item.speed;
+                ctx.fillText(item.type, item.x + 15, item.y + 15);
+                if (item.x < player.x + 40 && item.x + 30 > player.x && item.y < player.y + 40 && item.y + 30 > player.y) {
+                    document.getElementById('soundPower').play();
+                    if (item.type === '⭐') lives++;
+                    else specialShotTimer = 300;
+                    lifeDisplay.innerText = `VIDAS: ${lives}`;
+                    items.splice(i, 1);
                 }
+                if (item.y > canvas.height) items.splice(i, 1);
+            });
+
+            // INIMIGOS
+            if (frames % Math.floor(spawnRate) === 0) {
+                let x = Math.random() * (canvas.width - 40);
+                enemies.push({ x, y: -40, hp: 1, type: '🛸', points: 10, speed: 2 });
             }
 
-            // ATUALIZA INIMIGOS E COLISÕES
-            enemies.forEach((enemy, eIndex) => {
-                enemy.y += enemy.speed;
-                ctx.font = enemy.hp > 3 ? "50px Arial" : "40px Arial";
-                ctx.textAlign = "left"; 
-                ctx.textBaseline = "alphabetic"; 
-                ctx.fillText(enemy.type, enemy.x, enemy.y + 35);
+            enemies.forEach((e, ei) => {
+                e.y += e.speed;
+                ctx.fillText(e.type, e.x + 20, e.y + 20);
 
-                if (enemy.y > canvas.height || 
-                   (enemy.x < player.x + player.width && enemy.x + enemy.width > player.x &&
-                    enemy.y < player.y + player.height && enemy.y + enemy.height > player.y)) {
-                    endGame(false);
+                if (e.y > canvas.height) {
+                    if (gameMode === 'infinite') {
+                        lives--; lifeDisplay.innerText = `VIDAS: ${lives}`;
+                        if (lives <= 0) endGame(false);
+                    } else { endGame(false); }
+                    enemies.splice(ei, 1);
                 }
 
-                bullets.forEach((bullet, bIndex) => {
-                    if (bullet.x < enemy.x + enemy.width && bullet.x + bullet.width > enemy.x &&
-                        bullet.y < enemy.y + enemy.height && bullet.y + bullet.height > enemy.y) {
-                        
-                        bullets.splice(bIndex, 1);
-                        enemy.hp--;
-                        
-                        if (enemy.hp <= 0) {
-                            if(btnSound.classList.contains("on")) playSound('soundExplosion');
-                            score += enemy.points;
-                            scoreDisplay.innerText = `PONTOS: ${score}`;
-                            enemies.splice(eIndex, 1);
-                            
-                            if (spawnRate > 20) spawnRate--; 
-                            
-                            if (score >= 1000) endGame(true);
+                if (e.x < player.x + 40 && e.x + 40 > player.x && e.y < player.y + 40 && e.y + 40 > player.y) endGame(false);
+
+                bullets.forEach((b, bi) => {
+                    if (b.x < e.x + 40 && b.x + 4 > e.x && b.y < e.y + 40 && b.y + 12 > e.y) {
+                        bullets.splice(bi, 1); e.hp--;
+                        if (e.hp <= 0) {
+                            document.getElementById('soundExplosion').currentTime = 0;
+                            document.getElementById('soundExplosion').play();
+                            score += e.points; scoreDisplay.innerText = `PONTOS: ${score}`;
+                            enemies.splice(ei, 1);
+                            let growth = gameMode === 'classic' ? 1.1 : 0.8;
+                            if (spawnRate > 20) spawnRate -= growth;
+                            if (gameMode === 'classic' && score >= 1000) endGame(true);
                         }
                     }
                 });
@@ -360,47 +258,42 @@
             animationId = requestAnimationFrame(loop);
         }
 
-        function startGame() {
-            score = 0; frames = 0; spawnRate = 80;
-            bullets = []; enemies = [];
-            scoreDisplay.innerText = `PONTOS: 0`;
-            player.x = 160;
-            player.y = 520; // Ajustado para 520
-            
-            if(btnSound.classList.contains("on")) {
-                track.volume = 1.0; 
-                track.play();
-            }
-            
-            isPlaying = true;
-            loop();
-        }
-
-        function endGame(isWin) {
-            isPlaying = false;
-            cancelAnimationFrame(animationId);
-            track.pause();
-            
-            if (isWin) {
-                if(btnSound.classList.contains("on")) playSound('soundWin');
-                messageDiv.style.display = 'block';
-                
-                if(window.registrarVitoria) window.registrarVitoria('guardiao_amor');
-                
+        function endGame(win) {
+            isPlaying = false; track.pause();
+            if (win) {
+                document.getElementById('message').style.display = 'block';
+                if (window.registrarVitoria) window.registrarVitoria('guardiao_amor');
             } else {
-                if(btnSound.classList.contains("on")) playSound('soundLose');
-                gameOverDiv.style.display = 'block';
+                document.getElementById('game-over').style.display = 'block';
+                document.getElementById('go-title').innerText = (gameMode === 'infinite') ? "MISSÃO CONCLUÍDA!" : "SISTEMA FALHOU!";
+                document.getElementById('go-text').innerText = (gameMode === 'infinite') ? 
+                    `Que bom que você chegou até aqui!\nPontuação final: ${score}` : 
+                    "A barreira foi rompida. Tente novamente!";
+                if (gameMode === 'infinite' && window.registrarRecorde) window.registrarRecorde(score, 'guerra_estelar_max');
             }
         }
 
         function resetGame() {
-            messageDiv.style.display = 'none';
-            gameOverDiv.style.display = 'none';
-            startGame();
+            score = 0; lives = 3; frames = 0; spawnRate = 80;
+            bullets = []; enemies = []; items = []; specialShotTimer = 0;
+            scoreDisplay.innerText = "PONTOS: 0";
+            lifeDisplay.innerText = "VIDAS: 3";
+            document.getElementById('message').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+            isPlaying = true; isPaused = false;
+            document.getElementById('btn-pause').innerText = "PAUSE";
+            loop();
         }
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            let rect = canvas.getBoundingClientRect();
+            player.x = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width) - 20;
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - 40) player.x = canvas.width - 40;
+        }, {passive: false});
     </script>
 
-    <!-- MOTOR DO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -415,32 +308,21 @@
             messagingSenderId: "960445216740",
             appId: "1:960445216740:web:d913dc274acdb1ffad39f1"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
         let userUID = null;
+        onAuthStateChanged(auth, (user) => { if (user) userUID = user.uid; });
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) userUID = user.uid;
-        });
-
-        window.registrarVitoria = async function(nomeDoJogo) {
-            if (!userUID) return; 
-            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
-            const snapshot = await get(dbRef);
-            const atual = snapshot.val() || 0;
-            set(dbRef, atual + 1); 
-        };
-
-        window.registrarRecorde = async function(pontos, nomeDoJogo) {
+        window.registrarVitoria = async (jogo) => {
             if (!userUID) return;
-            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
-            const snapshot = await get(dbRef);
-            const recordeAntigo = snapshot.val() || 0;
-            if (pontos > recordeAntigo) {
-                set(dbRef, pontos); 
-            }
+            const r = ref(db, `usuarios/${userUID}/estatisticas/${jogo}`);
+            const s = await get(r); set(r, (s.val() || 0) + 1);
+        };
+        window.registrarRecorde = async (p, jogo) => {
+            if (!userUID) return;
+            const r = ref(db, `usuarios/${userUID}/estatisticas/${jogo}`);
+            const s = await get(r); if (p > (s.val() || 0)) set(r, p);
         };
     </script>
 </body>
