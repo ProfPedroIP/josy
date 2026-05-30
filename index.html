@@ -87,14 +87,18 @@
         .btn-close-blue { background: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
         .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: #550000; box-shadow: 4px 4px 0px #550000; color: #fff; }
 
-        /* --- ESTILOS DA BRINCADEIRA --- */
-        #pergunta-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        /* --- ESTILOS DA BRINCADEIRA (LADO A LADO) --- */
+        #pergunta-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
         .question-title { font-size: 20px; color: #00ffff; text-shadow: 3px 3px #003366; margin-bottom: 50px; text-align: center; line-height: 1.6; padding: 0 20px; }
-        .btn-container { position: relative; width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; gap: 30px; }
+        .btn-container { position: relative; width: 100%; max-width: 320px; height: 120px; display: flex; align-items: center; justify-content: center; }
         .choice-btn { padding: 18px 28px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center; background: #111; cursor: pointer; border: 4px solid; box-sizing: border-box; }
-        #btn-sim { color: #00ff41; border-color: #00ff41; box-shadow: 5px 5px 0px #003300; z-index: 50; transition: transform 0.2s; }
+        
+        /* Posicionamento estático inicial para ficarem lado a lado */
+        #btn-sim { color: #00ff41; border-color: #00ff41; box-shadow: 5px 5px 0px #003300; z-index: 50; margin-right: 140px; transition: transform 0.2s; }
         #btn-sim:hover { transform: scale(1.1); background: #003300; }
-        #btn-nao { color: #ff0055; border-color: #ff0055; box-shadow: 5px 5px 0px #550000; position: absolute; z-index: 1000; transition: left 0.1s ease, top 0.1s ease; }
+        
+        /* O Não começa ao lado do Sim usando posições calculadas */
+        #btn-nao { color: #ff0055; border-color: #ff0055; box-shadow: 5px 5px 0px #550000; position: absolute; right: 10px; z-index: 1000; transition: left 0.1s ease, top 0.1s ease; }
         
         #glitch-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 5, 0.98); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 20px; }
         .glitch-wrapper { text-align: center; position: relative; }
@@ -215,20 +219,24 @@
     </div> 
 
     <script>
-        // Funções Globais de Controle de Interface da Brincadeira
         function mudarInterface(tela) {
             const fliperama = document.getElementById('game-content');
             const pergunta = document.getElementById('pergunta-content');
             const chatTrigger = document.getElementById('chat-trigger');
+            const btnNaoOriginal = document.getElementById('btn-nao');
             
             if (tela === 'pergunta') {
                 fliperama.style.display = 'none';
                 pergunta.style.display = 'flex';
                 if(chatTrigger) chatTrigger.style.display = 'none';
+                
+                // Reseta a posição do botão NÃO para o lado do SIM ao entrar na tela
+                btnNaoOriginal.style.position = 'absolute';
+                btnNaoOriginal.style.right = '10px';
+                btnNaoOriginal.style.top = '';
             } else {
                 fliperama.style.display = 'flex';
                 pergunta.style.display = 'none';
-                // Verifica login para restaurar visibilidade do chat
                 const pic = document.getElementById('profile-pic');
                 if(pic && pic.style.display === 'block' && chatTrigger) chatTrigger.style.display = 'block';
             }
@@ -295,7 +303,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
-                // Garante que se o usuário estiver na tela de pergunta, não force voltar pro fliperama no login
                 if (document.getElementById('pergunta-content').style.display !== 'flex') {
                     document.getElementById('game-content').style.display = 'flex';
                 }
@@ -338,7 +345,6 @@
                         chatContainer.appendChild(div);
                     });
                     chatContainer.scrollTop = chatContainer.scrollHeight;
-                    // Só mostra notificação se o chat estiver fechado e não estiver na tela de pergunta
                     const naPergunta = document.getElementById('pergunta-content').style.display === 'flex';
                     document.getElementById('chat-notif').style.display = (!chatAberto && temMensagemNovaParaMim && !naPergunta) ? 'block' : 'none';
                 }
