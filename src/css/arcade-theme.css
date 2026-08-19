@@ -1,0 +1,486 @@
+/* =============================================================================
+   src/css/arcade-theme.css
+   -----------------------------------------------------------------------------
+   Identidade visual do Josy Arcade: paleta neon, CRT/scanlines, campo de
+   estrelas, botões pixelados e modais.
+
+   Nada aqui muda a aparência do que já existia — é o mesmo CSS que estava
+   copiado nos 5 arquivos, com as diferenças entre páginas expressas como
+   variáveis e modificadores em vez de blocos repetidos.
+
+   Uso na página:
+     <link rel="stylesheet" href="src/css/arcade-theme.css">
+     <body class="tela-fixa">              (ou .tela-rolavel no Love Bird)
+       <div class="stars stars--sobe"></div>
+       <div id="app-wrapper"> ... </div>
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. TOKENS
+----------------------------------------------------------------------------- */
+
+:root {
+  /* Altura real da viewport no mobile — alimentado por initViewportFix() */
+  --vh: 1vh;
+
+  /* Paleta neon */
+  --cor-fundo: #050505;
+  --cor-painel: #111;
+
+  --verde: #00ff41;
+  --verde-sombra: #008f25;
+  --verde-borda: #003300;
+
+  --magenta: #ff00ff;
+  --magenta-sombra: #4b0082;
+
+  --ciano: #00ffff;
+  --ciano-sombra: #008b8b;
+
+  --azul: #4a90e2;
+  --azul-sombra: #003366;
+
+  --vermelho: #ff0000;
+  --vermelho-sombra: #a00000;
+  --vermelho-escuro: #550000;
+
+  --rosa: #ff4d6d;
+  --ouro: #ffd700;
+  --ouro-sombra: #8b6508;
+  --ouro-borda: #b89b00;
+
+  /* Tipografia */
+  --fonte: 'Press Start 2P', cursive;
+
+  /* Campo de estrelas (sobrescrito por .stars--denso) */
+  --campo-estrelas:
+    10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff,
+    20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff,
+    45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
+  --estrelas-duracao: 100s;
+
+  /* Terceira faixa do CRT: azul por padrão, vermelha no menu */
+  --scanline-c3: rgba(0, 0, 255, 0.06);
+
+  /* Moldura do app (varia por página) */
+  --wrapper-altura: 90%;
+  --wrapper-padding-inferior: 20px;
+}
+
+/* -----------------------------------------------------------------------------
+   2. BASE
+----------------------------------------------------------------------------- */
+
+body {
+  background: var(--cor-fundo);
+  color: var(--verde);
+  font-family: var(--fonte);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Páginas que ocupam exatamente a tela */
+body.tela-fixa {
+  height: calc(var(--vh, 1vh) * 100);
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Página que pode rolar (Love Bird, por causa do canvas alto) */
+body.tela-rolavel {
+  min-height: 100dvh;
+  overflow-y: auto;
+  position: relative;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+/* -----------------------------------------------------------------------------
+   3. CAMPO DE ESTRELAS
+----------------------------------------------------------------------------- */
+
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  background: transparent;
+  box-shadow: var(--campo-estrelas);
+  z-index: -1;
+  animation: estrelasSobem var(--estrelas-duracao) linear infinite;
+}
+
+/* Variação usada no menu e na Busca Estelar */
+.stars--denso {
+  --campo-estrelas:
+    15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff,
+    45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff,
+    80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
+}
+
+.stars--sobe    { animation-name: estrelasSobem; }
+.stars--desce   { animation-name: estrelasDescem; }
+.stars--lateral { animation-name: estrelasLaterais; }
+.stars--rapido  { --estrelas-duracao: 50s; }
+
+@keyframes estrelasSobem    { from { transform: translateY(0); }      to { transform: translateY(-100vh); } }
+@keyframes estrelasDescem   { from { transform: translateY(-100vh); } to { transform: translateY(100vh); } }
+@keyframes estrelasLaterais { from { transform: translateX(100vw); }  to { transform: translateX(-100vw); } }
+
+/* -----------------------------------------------------------------------------
+   4. EFEITO CRT (SCANLINES)
+----------------------------------------------------------------------------- */
+
+body::before {
+  content: ' ';
+  display: block;
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), var(--scanline-c3));
+  background-size: 100% 4px, 3px 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------------
+   5. MOLDURA DO APLICATIVO
+----------------------------------------------------------------------------- */
+
+#app-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 450px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 20;
+  box-sizing: border-box;
+  padding-bottom: calc(var(--wrapper-padding-inferior) + env(safe-area-inset-bottom));
+}
+
+/* Love Bird: conteúdo cresce, alinhado ao topo */
+body.tela-rolavel #app-wrapper {
+  min-height: 90dvh;
+  height: auto;
+  justify-content: flex-start;
+  overflow: visible;
+  padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px;
+}
+
+/* Acima de 450px vira "gabinete" com borda */
+@media (min-width: 451px) {
+  #app-wrapper {
+    height: var(--wrapper-altura);
+    border: 2px solid var(--verde-borda);
+    border-radius: 15px;
+    box-shadow: 0 0 50px rgba(0, 255, 65, 0.1);
+    background: rgba(5, 5, 5, 0.8);
+  }
+  body.tela-rolavel #app-wrapper {
+    height: auto;
+    margin: 20px 0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   6. CONTROLES (som / pause / fechar)
+----------------------------------------------------------------------------- */
+
+.top-controls {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  z-index: 50;
+}
+
+.btn-ctrl,
+.btn-sound,
+.btn-close,
+.btn-pause {
+  background: var(--cor-painel);
+  font-family: var(--fonte);
+  font-size: 8px;
+  cursor: pointer;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.btn-sound {
+  color: var(--vermelho);
+  border-color: var(--vermelho-sombra);
+  box-shadow: 3px 3px 0px var(--vermelho-sombra);
+}
+
+/* Estado ligado — controlado por AudioManager.ligarBotao() */
+.btn-sound.on {
+  color: var(--verde);
+  border-color: var(--verde-sombra);
+  box-shadow: 3px 3px 0px var(--verde-sombra);
+}
+
+.btn-pause {
+  color: var(--ouro);
+  border-color: var(--ouro-borda);
+  box-shadow: 3px 3px 0px var(--ouro-borda);
+  width: 80px;
+}
+
+.btn-close {
+  color: var(--vermelho);
+  border-color: var(--vermelho);
+  box-shadow: 3px 3px 0px var(--vermelho);
+  width: 40px;
+  font-size: 12px;
+}
+
+/* Posicionamento absoluto (menu, minado, busca estelar) */
+.btn-flutuante-esq { position: absolute; top: 30px; left: 20px; z-index: 150; }
+.btn-flutuante-dir { position: absolute; top: 30px; right: 20px; z-index: 150; }
+
+/* -----------------------------------------------------------------------------
+   7. CABEÇALHO E PLACAR
+----------------------------------------------------------------------------- */
+
+.score-board {
+  background: var(--cor-painel);
+  border: 3px solid var(--ouro);
+  padding: 12px;
+  font-size: 9px;
+  color: var(--ouro);
+  box-shadow: 4px 4px 0px var(--ouro-sombra);
+  margin-bottom: 15px;
+  text-align: center;
+  line-height: 1.5;
+  box-sizing: border-box;
+  z-index: 50;
+}
+
+.game-header {
+  margin-top: 40px;
+  margin-bottom: 15px;
+  text-align: center;
+  width: 100%;
+}
+
+.game-header h1 {
+  font-size: 14px;
+  color: var(--magenta);
+  text-shadow: 3px 3px var(--magenta-sombra);
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 8px;
+  color: var(--ciano);
+}
+
+/* -----------------------------------------------------------------------------
+   8. CANVAS
+----------------------------------------------------------------------------- */
+
+canvas {
+  background: rgba(0, 0, 0, 0.9);
+  border: 4px solid var(--azul);
+  box-shadow: 0 0 15px var(--azul);
+  z-index: 5;
+  touch-action: none;
+}
+
+/* -----------------------------------------------------------------------------
+   9. GRID 5x5 (Busca Estelar e Minado Amorous)
+----------------------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  gap: 8px;
+  background: var(--cor-painel);
+  padding: 12px;
+  border: 4px solid var(--azul);
+  box-shadow: 0 0 15px var(--azul);
+  margin-bottom: 15px;
+  z-index: 5;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  background: #000;
+  border: 2px solid #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--ouro);
+  transition: 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell.revealed       { background: #1a1a1a; border-color: #444; cursor: default; }
+.cell.hit,
+.cell.heart          { background: #220022; border-color: var(--rosa); color: var(--rosa); animation: blink 0.5s infinite; }
+.cell.heart-revealed { background: #1a1a1a; border-color: var(--rosa); color: var(--rosa); opacity: 0.7; animation: none; }
+.cell.blackhole      { background: #000; border-color: var(--vermelho); color: #fff; text-shadow: 0 0 8px var(--vermelho); }
+.cell.miss           { background: var(--cor-painel); border-color: var(--vermelho); color: var(--vermelho); }
+.cell.number         { color: var(--ciano); }
+
+@media (max-width: 380px) {
+  .grid { grid-template-columns: repeat(5, 52px); gap: 5px; }
+  .cell { width: 52px; height: 52px; font-size: 18px; }
+}
+
+/* -----------------------------------------------------------------------------
+   10. OVERLAYS E MODAIS
+----------------------------------------------------------------------------- */
+
+#overlay,
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.overlay--coluna { flex-direction: column; }
+
+.popup,
+.popup-start {
+  border: 4px solid var(--magenta);
+  padding: 30px;
+  background: var(--cor-painel);
+  box-shadow: 0 0 20px var(--magenta);
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Caixa central de vitória / derrota / milestone */
+.message-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  padding: 20px;
+  background: rgba(17, 17, 17, 0.98);
+  width: 85%;
+  max-width: 350px;
+  z-index: 200;
+  text-align: center;
+  box-sizing: border-box;
+  animation: fadeIn 0.5s;
+}
+
+.message-box--rosa     { border: 4px double var(--rosa);     box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); }
+.message-box--ciano    { border: 4px double var(--ciano);    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); }
+.message-box--vermelho { border: 4px double var(--vermelho); box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); }
+
+.msg-title      { color: var(--rosa);     font-size: 16px; margin-bottom: 15px; }
+.msg-title-cyan { color: var(--ciano);    font-size: 16px; margin-bottom: 15px; }
+.msg-title-red  { color: var(--vermelho); font-size: 16px; margin-bottom: 15px; }
+.msg-text,
+.msg-white      { color: #fff; font-size: 9px; line-height: 1.6; margin-bottom: 10px; }
+.msg-final      { color: var(--vermelho); font-size: 12px; margin: 15px 0; text-shadow: 2px 2px var(--vermelho-escuro); }
+
+/* -----------------------------------------------------------------------------
+   11. BOTÕES
+----------------------------------------------------------------------------- */
+
+.btn,
+.game-btn {
+  padding: 15px;
+  font-family: var(--fonte);
+  font-size: 9px;
+  color: #fff;
+  cursor: pointer;
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  text-decoration: none;
+  margin-bottom: 10px;
+  text-align: center;
+  border: 4px solid;
+}
+
+.btn-restart      { background: var(--magenta); border-color: var(--magenta-sombra); box-shadow: 4px 4px 0px var(--magenta-sombra); }
+.btn-restart-lose { background: #444; border-color: #000; box-shadow: 4px 4px 0px #222; }
+.btn-menu         { background: var(--azul); border-color: var(--azul-sombra); box-shadow: 4px 4px 0px var(--azul-sombra); }
+.btn-green        { background: var(--verde); border-color: var(--verde-sombra); box-shadow: 4px 4px 0px var(--verde-sombra); color: #000; }
+
+.start-btn {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--verde);
+  color: #000;
+  border: none;
+  font-family: var(--fonte);
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--verde-sombra);
+  font-size: 10px;
+}
+
+/* Botão do gabinete principal (menu) */
+.arcade-btn {
+  padding: 20px;
+  font-family: var(--fonte);
+  font-size: 12px;
+  text-align: center;
+  background: var(--cor-painel);
+  color: var(--ciano);
+  border: 4px solid var(--azul);
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.3s;
+  box-shadow: 6px 6px 0px var(--magenta-sombra);
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+}
+
+.arcade-btn:hover { background: var(--magenta); color: #fff; transform: scale(1.05); }
+.arcade-btn-novo  { border-color: var(--magenta); color: var(--magenta); }
+
+/* -----------------------------------------------------------------------------
+   12. ANIMAÇÕES COMPARTILHADAS
+----------------------------------------------------------------------------- */
+
+@keyframes blink  { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse  { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+@keyframes glitch-anim {
+  0%   { text-shadow: 2px -2px #ff0000, -2px 2px #0000ff; transform: translate(0); }
+  50%  { text-shadow: -3px 2px #ff0000, 3px -2px #0000ff; transform: translate(-2px, 2px); }
+  100% { text-shadow: 3px 3px #ff0000, -3px -3px #0000ff; transform: translate(2px, -2px); }
+}
+
+/* Respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .stars { animation: none; }
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
