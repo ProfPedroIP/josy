@@ -7,124 +7,87 @@
     <title>Arcade Josy & Pedro</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕹️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/arcade-theme.css">
+
     <style>
-        :root { --vh: 1vh; }
-
-        body { 
-            background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; 
-            height: calc(var(--vh, 1vh) * 100); width: 100vw; overflow: hidden;
+        /* ----- Específico do menu ----- */
+        :root {
+            --scanline-c3: rgba(255, 0, 0, 0.06); /* faixa CRT vermelha só aqui */
+            --wrapper-altura: 90%;
         }
 
-        .stars {
-            position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
-            box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
-            animation: spaceMove 100s linear infinite; z-index: -1;
-        }
-        @keyframes spaceMove { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
-
-        body::before {
-            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(255, 0, 0, 0.06));
-            z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
-        }
-
-        #app-wrapper {
-            position: relative; width: 100%; max-width: 450px; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden; z-index: 20; box-sizing: border-box;
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
-        }
-
-        @media (min-width: 451px) {
-            #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
-        }
-
+        /* Login */
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
         .login-logo { width: 150px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 15px #ff00ff); animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .login-title { font-size: 24px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; }
-        .btn-login-large { background: #111; color: #00ffff; border: 4px solid #00ffff; padding: 25px 35px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 8px 8px 0px #003366; }
+        .login-title { font-size: 24px; color: var(--magenta); text-shadow: 4px 4px var(--magenta-sombra); margin-bottom: 40px; }
+        .btn-login-large { background: var(--cor-painel); color: var(--ciano); border: 4px solid var(--ciano); padding: 25px 35px; font-family: var(--fonte); font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 8px 8px 0px var(--azul-sombra); }
 
+        /* Menu de jogos */
         #game-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
-        h1 { font-size: 22px; color: #ff00ff; text-shadow: 4px 4px #4b0082; margin-bottom: 40px; text-align: center;}
+        #game-content h1 { font-size: 22px; color: var(--magenta); text-shadow: 4px 4px var(--magenta-sombra); margin-bottom: 40px; text-align: center; }
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
-        .arcade-btn { padding: 20px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center; background: #111; color: #00ffff; border: 4px solid #4a90e2; cursor: pointer; text-decoration: none; transition: 0.3s; box-shadow: 6px 6px 0px #4b0082; position: relative; display: block; box-sizing: border-box; }
-        .arcade-btn:hover { background: #ff00ff; color: white; transform: scale(1.05); }
-        .arcade-btn-novo { border-color: #ff00ff; color: #ff00ff; }
-        .badge-novo { position: absolute; top: -12px; right: -15px; background: #ff00ff; color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px #4b0082; animation: blink 1s infinite; transform: rotate(5deg); }
+        .badge-novo { position: absolute; top: -12px; right: -15px; background: var(--magenta); color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px var(--magenta-sombra); animation: blink 1s infinite; transform: rotate(5deg); }
 
-        .btn-sound { position: absolute; top: 25px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
-        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
-        #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ff00ff; cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px #ff00ff; object-fit: cover; z-index: 50; display: none; }
+        /* Controles de topo */
+        #btn-sound { position: absolute; top: 25px; left: 20px; z-index: 150; }
+        #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--magenta); cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px var(--magenta); object-fit: cover; z-index: 50; display: none; }
 
-        #chat-trigger { position: absolute; bottom: 25px; left: 20px; z-index: 100; background: #111; border: 3px solid #00ff41; color: #00ff41; padding: 15px; cursor: pointer; font-family: 'Press Start 2P'; font-size: 12px; box-shadow: 4px 4px 0px #008f25; display: none; }
-        .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: #ff0000; border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
-        #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 40px 20px 40px 20px; box-sizing: border-box; }
-        #chat-messages { flex: 1; overflow-y: auto; border: 2px solid #00ff41; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
-        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; position: relative;}
-        .msg-me { align-self: flex-end; background: #003300; border: 1px solid #00ff41; color: #00ff41; text-align: right; }
-        .msg-other { align-self: flex-start; background: #111; border: 1px solid #ff00ff; color: #ff00ff; text-align: left; }
+        /* Chat */
+        #chat-trigger { position: absolute; bottom: 25px; left: 20px; z-index: 100; background: var(--cor-painel); border: 3px solid var(--verde); color: var(--verde); padding: 15px; cursor: pointer; font-family: var(--fonte); font-size: 12px; box-shadow: 4px 4px 0px var(--verde-sombra); display: none; }
+        .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: var(--vermelho); border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
+        #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 40px 20px; box-sizing: border-box; }
+        #chat-messages { flex: 1; overflow-y: auto; border: 2px solid var(--verde); padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
+        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; position: relative; }
+        .msg-me { align-self: flex-end; background: var(--verde-borda); border: 1px solid var(--verde); color: var(--verde); text-align: right; }
+        .msg-other { align-self: flex-start; background: var(--cor-painel); border: 1px solid var(--magenta); color: var(--magenta); text-align: left; }
         .msg-info { font-size: 6px; display: block; margin-bottom: 5px; opacity: 0.8; }
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 5px; }
         .msg-time { font-size: 5px; color: #888; }
-        .msg-status-neon { font-size: 10px; color: #00ffff; text-shadow: 0 0 5px #00ffff; font-weight: bold; }
+        .msg-status-neon { font-size: 10px; color: var(--ciano); text-shadow: 0 0 5px var(--ciano); font-weight: bold; }
         #chat-input-container { display: flex; gap: 10px; }
-        #chat-input { flex: 1; background: #000; border: 2px solid #00ff41; color: #00ff41; padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; outline: none; width: 100%; box-sizing: border-box; }
-        #chat-send { background: #00ff41; border: none; color: #000; padding: 10px; font-family: 'Press Start 2P'; cursor: pointer; font-size: 8px; }
+        #chat-input { flex: 1; background: #000; border: 2px solid var(--verde); color: var(--verde); padding: 10px; font-family: var(--fonte); font-size: 10px; outline: none; width: 100%; box-sizing: border-box; }
+        #chat-send { background: var(--verde); border: none; color: #000; padding: 10px; font-family: var(--fonte); cursor: pointer; font-size: 8px; }
+        #chat-fechar { background: var(--cor-painel); border: 2px solid var(--vermelho); color: var(--vermelho); font-family: var(--fonte); font-size: 10px; width: 30px; height: 30px; cursor: pointer; }
 
+        /* Modal de perfil / placar */
         #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .stats-box { background: #111; border: 4px solid #ff00ff; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #ff00ff; text-align: left; position: relative; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
+        .stats-box { background: var(--cor-painel); border: 4px solid var(--magenta); padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px var(--magenta); text-align: left; position: relative; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: #222; color: #00ffff; border: 2px solid #4a90e2; font-family: 'Press Start 2P'; font-size: 8px; padding: 8px; cursor: pointer; flex: 1; text-align: center;}
-        .tab-btn.active { background: #00ffff; color: #000; border-color: #fff; }
-        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px;}
-        .leaderboard-table th { color: #00ffff; text-align: left; padding: 5px; border-bottom: 2px solid #00ffff;}
-        .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333;}
-        .score-win { color: #00ff41; } .score-draw { color: #ffd700; } .score-lose { color: #ff4444; } .score-indiv { color: #00ffff; }
-        .btn-modal-action { padding: 12px; font-family: 'Press Start 2P'; font-size: 10px; color: white; cursor: pointer; flex: 1; border: 4px solid; box-sizing: border-box; text-decoration: none; text-align: center; }
-        .btn-close-blue { background: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
-        .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: #550000; box-shadow: 4px 4px 0px #550000; color: #fff; }
+        .tab-btn { background: #222; color: var(--ciano); border: 2px solid var(--azul); font-family: var(--fonte); font-size: 8px; padding: 8px; cursor: pointer; flex: 1; text-align: center; }
+        .tab-btn.active { background: var(--ciano); color: #000; border-color: #fff; }
+        .leaderboard-table { width: 100%; font-size: 7px; color: #fff; border-collapse: collapse; margin-top: 5px; }
+        .leaderboard-table th { color: var(--ciano); text-align: left; padding: 5px; border-bottom: 2px solid var(--ciano); }
+        .leaderboard-table td { padding: 8px 5px; border-bottom: 1px solid #333; }
+        .score-win { color: var(--verde); } .score-draw { color: var(--ouro); } .score-lose { color: #ff4444; } .score-indiv { color: var(--ciano); }
+        .btn-modal-action { padding: 12px; font-family: var(--fonte); font-size: 10px; color: #fff; cursor: pointer; flex: 1; border: 4px solid; box-sizing: border-box; text-decoration: none; text-align: center; }
+        .btn-close-blue { background: var(--azul); border-color: var(--azul-sombra); box-shadow: 4px 4px 0px var(--azul-sombra); }
+        .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: var(--vermelho-escuro); box-shadow: 4px 4px 0px var(--vermelho-escuro); color: #fff; }
 
-        /* --- ESTILOS DA BRINCADEIRA (LADO A LADO) --- */
+        /* Brincadeira "Conexão Estelar" */
         #pergunta-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
-        .question-title { font-size: 20px; color: #00ffff; text-shadow: 3px 3px #003366; margin-bottom: 50px; text-align: center; line-height: 1.6; padding: 0 20px; }
+        .question-title { font-size: 20px; color: var(--ciano); text-shadow: 3px 3px var(--azul-sombra); margin-bottom: 50px; text-align: center; line-height: 1.6; padding: 0 20px; }
         .btn-container { position: relative; width: 100%; max-width: 320px; height: 120px; display: flex; align-items: center; justify-content: center; }
-        .choice-btn { padding: 18px 28px; font-family: 'Press Start 2P'; font-size: 12px; text-align: center; background: #111; cursor: pointer; border: 4px solid; box-sizing: border-box; }
-        
-        /* Posicionamento estático inicial para ficarem lado a lado */
-        #btn-sim { color: #00ff41; border-color: #00ff41; box-shadow: 5px 5px 0px #003300; z-index: 50; margin-right: 140px; transition: transform 0.2s; }
-        #btn-sim:hover { transform: scale(1.1); background: #003300; }
-        
-        /* O Não começa ao lado do Sim usando posições calculadas */
-        #btn-nao { color: #ff0055; border-color: #ff0055; box-shadow: 5px 5px 0px #550000; position: absolute; right: 10px; z-index: 1000; transition: left 0.1s ease, top 0.1s ease; }
-        
+        .choice-btn { padding: 18px 28px; font-family: var(--fonte); font-size: 12px; text-align: center; background: var(--cor-painel); cursor: pointer; border: 4px solid; box-sizing: border-box; }
+        #btn-sim { color: var(--verde); border-color: var(--verde); box-shadow: 5px 5px 0px var(--verde-borda); z-index: 50; margin-right: 140px; transition: transform 0.2s; }
+        #btn-sim:hover { transform: scale(1.1); background: var(--verde-borda); }
+        #btn-nao { color: #ff0055; border-color: #ff0055; box-shadow: 5px 5px 0px var(--vermelho-escuro); position: absolute; right: 10px; z-index: 1000; transition: left 0.1s ease, top 0.1s ease; }
+
         #glitch-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 5, 0.98); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 20px; }
         .glitch-wrapper { text-align: center; position: relative; }
-        .glitch-title { font-size: 24px; font-weight: bold; color: #ff00ff; text-shadow: 3px 3px #4b0082; position: relative; animation: glitch-anim 1s linear infinite alternate; margin-bottom: 25px; }
-        .glitch-sub { font-size: 11px; color: #00ffff; line-height: 1.8; margin-bottom: 30px; text-shadow: 2px 2px #003366; }
-        .btn-back-action { background: #111; padding: 12px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; border: 4px solid; display: block; width: 260px; margin: 12px auto; text-align: center; box-sizing: border-box; }
-        .btn-yellow { color: #ffd700; border-color: #ffd700; box-shadow: 4px 4px 0px #8b6508; }
-        .btn-cyan { color: #00ffff; border-color: #00ffff; box-shadow: 4px 4px 0px #008b8b; }
-
-        @keyframes glitch-anim {
-            0% { text-shadow: 2px -2px #ff0000, -2px 2px #0000ff; transform: translate(0); }
-            50% { text-shadow: -3px 2px #ff0000, 3px -2px #0000ff; transform: translate(-2px, 2px); }
-            100% { text-shadow: 3px 3px #ff0000, -3px -3px #0000ff; transform: translate(2px, -2px); }
-        }
-        
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .glitch-title { font-size: 24px; font-weight: bold; color: var(--magenta); text-shadow: 3px 3px var(--magenta-sombra); position: relative; animation: glitch-anim 1s linear infinite alternate; margin-bottom: 25px; }
+        .glitch-sub { font-size: 11px; color: var(--ciano); line-height: 1.8; margin-bottom: 30px; text-shadow: 2px 2px var(--azul-sombra); }
+        .btn-back-action { background: var(--cor-painel); padding: 12px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid; display: block; width: 260px; margin: 12px auto; text-align: center; box-sizing: border-box; }
+        .btn-yellow { color: var(--ouro); border-color: var(--ouro); box-shadow: 4px 4px 0px var(--ouro-sombra); }
+        .btn-cyan { color: var(--ciano); border-color: var(--ciano); box-shadow: 4px 4px 0px var(--ciano-sombra); }
     </style>
 </head>
-<body>
+<body class="tela-fixa">
 
-    <div class="stars"></div>
-    <audio id="bgTrack" loop><source src="assets/sounds/track.wav" type="audio/wav"></audio>
+    <div class="stars stars--denso stars--sobe"></div>
 
     <div id="app-wrapper">
         <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
-        
+
         <div id="login-screen">
             <img src="assets/images/icon-512.png" class="login-logo" alt="Logo">
             <div class="login-title">JOSY ARCADE</div>
@@ -143,10 +106,10 @@
                     <a href="campo_minado.html" class="arcade-btn">02. MINADO AMOROUS</a>
                     <a href="guerra_estelar.html" class="arcade-btn">03. GUARDIÃO DO AMOR</a>
                     <a href="love_bird.html" class="arcade-btn">04. LOVE BIRD</a>
-                    <button onclick="mudarInterface('pergunta')" class="arcade-btn arcade-btn-novo">05. CONEXÃO ESTELAR <span class="badge-novo">❤️</span></button>
+                    <button id="btn-conexao-estelar" class="arcade-btn arcade-btn-novo">05. CONEXÃO ESTELAR <span class="badge-novo">❤️</span></button>
                 </div>
             </div>
-            <button id="chat-trigger" onclick="window.toggleChat(true)">
+            <button id="chat-trigger">
                 CHAT <div class="notification-dot" id="chat-notif"></div>
             </button>
         </div>
@@ -154,7 +117,7 @@
         <div id="pergunta-content">
             <div class="question-title">VOCÊ ME AMA?</div>
             <div class="btn-container" id="area-botoes">
-                <button id="btn-sim" class="choice-btn" onclick="mostrarPopup(true)">SIM</button>
+                <button id="btn-sim" class="choice-btn">SIM</button>
                 <button id="btn-nao" class="choice-btn">NÃO</button>
             </div>
         </div>
@@ -167,41 +130,36 @@
                     ERA O MEU PRÊMIO MÁXIMO.<br><br>
                     <span style="color:#ff0055;">❤️ PEDRO & JOSY ❤️</span>
                 </div>
-                <button class="btn-back-action btn-yellow" onclick="mostrarPopup(false); mudarInterface('fliperama');">VOLTAR AO FLIPERAMA</button>
-                <button class="btn-back-action btn-cyan" onclick="mostrarPopup(false);">VOLTAR À PERGUNTA</button>
+                <button id="btn-voltar-fliperama" class="btn-back-action btn-yellow">VOLTAR AO FLIPERAMA</button>
+                <button id="btn-voltar-pergunta" class="btn-back-action btn-cyan">VOLTAR À PERGUNTA</button>
             </div>
         </div>
 
         <div id="chat-modal">
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
-                <button onclick="window.toggleChat(false)" style="background: #111; border: 2px solid #ff0000; color: #ff0000; font-family: 'Press Start 2P'; font-size: 10px; width: 30px; height: 30px; cursor: pointer;">X</button>
+                <button id="chat-fechar">X</button>
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input-container">
                 <input type="text" id="chat-input" placeholder="DIGITE..." autocomplete="off">
-                <button id="chat-send" style="background:#00ff41; font-family:'Press Start 2P'; font-size:8px; padding:10px; border:none; cursor:pointer;">SEND</button>
+                <button id="chat-send">SEND</button>
             </div>
         </div>
 
         <div id="stats-modal">
             <div class="stats-box">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-                    <img id="modal-profile-pic" src="" style="width:70px; border-radius:50%; border:3px solid #00ffff; object-fit:cover;">
+                    <img id="modal-profile-pic" src="" style="width:70px; border-radius:50%; border:3px solid #00ffff; object-fit:cover;" alt="">
                     <h2 id="player-name-title" style="color:#fff; font-size:12px; margin:0;">JOGADOR</h2>
                 </div>
                 <div class="modal-tabs">
-                    <button class="tab-btn active" onclick="window.openTab(event, 'tab-stats')">INDIVIDUAL</button>
-                    <button class="tab-btn" onclick="window.openTab(event, 'tab-leaderboard')">GERAL</button>
+                    <button class="tab-btn active" data-aba="tab-stats">INDIVIDUAL</button>
+                    <button class="tab-btn" data-aba="tab-leaderboard">GERAL</button>
                 </div>
-                <div id="tab-stats" class="tab-content active" style="display:block">
+                <div id="tab-stats" class="tab-content" style="display:block">
                     <table class="leaderboard-table">
                         <thead><tr><th>JOGO</th><th style="text-align:right">PONTUAÇÃO</th></tr></thead>
-                        <tbody>
-                            <tr><td>01. BUSCA ESTELAR</td><td style="text-align:right" class="score-indiv" id="stat-busca">0V</td></tr>
-                            <tr><td>02. MINADO AMOROUS</td><td style="text-align:right" class="score-indiv" id="stat-minado">0V</td></tr>
-                            <tr><td>03. GUARDIÃO DO AMOR</td><td style="text-align:right" class="score-indiv" id="stat-guardiao">0V</td></tr>
-                            <tr><td>04. LOVE BIRD</td><td style="text-align:right" class="score-indiv" id="stat-bird">0Pts</td></tr>
-                        </tbody>
+                        <tbody id="stats-body"></tbody>
                     </table>
                 </div>
                 <div id="tab-leaderboard" class="tab-content" style="display:none">
@@ -211,225 +169,13 @@
                     </table>
                 </div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn-modal-action btn-close-blue" onclick="document.getElementById('stats-modal').style.display='none'">VOLTAR</button>
+                    <button id="btn-fechar-stats" class="btn-modal-action btn-close-blue">VOLTAR</button>
                     <button id="btn-logout" class="btn-modal-action btn-logout-red">SAIR</button>
                 </div>
             </div>
         </div>
-    </div> 
+    </div>
 
-    <script>
-        function mudarInterface(tela) {
-            const fliperama = document.getElementById('game-content');
-            const pergunta = document.getElementById('pergunta-content');
-            const chatTrigger = document.getElementById('chat-trigger');
-            const btnNaoOriginal = document.getElementById('btn-nao');
-            
-            if (tela === 'pergunta') {
-                fliperama.style.display = 'none';
-                pergunta.style.display = 'flex';
-                if(chatTrigger) chatTrigger.style.display = 'none';
-                
-                // Reseta a posição do botão NÃO para o lado do SIM ao entrar na tela
-                btnNaoOriginal.style.position = 'absolute';
-                btnNaoOriginal.style.right = '10px';
-                btnNaoOriginal.style.top = '';
-            } else {
-                fliperama.style.display = 'flex';
-                pergunta.style.display = 'none';
-                const pic = document.getElementById('profile-pic');
-                if(pic && pic.style.display === 'block' && chatTrigger) chatTrigger.style.display = 'block';
-            }
-        }
-
-        function mostrarPopup(abrir) {
-            document.getElementById('glitch-popup').style.display = abrir ? 'flex' : 'none';
-        }
-
-        const btnNao = document.getElementById('btn-nao');
-        const appWrapper = document.getElementById('app-wrapper');
-
-        function desviar() {
-            const padX = btnNao.offsetWidth;
-            const padY = btnNao.offsetHeight;
-            const maxX = appWrapper.clientWidth - padX;
-            const maxY = appWrapper.clientHeight - padY;
-
-            const newX = Math.floor(Math.random() * maxX);
-            const newY = Math.floor(Math.random() * maxY);
-
-            btnNao.style.position = 'absolute';
-            btnNao.style.left = `${newX}px`;
-            btnNao.style.top = `${newY}px`;
-        }
-
-        btnNao.addEventListener('mouseenter', desviar);
-        btnNao.addEventListener('touchstart', (e) => { e.preventDefault(); desviar(); });
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, get, set, push, serverTimestamp, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-        const fixHeight = () => {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-        window.addEventListener('resize', fixHeight);
-        window.addEventListener('pageshow', fixHeight);
-        fixHeight();
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
-            authDomain: "josyarcade.firebaseapp.com",
-            databaseURL: "https://josyarcade-default-rtdb.firebaseio.com",
-            projectId: "josyarcade",
-            storageBucket: "josyarcade.firebasestorage.app",
-            messagingSenderId: "960445216740",
-            appId: "1:960445216740:web:d913dc274acdb1ffad39f1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        const provider = new GoogleAuthProvider();
-
-        const usuariosAutorizados = ["phsc1994@gmail.com", "johcat.barth@gmail.com"];
-        let currentUserUID = "";
-        let currentUserName = "";
-        let chatAberto = false;
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                if (document.getElementById('pergunta-content').style.display !== 'flex') {
-                    document.getElementById('game-content').style.display = 'flex';
-                }
-                document.getElementById('profile-pic').style.display = 'block';
-                document.getElementById('profile-pic').src = user.photoURL;
-                currentUserUID = user.uid;
-                currentUserName = user.displayName.split(" ")[0].toUpperCase();
-                document.getElementById('player-name-title').innerText = currentUserName;
-                document.getElementById('modal-profile-pic').src = user.photoURL;
-                if(usuariosAutorizados.includes(user.email) && document.getElementById('pergunta-content').style.display !== 'flex') {
-                    document.getElementById('chat-trigger').style.display = 'block';
-                    iniciarEscutaChat();
-                }
-                set(ref(db, 'usuarios/' + user.uid + '/nome'), currentUserName);
-                carregarEstatisticas(user.uid); carregarPlacarGlobal();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('game-content').style.display = 'none';
-                document.getElementById('pergunta-content').style.display = 'none';
-                document.getElementById('profile-pic').style.display = 'none';
-            }
-        });
-
-        function iniciarEscutaChat() {
-            onValue(ref(db, 'chat_global'), (snapshot) => {
-                const msgs = snapshot.val();
-                const chatContainer = document.getElementById('chat-messages');
-                chatContainer.innerHTML = "";
-                let temMensagemNovaParaMim = false;
-                if (msgs) {
-                    Object.entries(msgs).forEach(([id, m]) => {
-                        if (m.uid !== currentUserUID && m.lida === false) temMensagemNovaParaMim = true;
-                        const div = document.createElement('div');
-                        const isMe = m.uid === currentUserUID;
-                        div.className = `msg ${isMe ? 'msg-me' : 'msg-other'}`;
-                        const dateObj = m.timestamp ? new Date(m.timestamp) : null;
-                        const formattedDate = dateObj ? dateObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : "";
-                        let checkHtml = (isMe && m.lida === true) ? `<span class="msg-status-neon">✓</span>` : "";
-                        div.innerHTML = `<span class="msg-info">${m.nome}</span>${m.texto}<div class="msg-footer"><span class="msg-time">${formattedDate}</span>${checkHtml}</div>`;
-                        chatContainer.appendChild(div);
-                    });
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    const naPergunta = document.getElementById('pergunta-content').style.display === 'flex';
-                    document.getElementById('chat-notif').style.display = (!chatAberto && temMensagemNovaParaMim && !naPergunta) ? 'block' : 'none';
-                }
-            });
-        }
-
-        window.toggleChat = async (abrir) => {
-            chatAberto = abrir;
-            const modal = document.getElementById('chat-modal');
-            const chatContainer = document.getElementById('chat-messages');
-            modal.style.display = abrir ? 'flex' : 'none';
-            
-            if (abrir) {
-                document.getElementById('chat-notif').style.display = 'none';
-                setTimeout(() => { chatContainer.scrollTop = chatContainer.scrollHeight; }, 100);
-
-                const snapshot = await get(ref(db, 'chat_global'));
-                const msgs = snapshot.val();
-                if (msgs) {
-                    const updates = {};
-                    Object.entries(msgs).forEach(([id, m]) => {
-                        if (m.uid !== currentUserUID && m.lida === false) updates[`chat_global/${id}/lida`] = true;
-                    });
-                    update(ref(db), updates);
-                }
-            }
-        };
-
-        window.openTab = (evt, tabName) => {
-            const contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
-            const tabs = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.classList.add("active");
-        };
-
-        function enviarMensagem() {
-            const input = document.getElementById('chat-input');
-            const texto = input.value.trim();
-            if(!texto) return;
-            push(ref(db, 'chat_global'), { uid: currentUserUID, nome: currentUserName, texto: texto, timestamp: serverTimestamp(), lida: false });
-            input.value = "";
-        }
-
-        document.getElementById('btn-login-google').addEventListener('click', () => signInWithPopup(auth, provider));
-        document.getElementById('btn-logout').addEventListener('click', () => confirm("SAIR?") && signOut(auth).then(() => location.reload()));
-        document.getElementById('chat-send').addEventListener('click', enviarMensagem);
-        document.getElementById('chat-input').addEventListener('keypress', (e) => e.key === 'Enter' && enviarMensagem());
-        document.getElementById('profile-pic').addEventListener('click', () => document.getElementById('stats-modal').style.display = 'flex');
-
-        const btnSound = document.getElementById('btn-sound');
-        const track = document.getElementById('bgTrack');
-        btnSound.addEventListener('click', () => {
-            if (track.paused) { track.play(); btnSound.innerHTML = "🔊 SOM ON"; btnSound.classList.add("on"); }
-            else { track.pause(); btnSound.innerHTML = "🔇 SOM OFF"; btnSound.classList.remove("on"); }
-        });
-
-        function carregarEstatisticas(uid) {
-            onValue(ref(db, 'usuarios/' + uid + '/estatisticas'), (snap) => {
-                const d = snap.val() || {};
-                document.getElementById('stat-busca').innerText = (d.busca_estelar || 0) + "V";
-                document.getElementById('stat-minado').innerText = (d.minado_amorous || 0) + "V";
-                document.getElementById('stat-guardiao').innerText = (d.guardiao_amor || 0) + "V";
-                document.getElementById('stat-bird').innerText = (d.love_bird_max || 0) + "Pts";
-            });
-        }
-
-        async function carregarPlacarGlobal() {
-            const body = document.getElementById('leaderboard-body');
-            const snap = await get(ref(db, 'usuarios'));
-            const all = snap.val(); if(!all) return;
-            const games = [{k:'busca_estelar', l:'01. BUSCA ESTELAR', s:'V'}, {k:'minado_amorous', l:'02. MINADO AMOROUS', s:'V'}, {k:'guardiao_amor', l:'03. GUARDIÃO DO AMOR', s:'V'}, {k:'love_bird_max', l:'04. LOVE BIRD', s:'Pts'}];
-            body.innerHTML = "";
-            games.forEach(g => {
-                let scores = Object.values(all).map(u => ({n: u.nome || "---", s: (u.estatisticas && u.estatisticas[g.k]) || 0})).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
-                let leader = "---", score = 0, cls = "";
-                if(scores.length > 0) {
-                    score = scores[0].s;
-                    if(scores.length > 1 && scores[1].s === score) { leader = "EMPATE"; cls = "score-draw"; }
-                    else { leader = scores[0].n; cls = (leader === currentUserName) ? "score-win" : "score-lose"; }
-                }
-                body.innerHTML += `<tr><td>${g.l}</td><td style="color:#ff00ff">${leader}</td><td style="text-align:right" class="${cls}">${score}${g.s}</td></tr>`;
-            });
-        }
-    </script>
+    <script type="module" src="src/js/games/menu.js"></script>
 </body>
 </html>
