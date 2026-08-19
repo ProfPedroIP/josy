@@ -7,228 +7,57 @@
     <title>Missão Espacial: Josy & Pedro</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/arcade-theme.css">
+
     <style>
-        :root { --vh: 1vh; }
+        /* ----- Específico da Busca Estelar ----- */
+        :root { --wrapper-padding-inferior: 30px; }
 
-        body { 
-            background: #050505; color: #00ff41; font-family: 'Press Start 2P', cursive; 
-            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; 
-            height: calc(var(--vh, 1vh) * 100); width: 100vw; overflow: hidden;
-        }
+        .grid { margin-bottom: 10px; }
+        .cell { font-size: 24px; }
+        .cell.hit { animation: blinkForte 0.5s infinite; }
+        @keyframes blinkForte { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .stars {
-            position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: transparent;
-            box-shadow: 15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff, 45vw 60vh #fff, 75vw 55vh #fff, 90vw 80vh #fff, 20vw 90vh #fff, 55vw 85vh #fff, 80vw 10vh #fff, 30vw 40vh #fff, 70vw 70vh #fff, 50vw 20vh #fff, 95vw 45vh #fff;
-            animation: spaceMove 100s linear infinite; z-index: -1;
-        }
-        @keyframes spaceMove { from { transform: translateY(0); } to { transform: translateY(-100vh); } }
-
-        body::before {
-            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
-        }
-
-        #app-wrapper {
-            position: relative; width: 100%; max-width: 450px; height: 100%;   
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden; z-index: 20; box-sizing: border-box;
-            padding-bottom: calc(30px + env(safe-area-inset-bottom));
-        }
-
-        @media (min-width: 451px) {
-            #app-wrapper { height: 90%; border: 2px solid #003300; border-radius: 15px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.1); background: rgba(5, 5, 5, 0.8); }
-        }
-
-        .btn-sound { position: absolute; top: 30px; left: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #a00000; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 3px 3px 0px #a00000; height: 40px; }
-        .btn-sound.on { color: #00ff41; border-color: #008f25; box-shadow: 3px 3px 0px #008f25; }
-        .btn-close { position: absolute; top: 30px; right: 20px; z-index: 150; background: #111; color: #ff0000; border: 3px solid #ff0000; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer; box-shadow: 3px 3px 0px #ff0000; }
-
-        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .popup { border: 4px solid #ff00ff; padding: 30px; background: #111; box-shadow: 0 0 20px #ff00ff; max-width: 350px; text-align: center; }
-        .start-btn { margin-top: 20px; padding: 15px; background: #00ff41; color: #000; border: none; font-family: 'Press Start 2P'; cursor: pointer; box-shadow: 4px 4px 0px #008f25; font-size: 10px; }
-
-        .game-header { margin-top: 40px; margin-bottom: 15px; text-align: center; width: 100%; }
-        h1 { font-size: 14px; color: #ff00ff; text-shadow: 3px 3px #4b0082; margin: 0 0 8px 0; }
-        .subtitle { font-size: 8px; color: #00ffff; }
-
-        .score-board { background: #111; border: 3px solid #ffd700; padding: 12px; font-size: 9px; color: #ffd700; box-shadow: 4px 4px 0px #8b6508; margin-bottom: 15px; text-align: center; line-height: 1.5; }
-
-        .grid { display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; background: #111; padding: 12px; border: 4px solid #4a90e2; box-shadow: 0 0 15px #4a90e2; margin-bottom: 10px; z-index: 5; }
-        .cell { width: 60px; height: 60px; background: #000; border: 2px solid #333; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: 0.2s; color: #ffd700; -webkit-tap-highlight-color: transparent; }
-        .cell.hit { background: #220022; border-color: #ff4d6d; animation: blink 0.5s infinite; }
-        .cell.miss { background: #111; border-color: #ff0000; color: #ff0000; }
-
-        #message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; padding: 20px; border: 4px double #ff4d6d; background: rgba(17, 17, 17, 0.98); width: 85%; max-width: 350px; z-index: 200; text-align: center; box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); }
-        .msg-title { color: #ff4d6d; font-size: 16px; margin-bottom: 15px; }
-        .msg-text { color: #ffffff; font-size: 9px; line-height: 1.6; margin-bottom: 10px; }
-        .msg-final { color: #ff0000; font-size: 12px; margin: 15px 0; text-shadow: 2px 2px #550000; }
-
-        .btn { padding: 15px; font-family: 'Press Start 2P', cursive; font-size: 9px; color: white; cursor: pointer; width: 100%; display: block; box-sizing: border-box; text-decoration: none; margin-bottom: 10px; text-align: center; border: 4px solid; }
-        .btn-restart { background-color: #ff00ff; border-color: #4b0082; box-shadow: 4px 4px 0px #4b0082; }
-        .btn-menu { background-color: #4a90e2; border-color: #003366; box-shadow: 4px 4px 0px #003366; }
-
-        @media (max-width: 380px) {
-            .grid { grid-template-columns: repeat(5, 52px); gap: 5px; }
-            .cell { width: 52px; height: 52px; font-size: 20px; }
-        }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .popup { max-width: 350px; }
     </style>
 </head>
-<body>
+<body class="tela-fixa">
 
-    <div class="stars"></div>
+    <div class="stars stars--denso stars--sobe"></div>
 
     <div id="app-wrapper">
         <div id="overlay">
             <div class="popup">
                 <p style="line-height: 1.6; font-size: 9px; color: #00ff41;">PREPARANDO MOTORES PARA A BUSCA ESTELAR...</p>
-                <button class="start-btn" onclick="iniciarMissao()">INICIAR MISSÃO</button>
+                <button id="btn-iniciar" class="start-btn">INICIAR MISSÃO</button>
             </div>
         </div>
 
-        <button id="btn-sound" class="btn-sound">🔇</button>
-        <button id="btn-close" class="btn-close" onclick="window.location.href='index.html'">X</button>
-
-        <audio id="bgTrack" loop><source src="assets/sounds/batalha_estelar.mp3" type="audio/mpeg"></audio>
-        <audio id="soundClick"><source src="assets/sounds/click.wav" type="audio/wav"></audio>
-        <audio id="soundWin"><source src="assets/sounds/win.wav" type="audio/wav"></audio>
+        <button id="btn-sound" class="btn-sound btn-flutuante-esq">🔇</button>
+        <button id="btn-close" class="btn-close btn-flutuante-dir">X</button>
 
         <div class="game-header">
-            <h1>> 01. BUSCA ESTELAR</h1>
+            <h1>&gt; 01. BUSCA ESTELAR</h1>
             <div class="subtitle">PLAYER 1: JOSY</div>
         </div>
 
         <div class="score-board" id="score-display">
             CORAÇÕES: 0 / 3<br>PONTOS: 1000
         </div>
-        
+
         <div class="grid" id="grid"></div>
-        
-        <div id="message">
+
+        <div id="message" class="message-box message-box--rosa">
             <h2 class="msg-title">MISSION CLEAR! 🏆</h2>
             <p class="msg-text">Assim como você encontrou os corações...</p>
             <p class="msg-text" style="color:#00ffff;">Sorte a minha ter te encontrado entre 8 bilhões de pessoas.</p>
             <p id="final-score-msg" style="color:#ffd700; font-size:10px; margin:10px 0;"></p>
             <p class="msg-final"><strong>PEDRO AMA JOSY!</strong></p>
-            <button class="btn btn-restart" onclick="startGame()">JOGAR DE NOVO</button>
+            <button class="btn btn-restart" data-acao="reiniciar">JOGAR DE NOVO</button>
             <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
         </div>
     </div>
 
-    <script>
-        const grid = document.getElementById('grid');
-        const messageDiv = document.getElementById('message');
-        const track = document.getElementById('bgTrack');
-        const scoreDisplay = document.getElementById('score-display');
-        const btnSound = document.getElementById('btn-sound');
-        
-        let targets = [];
-        let found = 0;
-        let currentScore = 1000;
-
-        const fixHeight = () => {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-        window.addEventListener('resize', fixHeight);
-        window.addEventListener('pageshow', fixHeight);
-        fixHeight();
-
-        track.volume = 0.5;
-        btnSound.addEventListener('click', () => {
-            if (track.paused) {
-                track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
-            } else {
-                track.pause(); btnSound.innerHTML = "🔇"; btnSound.classList.remove("on");
-            }
-        });
-
-        function iniciarMissao() {
-            track.play(); btnSound.innerHTML = "🔊"; btnSound.classList.add("on");
-            document.getElementById('overlay').style.display = 'none';
-        }
-
-        function playClick() {
-            const s = document.getElementById('soundClick');
-            s.currentTime = 0; s.play();
-        }
-
-        function startGame() {
-            grid.innerHTML = '';
-            messageDiv.style.display = 'none';
-            found = 0;
-            currentScore = 1000;
-            targets = [];
-            scoreDisplay.innerHTML = "CORAÇÕES: 0 / 3<br>PONTOS: 1000";
-            
-            while(targets.length < 3){
-                let r = Math.floor(Math.random() * 25);
-                if(!targets.includes(r)) targets.push(r);
-            }
-
-            for (let i = 0; i < 25; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.innerHTML = "★"; 
-                cell.onclick = () => {
-                    playClick();
-                    if (targets.includes(i)) {
-                        cell.innerText = '❤️';
-                        cell.classList.add('hit');
-                        found++;
-                        scoreDisplay.innerHTML = `CORAÇÕES: ${found} / 3<br>PONTOS: ${currentScore}`;
-                        if (found === 3) {
-                            track.pause();
-                            document.getElementById('soundWin').play();
-                            document.getElementById('final-score-msg').innerText = `SCORE: ${currentScore} PTS`;
-                            if(window.registrarRecorde) window.registrarRecorde(currentScore, 'busca_estelar_max');
-                            messageDiv.style.display = 'block';
-                        }
-                    } else {
-                        cell.innerText = 'X'; 
-                        cell.classList.add('miss');
-                        currentScore -= 40;
-                        scoreDisplay.innerHTML = `CORAÇÕES: ${found} / 3<br>PONTOS: ${currentScore}`;
-                    }
-                    cell.onclick = null; 
-                };
-                grid.appendChild(cell);
-            }
-        }
-        startGame();
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI",
-            authDomain: "josyarcade.firebaseapp.com",
-            databaseURL: "https://josyarcade-default-rtdb.firebaseio.com",
-            projectId: "josyarcade",
-            storageBucket: "josyarcade.firebasestorage.app",
-            messagingSenderId: "960445216740",
-            appId: "1:960445216740:web:d913dc274acdb1ffad39f1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        let userUID = null;
-
-        onAuthStateChanged(auth, (user) => { if (user) userUID = user.uid; });
-
-        window.registrarRecorde = async function(pontos, nomeDoJogo) {
-            if (!userUID) return;
-            const dbRef = ref(db, `usuarios/${userUID}/estatisticas/${nomeDoJogo}`);
-            const snapshot = await get(dbRef);
-            const recordeAntigo = snapshot.val() || 0;
-            if (pontos > recordeAntigo) { set(dbRef, pontos); }
-        };
-    </script>
+    <script type="module" src="src/js/games/busca-estelar.js"></script>
 </body>
 </html>
