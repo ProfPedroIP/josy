@@ -1,28 +1,11 @@
 /* =============================================================================
    src/js/games/menu.js
    -----------------------------------------------------------------------------
-   Hub do Josy Arcade: login, menu de jogos, chat global, placar e a
-   brincadeira da "CONEXÃO ESTELAR".
-
-   CORREÇÕES APLICADAS NESTA REFATORAÇÃO
-   1. O placar lia 'busca_estelar' e 'minado_amorous' enquanto os jogos
-      gravavam '..._max'. Agora tudo vem do catálogo JOGOS.
-   2. O recorde do Modo Recorde do Guardião passa a aparecer no placar.
-   3. sw.js nunca era registrado — o PWA não era instalável. Corrigido.
-   4. As mensagens do chat eram inseridas com innerHTML (o texto digitado ia
-      direto para o HTML). Agora o corpo da mensagem usa textContent.
-   5. nomeCurto() não quebra mais com conta Google sem nome público.
-   6. Áudio centralizado no AudioManager.
+   Hub do Josy Arcade: login, menu, chat global, placar, brincadeira da
+   "CONEXÃO ESTELAR" e a camada de estado offline.
    ============================================================================= */
 
-import {
-  initViewportFix,
-  registrarServiceWorker,
-  AudioManager,
-  som,
-  $,
-  $$,
-} from '../utils.js';
+import { initViewportFix, AudioManager, som, $, $$ } from '../utils.js';
 import {
   onUsuario,
   entrarComGoogle,
@@ -35,10 +18,26 @@ import {
   enviarMensagem,
   marcarMensagensComoLidas,
   USUARIOS_AUTORIZADOS,
+  registrarServiceWorker,
+  baixarMidiaOffline,
+  onConexao,
+  onPendencias,
+  sincronizar,
+  estaOnline,
 } from '../firebase-config.js';
 
 initViewportFix();
-registrarServiceWorker();
+
+/* -----------------------------------------------------------------------------
+   SERVICE WORKER + AVISO DE VERSÃO NOVA
+----------------------------------------------------------------------------- */
+
+registrarServiceWorker((aplicarAtualizacao) => {
+  const barra = $('#update-bar');
+  if (!barra) return;
+  barra.style.display = 'flex';
+  $('#btn-atualizar').addEventListener('click', aplicarAtualizacao, { once: true });
+});
 
 /* -----------------------------------------------------------------------------
    ÁUDIO
@@ -46,8 +45,6 @@ registrarServiceWorker();
 
 const audio = new AudioManager({ musica: som('track.wav'), volumeMusica: 1 });
 audio.ligarBotao('#btn-sound', { ligado: '🔊 SOM ON', desligado: '🔇 SOM OFF' });
-
-// O menu quer trilha sempre que o som estiver ligado
 audio.tocarMusica();
 
 /* -----------------------------------------------------------------------------
@@ -58,6 +55,45 @@ let meuUid = '';
 let meuNome = '';
 let chatAberto = false;
 let cancelarChat = null;
+
+/* -----------------------------------------------------------------------------
+   INDICADOR DE CONEXÃO E FILA
+----------------------------------------------------------------------------- */
+
+let online = estaOnline();
+let naFila = 0;
+
+function pintarStatus() {
+  const selo = $('#status-conexao');
+  if (!selo) return;
+
+  if (!online) {
+    selo.style.display = 'block';
+    selo.className = 'status-selo status-offline';
+    selo.innerText = naFila > 0 ? `OFFLINE · ${naFila} P/ ENVIAR` : 'OFFLINE';
+    return;
+  }
+
+  if (naFila > 0) {
+    selo.style.display = 'block';
+    selo.className = 'status-selo status-sync';
+    selo.innerText = `SINCRONIZANDO · ${naFila}`;
+    return;
+  }
+
+  selo.style.display = 'none';
+}
+
+onConexao((estaOn) => {
+  online = estaOn;
+  pintarStatus();
+  if (estaOn) sincronizar();
+});
+
+onPendencias((n) => {
+  naFila = n;
+  pintarStatus();
+});
 
 /* -----------------------------------------------------------------------------
    NAVEGAÇÃO ENTRE TELAS
@@ -73,8 +109,6 @@ function mudarInterface(tela) {
     fliperama.style.display = 'none';
     pergunta.style.display = 'flex';
     gatilhoChat.style.display = 'none';
-
-    // Devolve o botão NÃO para o lado do SIM
     btnNao.style.position = 'absolute';
     btnNao.style.right = '10px';
     btnNao.style.top = '';
@@ -120,8 +154,7 @@ btnNao.addEventListener('touchstart', (e) => {
 ----------------------------------------------------------------------------- */
 
 function podeVerChat() {
-  const email = $('#profile-pic').dataset.email || '';
-  return USUARIOS_AUTORIZADOS.includes(email);
+  return USUARIOS_AUTORIZADOS.includes($('#profile-pic').dataset.email || '');
 }
 
 onUsuario((user) => {
@@ -170,11 +203,13 @@ function iniciarEstatisticas(uid) {
   const corpo = $('#stats-body');
   observarEstatisticas(uid, (linhas) => {
     corpo.innerHTML = '';
-    linhas.forEach(({ jogo, valor }) => {
+    linhas.forEach(({ jogo, valor, apenasLocal }) => {
       const tr = document.createElement('tr');
+      // O • marca pontuação feita offline que ainda não subiu
+      const marca = apenasLocal ? ' <span class="marca-local" title="ainda não sincronizado">•</span>' : '';
       tr.innerHTML =
         `<td>${jogo.rotulo}</td>` +
-        `<td style="text-align:right" class="score-indiv">${valor}${jogo.sufixo}</td>`;
+        `<td style="text-align:right" class="score-indiv">${valor}${jogo.sufixo}${marca}</td>`;
       corpo.appendChild(tr);
     });
   });
@@ -182,13 +217,20 @@ function iniciarEstatisticas(uid) {
 
 async function carregarPlacar() {
   const corpo = $('#leaderboard-body');
-  const linhas = await carregarPlacarGlobal();
+  const { linhas, online: temRede } = await carregarPlacarGlobal();
   corpo.innerHTML = '';
+
+  if (!temRede) {
+    corpo.innerHTML =
+      '<tr><td colspan="3" style="text-align:center; color:#ffd700; padding:15px;">' +
+      'SEM CONEXÃO<br><span style="font-size:6px;">O placar geral precisa de internet</span>' +
+      '</td></tr>';
+    return;
+  }
 
   linhas.forEach(({ jogo, lider, valor, empate }) => {
     let classe = '';
     if (valor > 0) classe = empate ? 'score-draw' : lider === meuNome ? 'score-win' : 'score-lose';
-
     const tr = document.createElement('tr');
     tr.innerHTML =
       `<td>${jogo.rotulo}</td>` +
@@ -255,8 +297,7 @@ function iniciarChat() {
 
 async function alternarChat(abrir) {
   chatAberto = abrir;
-  const modal = $('#chat-modal');
-  modal.style.display = abrir ? 'flex' : 'none';
+  $('#chat-modal').style.display = abrir ? 'flex' : 'none';
   if (!abrir) return;
 
   $('#chat-notif').style.display = 'none';
@@ -287,10 +328,33 @@ function abrirAba(botao, idAba) {
 }
 
 /* -----------------------------------------------------------------------------
+   DOWNLOAD DOS ÁUDIOS PARA USO OFFLINE
+----------------------------------------------------------------------------- */
+
+async function baixarParaOffline() {
+  const btn = $('#btn-baixar-offline');
+  if (!estaOnline()) {
+    btn.innerText = 'PRECISA DE INTERNET';
+    setTimeout(() => (btn.innerText = 'BAIXAR SONS P/ OFFLINE'), 2500);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = 'BAIXANDO... 0%';
+
+  const resultado = await baixarMidiaOffline((feitos, total) => {
+    btn.innerText = `BAIXANDO... ${Math.round((feitos / total) * 100)}%`;
+  });
+
+  btn.disabled = false;
+  btn.innerText = resultado.ok
+    ? `PRONTO — ${resultado.feitos} SONS OFFLINE`
+    : 'FALHOU — TENTE DE NOVO';
+  setTimeout(() => (btn.innerText = 'BAIXAR SONS P/ OFFLINE'), 4000);
+}
+
+/* -----------------------------------------------------------------------------
    LIGAÇÃO COM O HTML
-   -----------------------------------------------------------------------------
-   Com type="module" nada vira global, então os antigos onclick="" do HTML
-   foram removidos e substituídos por estes listeners.
 ----------------------------------------------------------------------------- */
 
 $('#btn-login-google').addEventListener('click', () => entrarComGoogle());
@@ -312,6 +376,8 @@ $$('.tab-btn').forEach((btn) => {
   btn.addEventListener('click', () => abrirAba(btn, btn.dataset.aba));
 });
 
+$('#btn-baixar-offline').addEventListener('click', baixarParaOffline);
+
 $('#btn-conexao-estelar').addEventListener('click', () => mudarInterface('pergunta'));
 $('#btn-sim').addEventListener('click', () => mostrarPopup(true));
 
@@ -327,3 +393,5 @@ $('#chat-send').addEventListener('click', enviar);
 $('#chat-input').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') enviar();
 });
+
+pintarStatus();
