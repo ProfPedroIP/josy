@@ -63,6 +63,14 @@
         .btn-close-blue { background: var(--azul); border-color: var(--azul-sombra); box-shadow: 4px 4px 0px var(--azul-sombra); }
         .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: var(--vermelho-escuro); box-shadow: 4px 4px 0px var(--vermelho-escuro); color: #fff; }
 
+        /* Status de conexão e modo offline */
+        .pilula-status { position: absolute; top: 72px; left: 20px; z-index: 150; font-size: 6px; padding: 6px 8px; border: 2px solid; line-height: 1.4; }
+        .pilula-status.offline  { color: var(--ouro); border-color: var(--ouro-borda); background: #1a1400; }
+        .pilula-status.enviando { color: var(--ciano); border-color: var(--ciano-sombra); background: #001a1a; animation: blink 1.2s infinite; }
+        .marca-pendente { color: var(--ouro); font-size: 6px; vertical-align: middle; }
+        .btn-offline { width: 100%; padding: 10px; font-family: var(--fonte); font-size: 7px; cursor: pointer; background: #001a1a; color: var(--ciano); border: 2px solid var(--ciano-sombra); box-sizing: border-box; }
+        .btn-offline:disabled { color: var(--verde); border-color: var(--verde-sombra); cursor: default; }
+
         /* Brincadeira "Conexão Estelar" */
         #pergunta-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
         .question-title { font-size: 20px; color: var(--ciano); text-shadow: 3px 3px var(--azul-sombra); margin-bottom: 50px; text-align: center; line-height: 1.6; padding: 0 20px; }
@@ -78,7 +86,30 @@
         .glitch-sub { font-size: 11px; color: var(--ciano); line-height: 1.8; margin-bottom: 30px; text-shadow: 2px 2px var(--azul-sombra); }
         .btn-back-action { background: var(--cor-painel); padding: 12px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid; display: block; width: 260px; margin: 12px auto; text-align: center; box-sizing: border-box; }
         .btn-yellow { color: var(--ouro); border-color: var(--ouro); box-shadow: 4px 4px 0px var(--ouro-sombra); }
+
+        /* Status de conexão e modo offline */
+        .pilula-status { position: absolute; top: 78px; left: 50%; transform: translateX(-50%); z-index: 160; font-size: 7px; padding: 6px 10px; border: 2px solid; display: none; white-space: nowrap; }
+        .pilula-status.offline { color: var(--ouro); border-color: var(--ouro); background: #1a1400; }
+        .pilula-status.enviando { color: var(--ciano); border-color: var(--ciano); background: #001a1a; animation: blink 1.2s infinite; }
+        .marca-pendente { color: var(--ouro); font-size: 12px; vertical-align: middle; }
+        #placar-aviso { display: none; font-size: 6px; color: var(--ouro); text-align: center; margin-top: 8px; line-height: 1.5; }
+        .offline-texto { font-size: 7px; color: #aaa; line-height: 1.8; margin: 0 0 12px 0; }
+        .offline-texto b { color: var(--ciano); }
+        #btn-baixar-offline { width: 100%; padding: 12px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid var(--verde-sombra); background: var(--verde); color: #000; box-shadow: 4px 4px 0px var(--verde-sombra); box-sizing: border-box; }
+        #btn-baixar-offline:disabled { background: #222; color: var(--verde); border-color: #333; box-shadow: 4px 4px 0px #111; cursor: default; }
+        #btn-sincronizar { width: 100%; padding: 10px; margin-top: 10px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid var(--azul-sombra); background: var(--azul); color: #fff; box-shadow: 4px 4px 0px var(--azul-sombra); box-sizing: border-box; }
         .btn-cyan { color: var(--ciano); border-color: var(--ciano); box-shadow: 4px 4px 0px var(--ciano-sombra); }
+
+        /* ----- Estado offline ----- */
+        .status-selo { position: absolute; top: 78px; left: 20px; z-index: 160; font-size: 7px; padding: 6px 8px; border: 2px solid; display: none; }
+        .status-offline { color: var(--ouro); border-color: var(--ouro); background: rgba(0,0,0,0.85); }
+        .status-sync { color: var(--ciano); border-color: var(--ciano); background: rgba(0,0,0,0.85); animation: blink 1.2s infinite; }
+        .marca-local { color: var(--ouro); font-size: 10px; }
+        #update-bar { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 500; background: var(--magenta-sombra); border-top: 3px solid var(--magenta); padding: 10px; box-sizing: border-box; display: none; align-items: center; justify-content: space-between; gap: 10px; }
+        #update-bar span { font-size: 7px; color: #fff; line-height: 1.4; }
+        #btn-atualizar { background: var(--magenta); color: #fff; border: 2px solid #fff; font-family: var(--fonte); font-size: 7px; padding: 8px 10px; cursor: pointer; white-space: nowrap; }
+        #btn-baixar-offline { width: 100%; padding: 10px; font-family: var(--fonte); font-size: 7px; background: #222; color: var(--verde); border: 2px solid var(--verde-sombra); cursor: pointer; box-sizing: border-box; }
+        #btn-baixar-offline:disabled { opacity: 0.6; cursor: wait; }
     </style>
 </head>
 <body class="tela-fixa">
@@ -87,6 +118,9 @@
 
     <div id="app-wrapper">
         <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
+        <div id="status-conexao" class="status-selo"></div>
+        <div id="status-conexao" class="pilula-status"></div>
+        <div id="status-conexao" class="pilula-status" style="display:none"></div>
 
         <div id="login-screen">
             <img src="assets/images/icon-512.png" class="login-logo" alt="Logo">
@@ -155,6 +189,7 @@
                 <div class="modal-tabs">
                     <button class="tab-btn active" data-aba="tab-stats">INDIVIDUAL</button>
                     <button class="tab-btn" data-aba="tab-leaderboard">GERAL</button>
+                    <button class="tab-btn" data-aba="tab-offline">OFFLINE</button>
                 </div>
                 <div id="tab-stats" class="tab-content" style="display:block">
                     <table class="leaderboard-table">
@@ -167,12 +202,31 @@
                         <thead><tr><th>JOGO</th><th>LÍDER</th><th style="text-align:right">MÁXIMO</th></tr></thead>
                         <tbody id="leaderboard-body"></tbody>
                     </table>
+                    <div id="placar-aviso"></div>
                 </div>
+                <div id="tab-offline" class="tab-content" style="display:none">
+                    <p class="offline-texto">
+                        O arcade j&aacute; funciona sem internet: os jogos ficam salvos no aparelho.<br><br>
+                        As pontua&ccedil;&otilde;es feitas offline entram numa fila e sobem sozinhas
+                        quando a conex&atilde;o voltar &mdash; e s&oacute; substituem o recorde se forem
+                        <b>maiores</b> que o j&aacute; salvo.<br><br>
+                        Os sons somam <b>11 MB</b> e n&atilde;o s&atilde;o baixados sozinhos.
+                        Toque abaixo para jogar offline com &aacute;udio.
+                    </p>
+                    <button id="btn-baixar-offline">⬇ BAIXAR SONS (11 MB)</button>
+                    <button id="btn-sincronizar">↻ SINCRONIZAR AGORA</button>
+                </div>
+                <button id="btn-baixar-offline" class="btn-offline">⬇ BAIXAR PARA JOGAR OFFLINE</button>
+                <button id="btn-baixar-offline">BAIXAR SONS P/ OFFLINE</button>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button id="btn-fechar-stats" class="btn-modal-action btn-close-blue">VOLTAR</button>
                     <button id="btn-logout" class="btn-modal-action btn-logout-red">SAIR</button>
                 </div>
             </div>
+        </div>
+        <div id="update-bar">
+            <span>NOVA VERSÃO DISPONÍVEL</span>
+            <button id="btn-atualizar">ATUALIZAR</button>
         </div>
     </div>
 
