@@ -1,10 +1,9 @@
 /* =============================================================================
    src/js/firebase-config.js
    -----------------------------------------------------------------------------
-   CAMADA ÚNICA DE ACESSO AO FIREBASE DO JOSY ARCADE.
+   CAMADA ÚNICA DE ACESSO AO FIREBASE DO JOSY ARCADE — com suporte offline.
 
-   Antes: config e initializeApp clonados nos 5 arquivos .html.
-   Agora: uma fonte da verdade. Nenhuma página importa de gstatic.com.
+   Nenhuma página importa de gstatic.com diretamente.
 
    Uso:
      import { registrarRecorde, CHAVES } from './src/js/firebase-config.js';
@@ -27,8 +26,33 @@ import {
   push,
   update,
   onValue,
+  runTransaction,
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js';
+
+import {
+  guardarRecordeLocal,
+  recordesLocais,
+  migrarRecordesLocais,
+  enfileirar,
+  lerOutbox,
+  remover,
+  marcarFalha,
+  adotarItensOrfaos,
+  estaOnline,
+  onConexao,
+  comTempoLimite,
+} from './offline.js';
+
+// Reexportado para as páginas não precisarem conhecer offline.js
+export {
+  recordesLocais,
+  pendentes,
+  estaOnline,
+  onConexao,
+  registrarServiceWorker,
+  baixarMidiaOffline,
+} from './offline.js';
 
 /* -----------------------------------------------------------------------------
    1. CREDENCIAIS E INICIALIZAÇÃO
@@ -55,14 +79,6 @@ export const USUARIOS_AUTORIZADOS = ['phsc1994@gmail.com', 'johcat.barth@gmail.c
 
 /* -----------------------------------------------------------------------------
    2. CATÁLOGO DE JOGOS
-   -----------------------------------------------------------------------------
-   Esta lista dirige a GRAVAÇÃO e a LEITURA do placar. Antes da refatoração os
-   jogos gravavam em 'busca_estelar_max' e 'minado_amorous_max' enquanto o menu
-   lia 'busca_estelar' e 'minado_amorous' — por isso essas duas linhas do placar
-   ficavam eternamente zeradas.
-
-   Para adicionar um jogo novo: acrescente uma entrada aqui e use CHAVES.X no
-   módulo do jogo. O menu se atualiza sozinho.
 ----------------------------------------------------------------------------- */
 
 export const CHAVES = {
@@ -74,25 +90,37 @@ export const CHAVES = {
 };
 
 export const JOGOS = [
-  { rotulo: '01. BUSCA ESTELAR',    chave: CHAVES.BUSCA_ESTELAR,     tipo: 'recorde',  sufixo: 'Pts' },
-  { rotulo: '02. MINADO AMOROUS',   chave: CHAVES.MINADO,            tipo: 'recorde',  sufixo: 'Pts' },
-  { rotulo: '03. GUARDIÃO (VIT.)',  chave: CHAVES.GUARDIAO_VITORIAS, tipo: 'vitorias', sufixo: 'V'   },
-  { rotulo: '03. GUARDIÃO (REC.)',  chave: CHAVES.GUARDIAO_RECORDE,  tipo: 'recorde',  sufixo: 'Pts' },
-  { rotulo: '04. LOVE BIRD',        chave: CHAVES.LOVE_BIRD,         tipo: 'recorde',  sufixo: 'Pts' },
+  { rotulo: '01. BUSCA ESTELAR',   chave: CHAVES.BUSCA_ESTELAR,     tipo: 'recorde',  sufixo: 'Pts' },
+  { rotulo: '02. MINADO AMOROUS',  chave: CHAVES.MINADO,            tipo: 'recorde',  sufixo: 'Pts' },
+  { rotulo: '03. GUARDIÃO (VIT.)', chave: CHAVES.GUARDIAO_VITORIAS, tipo: 'vitorias', sufixo: 'V'   },
+  { rotulo: '03. GUARDIÃO (REC.)', chave: CHAVES.GUARDIAO_RECORDE,  tipo: 'recorde',  sufixo: 'Pts' },
+  { rotulo: '04. LOVE BIRD',       chave: CHAVES.LOVE_BIRD,         tipo: 'recorde',  sufixo: 'Pts' },
 ];
 
-function lerEstatistica(estatisticas, jogo) {
-  const valor = estatisticas?.[jogo.chave];
+/**
+ * Lê o valor de um jogo a partir do nó completo do usuário.
+ *
+ * Recordes ficam em `estatisticas/<chave>` como número.
+ *
+ * Vitórias mudaram de forma nesta versão: cada vitória virou uma chave própria
+ * em `vitorias/<chave>/<idUnico>`. Isso torna a gravação IDEMPOTENTE —
+ * reenviar a mesma vitória depois de uma queda de rede não conta duas vezes.
+ * O total soma o contador antigo (partidas anteriores a esta mudança, que
+ * nunca mais cresce) com a quantidade de IDs novos.
+ */
+function lerEstatistica(dadosUsuario, jogo) {
+  if (jogo.tipo === 'vitorias') {
+    const legado = dadosUsuario?.estatisticas?.[jogo.chave];
+    const anteriores = typeof legado === 'number' ? legado : 0;
+    const ids = dadosUsuario?.vitorias?.[jogo.chave];
+    return anteriores + (ids ? Object.keys(ids).length : 0);
+  }
+  const valor = dadosUsuario?.estatisticas?.[jogo.chave];
   return typeof valor === 'number' ? valor : 0;
 }
 
 /* -----------------------------------------------------------------------------
    3. SESSÃO / AUTENTICAÇÃO
-   -----------------------------------------------------------------------------
-   Antes cada jogo fazia `let userUID = null` e o registrarRecorde abortava com
-   `if (!userUID) return`. Partida que terminasse antes do Firebase resolver o
-   login descartava o recorde em silêncio. Agora as gravações esperam
-   aguardarUsuario().
 ----------------------------------------------------------------------------- */
 
 let usuario = null;
@@ -112,20 +140,14 @@ onAuthStateChanged(auth, (user) => {
   ouvintesDeUsuario.forEach((cb) => cb(user));
 });
 
-/** Usuário logado agora (ou null). Síncrono — pode ser null durante o boot. */
 export function usuarioAtual() {
   return usuario;
 }
 
-/** Promise que resolve no primeiro estado de auth conhecido (user ou null). */
 export function aguardarUsuario() {
   return primeiroEstado;
 }
 
-/**
- * Observa login/logout. Dispara na hora se o estado já for conhecido.
- * @returns {() => void} cancela a inscrição
- */
 export function onUsuario(callback) {
   ouvintesDeUsuario.add(callback);
   if (jaResolveu) callback(usuario);
@@ -140,72 +162,246 @@ export function sair() {
   return signOut(auth);
 }
 
-/**
- * "Pedro Henrique Silva" -> "PEDRO".
- * O original quebrava com TypeError quando displayName vinha null.
- */
+/** "Pedro Henrique Silva" -> "PEDRO". Não quebra se displayName vier null. */
 export function nomeCurto(user) {
   const nome = user?.displayName || user?.email || 'JOGADOR';
   return String(nome).trim().split(/\s+/)[0].toUpperCase();
 }
 
 export function salvarNome(uid, nome) {
-  return set(ref(db, `usuarios/${uid}/nome`), nome);
+  return set(ref(db, `usuarios/${uid}/nome`), nome).catch(() => {});
 }
 
 /* -----------------------------------------------------------------------------
-   4. PLACAR E ESTATÍSTICAS
+   4. GRAVAÇÃO DE PLACAR (offline-first)
+   -----------------------------------------------------------------------------
+   Toda gravação segue a mesma ordem:
+
+     1. guarda no aparelho          <- instantâneo, nunca falha
+     2. enfileira na caixa de saída <- sobrevive a fechar o app
+     3. tenta enviar agora          <- se falhar, fica para a próxima conexão
+
+   Offline, os passos 1 e 2 acontecem e o 3 expira por tempo limite. Quando a
+   conexão voltar, sincronizar() roda sozinho.
+
+   As duas operações são IDEMPOTENTES, então reenviar é sempre seguro:
+     recorde -> runTransaction com Math.max(atual, novo)
+     vitória -> grava um ID único; o mesmo ID duas vezes continua sendo uma
 ----------------------------------------------------------------------------- */
 
+const TEMPO_LIMITE = 8000;
+
 /**
- * Grava um recorde apenas se for maior que o anterior.
- * @returns {Promise<boolean>} true se bateu o recorde
+ * Transação atômica: quem compara é o servidor, não o celular.
+ * Isso também resolve o caso de vocês dois gravarem quase ao mesmo tempo —
+ * com get + set uma escrita podia sobrescrever a outra.
  */
-export async function registrarRecorde(pontos, chave) {
-  const user = await aguardarUsuario();
-  if (!user) return false;
-  const alvo = ref(db, `usuarios/${user.uid}/estatisticas/${chave}`);
-  const anterior = (await get(alvo)).val() || 0;
-  if (pontos <= anterior) return false;
-  await set(alvo, pontos);
+async function enviarRecorde(uid, chave, pontos) {
+  const alvo = ref(db, `usuarios/${uid}/estatisticas/${chave}`);
+  await comTempoLimite(
+    runTransaction(alvo, (atual) =>
+      Math.max(typeof atual === 'number' ? atual : 0, pontos)
+    ),
+    TEMPO_LIMITE
+  );
   return true;
 }
 
-/**
- * Incrementa um contador de vitórias.
- * @returns {Promise<number>} total após o incremento
- */
-export async function registrarVitoria(chave) {
-  const user = await aguardarUsuario();
-  if (!user) return 0;
-  const alvo = ref(db, `usuarios/${user.uid}/estatisticas/${chave}`);
-  const total = ((await get(alvo)).val() || 0) + 1;
-  await set(alvo, total);
-  return total;
+async function enviarVitoria(uid, chave, id) {
+  await comTempoLimite(
+    set(ref(db, `usuarios/${uid}/vitorias/${chave}/${id}`), Date.now()),
+    TEMPO_LIMITE
+  );
+  return true;
+}
+
+function enviar(item) {
+  if (item.tipo === 'recorde') return enviarRecorde(item.uid, item.chave, item.pontos);
+  if (item.tipo === 'vitoria') return enviarVitoria(item.uid, item.chave, item.id);
+  return Promise.resolve(false);
 }
 
 /**
- * Estatísticas do usuário em tempo real.
- * @param {(linhas: Array<{jogo: object, valor: number}>) => void} callback
+ * Registra um recorde. Funciona offline.
+ * @returns {Promise<{local: boolean, enviado: boolean}>}
+ *   local   = superou o melhor guardado neste aparelho
+ *   enviado = confirmado pelo Firebase
+ */
+export async function registrarRecorde(pontos, chave) {
+  const user = await aguardarUsuario();
+  const uid = user?.uid || null;
+
+  const ehRecordeLocal = guardarRecordeLocal(uid, chave, pontos);
+  if (!uid) return { local: ehRecordeLocal, enviado: false };
+
+  const id = enfileirar({ uid, tipo: 'recorde', chave, pontos });
+
+  if (!estaOnline()) {
+    avisarPendencias();
+    return { local: ehRecordeLocal, enviado: false };
+  }
+
+  try {
+    await enviarRecorde(uid, chave, pontos);
+    remover(id);
+    avisarPendencias();
+    return { local: ehRecordeLocal, enviado: true };
+  } catch {
+    marcarFalha(id);
+    avisarPendencias();
+    return { local: ehRecordeLocal, enviado: false };
+  }
+}
+
+/**
+ * Registra uma vitória. Funciona offline.
+ * O id da fila é o mesmo id gravado no banco — é ele que impede vitória
+ * dobrada quando uma retentativa acontece.
+ * @returns {Promise<{enviado: boolean}>}
+ */
+export async function registrarVitoria(chave) {
+  const user = await aguardarUsuario();
+  const uid = user?.uid || null;
+  if (!uid) return { enviado: false };
+
+  const id = enfileirar({ uid, tipo: 'vitoria', chave });
+
+  if (!estaOnline()) {
+    avisarPendencias();
+    return { enviado: false };
+  }
+
+  try {
+    await enviarVitoria(uid, chave, id);
+    remover(id);
+    avisarPendencias();
+    return { enviado: true };
+  } catch {
+    marcarFalha(id);
+    avisarPendencias();
+    return { enviado: false };
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   5. SINCRONIZAÇÃO
+----------------------------------------------------------------------------- */
+
+const ouvintesPendencias = new Set();
+
+/** Observa quantas gravações ainda não subiram. @returns {() => void} */
+export function onPendencias(callback) {
+  ouvintesPendencias.add(callback);
+  callback(lerOutbox().length);
+  return () => ouvintesPendencias.delete(callback);
+}
+
+function avisarPendencias() {
+  const n = lerOutbox().length;
+  ouvintesPendencias.forEach((cb) => cb(n));
+}
+
+let sincronizando = false;
+
+/**
+ * Esvazia a caixa de saída. Seguro chamar várias vezes.
+ * @returns {Promise<{enviados: number, restantes: number}>}
+ */
+export async function sincronizar() {
+  if (sincronizando) return { enviados: 0, restantes: lerOutbox().length };
+
+  const user = await aguardarUsuario();
+  if (!user || !estaOnline()) return { enviados: 0, restantes: lerOutbox().length };
+
+  sincronizando = true;
+  let enviados = 0;
+
+  try {
+    adotarItensOrfaos(user.uid);
+    for (const item of lerOutbox()) {
+      if (item.uid !== user.uid) continue;
+      try {
+        await enviar(item);
+        remover(item.id);
+        enviados++;
+      } catch {
+        marcarFalha(item.id);
+        break; // rede caiu de novo: para e tenta na próxima
+      }
+    }
+  } finally {
+    sincronizando = false;
+  }
+
+  avisarPendencias();
+  return { enviados, restantes: lerOutbox().length };
+}
+
+// Dispara sozinho ao logar e sempre que a conexão voltar
+onUsuario((user) => {
+  if (!user) return;
+  migrarRecordesLocais(user.uid);
+  adotarItensOrfaos(user.uid);
+  sincronizar();
+});
+
+onConexao((online) => {
+  if (online) sincronizar();
+});
+
+/* -----------------------------------------------------------------------------
+   6. LEITURA DE PLACAR
+----------------------------------------------------------------------------- */
+
+/**
+ * Estatísticas em tempo real, combinadas com os recordes locais.
+ * Pinta na hora com o que já existe no aparelho e depois atualiza com o
+ * servidor — assim a tela nunca fica vazia offline.
  */
 export function observarEstatisticas(uid, callback) {
-  return onValue(ref(db, `usuarios/${uid}/estatisticas`), (snap) => {
-    const dados = snap.val() || {};
-    callback(JOGOS.map((jogo) => ({ jogo, valor: lerEstatistica(dados, jogo) })));
-  });
+  const entregar = (dados) => {
+    const locais = recordesLocais(uid);
+    callback(
+      JOGOS.map((jogo) => {
+        const doServidor = lerEstatistica(dados, jogo);
+        const doAparelho = jogo.tipo === 'vitorias' ? 0 : locais[jogo.chave] || 0;
+        return {
+          jogo,
+          valor: Math.max(doServidor, doAparelho),
+          apenasLocal: doAparelho > doServidor,
+        };
+      })
+    );
+  };
+
+  entregar(null);
+  return onValue(
+    ref(db, `usuarios/${uid}`),
+    (snap) => entregar(snap.val()),
+    () => entregar(null)
+  );
 }
 
 /**
  * Placar global consolidado.
- * @returns {Promise<Array<{jogo, lider: string, valor: number, empate: boolean}>>}
+ * @returns {Promise<{linhas: Array, online: boolean}>}
  */
 export async function carregarPlacarGlobal() {
-  const todos = (await get(ref(db, 'usuarios'))).val() || {};
+  let todos = {};
+  let online = true;
+
+  try {
+    const snap = await comTempoLimite(get(ref(db, 'usuarios')), TEMPO_LIMITE);
+    todos = snap.val() || {};
+  } catch {
+    online = false;
+  }
+
   const jogadores = Object.values(todos);
 
-  return JOGOS.map((jogo) => {
+  const linhas = JOGOS.map((jogo) => {
     const notas = jogadores
-      .map((u) => ({ nome: u.nome || '---', valor: lerEstatistica(u.estatisticas, jogo) }))
+      .map((u) => ({ nome: u.nome || '---', valor: lerEstatistica(u, jogo) }))
       .filter((x) => x.valor > 0)
       .sort((a, b) => b.valor - a.valor);
 
@@ -215,16 +411,14 @@ export async function carregarPlacarGlobal() {
     const empate = notas.length > 1 && notas[1].valor === topo;
     return { jogo, lider: empate ? 'EMPATE' : notas[0].nome, valor: topo, empate };
   });
+
+  return { linhas, online };
 }
 
 /* -----------------------------------------------------------------------------
-   5. CHAT GLOBAL
+   7. CHAT GLOBAL
 ----------------------------------------------------------------------------- */
 
-/**
- * Escuta o chat com as mensagens já normalizadas e ordenadas por tempo.
- * @param {(msgs: Array, temNaoLida: boolean) => void} callback
- */
 export function observarChat(meuUid, callback) {
   return onValue(ref(db, 'chat_global'), (snap) => {
     const bruto = snap.val() || {};
@@ -245,16 +439,21 @@ export function enviarMensagem(uid, nome, texto) {
     texto: limpo,
     timestamp: serverTimestamp(),
     lida: false,
-  }).then(() => true);
+  })
+    .then(() => true)
+    .catch(() => false);
 }
 
-/** Marca como lidas todas as mensagens que não são minhas. */
 export async function marcarMensagensComoLidas(meuUid) {
-  const msgs = (await get(ref(db, 'chat_global'))).val();
-  if (!msgs) return;
-  const patch = {};
-  Object.entries(msgs).forEach(([id, m]) => {
-    if (m.uid !== meuUid && m.lida === false) patch[`chat_global/${id}/lida`] = true;
-  });
-  if (Object.keys(patch).length) await update(ref(db), patch);
+  try {
+    const msgs = (await comTempoLimite(get(ref(db, 'chat_global')), TEMPO_LIMITE)).val();
+    if (!msgs) return;
+    const patch = {};
+    Object.entries(msgs).forEach(([id, m]) => {
+      if (m.uid !== meuUid && m.lida === false) patch[`chat_global/${id}/lida`] = true;
+    });
+    if (Object.keys(patch).length) await update(ref(db), patch);
+  } catch {
+    /* offline: as mensagens serão marcadas na próxima abertura com rede */
+  }
 }
