@@ -466,16 +466,5 @@ export function posicaoNoCanvas(evento, canvas) {
   };
 }
 
-/* -----------------------------------------------------------------------------
-   9. PWA
-   -----------------------------------------------------------------------------
-   O sw.js existe no repositório mas nunca era registrado por página nenhuma —
-   por isso o "Instalar app" não aparecia no Chrome.
------------------------------------------------------------------------------ */
-
-export function registrarServiceWorker(caminho = 'sw.js') {
-  if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register(caminho).catch(() => {});
-  });
-}
+/* O registro do Service Worker e o download de mídia offline ficam em
+   src/js/offline.js, junto com o resto da lógica de funcionamento sem rede. */
