@@ -27,11 +27,11 @@ const placar = $('#score-display');
 const overlay = $('#overlay');
 
 const audio = new AudioManager({
-  musica: som('campo_minado.mp3'),
+  musica: som('cool.aac'),
   efeitos: {
-    clique: som('click.wav'),
-    vitoria: som('win.wav'),
-    derrota: som('lose.wav'),
+    clique: som('click.aac'),
+    vitoria: som('win.aac'),
+    derrota: som('lose.aac'),
   },
 });
 audio.ligarBotao('#btn-sound');
