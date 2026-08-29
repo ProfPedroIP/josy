@@ -23,13 +23,20 @@
      .0.1 -> ajuste menor
    ============================================================================= */
 
-export const VERSAO = '5.1.1';
+export const VERSAO = '5.1.2';
 
 /**
  * Histórico, do mais novo para o mais antigo.
  * `destaque: true` deixa o item em rosa, para o que mais importa da versão.
  */
 export const HISTORICO = [
+  {
+    versao: '5.1.2',
+    titulo: 'O NÃO APRENDEU A FICAR NA TELA',
+    itens: [
+      { texto: 'O botão NÃO agora corre pela tela inteira, sem escapar', destaque: true },
+    ],
+  },
   {
     versao: '5.1.1',
     titulo: 'CORREÇÃO DAS NOTIFICAÇÕES',
