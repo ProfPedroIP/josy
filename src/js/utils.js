@@ -62,121 +62,140 @@ export function initViewportFix() {
 }
 
 /* -----------------------------------------------------------------------------
-   4. GERENCIADOR DE ÁUDIO UNIFICADO
+   4. CONFIGURAÇÃO DE SOM (única para o arcade inteiro)
    -----------------------------------------------------------------------------
-   Antes: cada página repetia o mesmo listener de mute, cada jogo tinha seu
-   playSound(id) e os efeitos eram disparados com
-   `if (btnSound.classList.contains("on")) ...` espalhado pelo loop.
+   Antes cada página tinha um botão 🔊/🔇 no canto e só isso: ligado ou mudo.
+   Agora existe um painel de configurações no menu com volume separado para
+   música e efeitos, e a preferência vale em todas as páginas.
 
-   Agora: um objeto guarda o estado, persiste a preferência entre as páginas
-   e cuida do bloqueio de autoplay dos navegadores.
-
-     const audio = new AudioManager({
-       musica: som('love_bird.mp3'),
-       efeitos: { pulo: som('pulo.wav'), ponto: som('ponto.wav') },
-     });
-     audio.ligarBotao('#btn-sound');
-     audio.tocar('pulo');
+   Como as páginas são arquivos diferentes, a configuração mora no
+   localStorage. Mudanças disparam evento na mesma página e o `storage` avisa
+   as outras abas.
 ----------------------------------------------------------------------------- */
 
-const CHAVE_PREFERENCIA = 'josy-arcade:som';
+const CHAVE_AUDIO = 'josy-arcade:audio';
+const PADRAO_AUDIO = { musica: 0.5, efeitos: 0.8, mudo: false };
+const EVENTO_AUDIO = 'josy-arcade:audio-mudou';
+
+export function lerConfigAudio() {
+  try {
+    const cru = JSON.parse(localStorage.getItem(CHAVE_AUDIO) || '{}');
+    return {
+      musica: limitar(Number(cru.musica ?? PADRAO_AUDIO.musica), 0, 1),
+      efeitos: limitar(Number(cru.efeitos ?? PADRAO_AUDIO.efeitos), 0, 1),
+      mudo: !!cru.mudo,
+    };
+  } catch {
+    return { ...PADRAO_AUDIO };
+  }
+}
+
+/** Grava só o que mudou e avisa quem estiver ouvindo. */
+export function salvarConfigAudio(parcial) {
+  const config = { ...lerConfigAudio(), ...parcial };
+  try {
+    localStorage.setItem(CHAVE_AUDIO, JSON.stringify(config));
+  } catch {
+    /* silencioso */
+  }
+  window.dispatchEvent(new CustomEvent(EVENTO_AUDIO, { detail: config }));
+  return config;
+}
+
+/**
+ * Observa mudanças de som. Dispara na hora com o valor atual.
+ * @returns {() => void} cancela a inscrição
+ */
+export function onConfigAudio(callback) {
+  const naMesmaPagina = (e) => callback(e.detail);
+  const emOutraAba = (e) => {
+    if (e.key === CHAVE_AUDIO) callback(lerConfigAudio());
+  };
+  window.addEventListener(EVENTO_AUDIO, naMesmaPagina);
+  window.addEventListener('storage', emOutraAba);
+  callback(lerConfigAudio());
+  return () => {
+    window.removeEventListener(EVENTO_AUDIO, naMesmaPagina);
+    window.removeEventListener('storage', emOutraAba);
+  };
+}
+
+/* -----------------------------------------------------------------------------
+   GERENCIADOR DE ÁUDIO
+   -----------------------------------------------------------------------------
+     const audio = new AudioManager({
+       musica: som('happy.aac'),
+       efeitos: { pulo: som('flap.wav') },
+     });
+     audio.tocarMusica();
+     audio.tocar('pulo');
+
+   Ele se inscreve na configuração sozinho: mexer no volume pelo menu já muda
+   o som do jogo aberto, sem recarregar nada.
+----------------------------------------------------------------------------- */
 
 export class AudioManager {
   /**
    * @param {object} opcoes
    * @param {string|HTMLAudioElement} [opcoes.musica]
    * @param {Object<string, string|HTMLAudioElement>} [opcoes.efeitos]
-   * @param {number} [opcoes.volumeMusica=0.5]
-   * @param {number} [opcoes.volumeEfeitos=1]
-   * @param {boolean} [opcoes.lembrarPreferencia=true]
+   * @param {number} [opcoes.pesoMusica=1] ajuste fino por jogo (0 a 1)
+   * @param {number} [opcoes.pesoEfeitos=1]
    */
-  constructor({
-    musica = null,
-    efeitos = {},
-    volumeMusica = 0.5,
-    volumeEfeitos = 1,
-    lembrarPreferencia = true,
-  } = {}) {
-    this.lembrarPreferencia = lembrarPreferencia;
-    this.musica = this._criarAudio(musica, { loop: true, volume: volumeMusica });
+  constructor({ musica = null, efeitos = {}, pesoMusica = 1, pesoEfeitos = 1 } = {}) {
+    this.pesoMusica = pesoMusica;
+    this.pesoEfeitos = pesoEfeitos;
+
+    this.musica = this._criarAudio(musica, { loop: true });
     this.efeitos = {};
     for (const [nome, origem] of Object.entries(efeitos)) {
-      this.efeitos[nome] = this._criarAudio(origem, { volume: volumeEfeitos });
+      this.efeitos[nome] = this._criarAudio(origem);
     }
 
-    this.ativo = this._lerPreferencia();
-    this.botoes = [];
-    this._musicaDesejada = false; // o jogo quer trilha tocando agora?
+    this._musicaDesejada = false;
+    this.config = lerConfigAudio();
+    this._cancelar = onConfigAudio((c) => this._aplicar(c));
+  }
+
+  /** True quando o som está audível (não mudo e volume acima de zero). */
+  get ativo() {
+    return !this.config.mudo;
+  }
+
+  _aplicar(config) {
+    this.config = config;
+    if (this.musica) this.musica.volume = config.mudo ? 0 : config.musica * this.pesoMusica;
+    for (const efeito of Object.values(this.efeitos)) {
+      efeito.volume = config.mudo ? 0 : config.efeitos * this.pesoEfeitos;
+    }
+    if (!this.musica) return;
+    if (config.mudo || config.musica === 0) this.musica.pause();
+    else if (this._musicaDesejada) this._darPlay(this.musica);
   }
 
   /**
-   * Aceita um <audio> já no DOM, um seletor CSS que aponte para um, ou uma URL.
-   * Só tenta resolver como seletor quando a string começa com # ou . — caso
-   * contrário 'assets/sounds/x.mp3' seria interpretado como seletor inválido.
+   * Aceita um <audio> do DOM, um seletor CSS que aponte para um, ou uma URL.
+   * Só tenta resolver como seletor quando começa com # ou . — senão
+   * 'assets/sounds/x.aac' seria lido como seletor inválido e lançaria erro.
    */
-  _criarAudio(origem, { loop = false, volume = 1 } = {}) {
+  _criarAudio(origem, { loop = false } = {}) {
     if (!origem) return null;
-
     let audio = null;
-    if (origem instanceof HTMLAudioElement) {
-      audio = origem;
-    } else if (typeof origem === 'string' && /^[#.]/.test(origem)) {
+    if (origem instanceof HTMLAudioElement) audio = origem;
+    else if (typeof origem === 'string' && /^[#.]/.test(origem)) {
       const el = elemento(origem);
       if (el instanceof HTMLAudioElement) audio = el;
     }
     if (!audio) audio = new Audio(origem);
-
     audio.loop = loop;
-    audio.volume = volume;
     audio.preload = 'auto';
     return audio;
   }
 
-  _lerPreferencia() {
-    if (!this.lembrarPreferencia) return false;
-    try {
-      return localStorage.getItem(CHAVE_PREFERENCIA) === 'on';
-    } catch {
-      return false; // modo privativo / storage bloqueado
-    }
-  }
-
-  _salvarPreferencia() {
-    if (!this.lembrarPreferencia) return;
-    try {
-      localStorage.setItem(CHAVE_PREFERENCIA, this.ativo ? 'on' : 'off');
-    } catch {
-      /* silencioso */
-    }
-  }
-
-  /* ---- controle ---- */
-
-  /** Liga/desliga tudo. @returns {boolean} novo estado */
-  alternar() {
-    return this.ativo ? this.desligar() : this.ligar();
-  }
-
-  ligar() {
-    this.ativo = true;
-    this._salvarPreferencia();
-    if (this._musicaDesejada) this._darPlay(this.musica);
-    this._atualizarBotoes();
-    return true;
-  }
-
-  desligar() {
-    this.ativo = false;
-    this._salvarPreferencia();
-    this.musica?.pause();
-    this._atualizarBotoes();
-    return false;
-  }
-
-  /** Toca a trilha (respeitando o mute). Chame no início da partida. */
+  /** Começa a trilha. Chame no início da partida (precisa de um gesto antes). */
   tocarMusica() {
     this._musicaDesejada = true;
-    if (this.ativo) this._darPlay(this.musica);
+    if (this.ativo && this.config.musica > 0) this._darPlay(this.musica);
   }
 
   /** Pausa mantendo a posição — pause, milestone, cutscene. */
@@ -195,7 +214,7 @@ export class AudioManager {
 
   /** Dispara um efeito pelo nome registrado no construtor. */
   tocar(nome) {
-    if (!this.ativo) return;
+    if (!this.ativo || this.config.efeitos === 0) return;
     const efeito = this.efeitos[nome];
     if (!efeito) {
       console.warn(`[AudioManager] efeito "${nome}" não registrado.`);
@@ -211,34 +230,10 @@ export class AudioManager {
     audio?.play?.().catch(() => {});
   }
 
-  /* ---- botão de mute ---- */
-
-  /**
-   * Conecta um botão de som, substituindo os listeners duplicados por página.
-   * @param {string|Element} alvo
-   * @param {{ligado?: string, desligado?: string}} [rotulos]
-   */
-  ligarBotao(alvo, rotulos = {}) {
-    const btn = elemento(alvo);
-    if (!btn) return this;
-    const config = {
-      btn,
-      ligado: rotulos.ligado ?? '🔊',
-      desligado: rotulos.desligado ?? '🔇',
-    };
-    this.botoes.push(config);
-    btn.addEventListener('click', () => this.alternar());
-    this._pintar(config);
-    return this;
-  }
-
-  _atualizarBotoes() {
-    this.botoes.forEach((c) => this._pintar(c));
-  }
-
-  _pintar({ btn, ligado, desligado }) {
-    btn.innerHTML = this.ativo ? ligado : desligado;
-    btn.classList.toggle('on', this.ativo);
+  /** Solta os ouvintes. Só é preciso se a página trocar de AudioManager. */
+  destruir() {
+    this._cancelar?.();
+    this.pararMusica();
   }
 }
 
