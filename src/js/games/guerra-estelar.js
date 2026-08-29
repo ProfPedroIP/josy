@@ -49,11 +49,11 @@ const telaVitoria = $('#message');
 const telaDerrota = $('#game-over');
 
 const audio = new AudioManager({
-  musica: som('guerra_estelar.mp3'),
+  musica: som('excited.aac'),
   efeitos: {
-    laser: som('laser.wav'),
-    explosao: som('explosao.wav'),
-    poder: som('win.wav'),
+    laser: som('laser.aac'),
+    explosao: som('explosion.aac'),
+    poder: som('win.aac'),
   },
 });
 audio.ligarBotao('#btn-sound');
