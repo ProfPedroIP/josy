@@ -20,6 +20,7 @@ const overlay = $('#overlay');
 const milestoneScreen = $('#milestone-screen');
 const gameOverDiv = $('#game-over');
 const btnContinuar = $('#btn-continue');
+const btnPause = $('#btn-pause');
 
 const audio = new AudioManager({
   musica: som('happy.aac'),
@@ -71,6 +72,7 @@ let tempoCutscene = 0;
 let pedidoCutscene = false;
 let milestonePendente = null;
 let timerContagem = null;
+let pausadoManual = false;
 
 const loop = new GameLoop((delta) => atualizar(delta), { maxDelta: 0.1 });
 
@@ -269,32 +271,67 @@ function mostrarMilestone(marco) {
 }
 
 // Não reduz a velocidade dos canos: é isso que faz o "modo impossível".
-function retomarComContagem() {
-  milestoneScreen.style.display = 'none';
-
-  jogador.x = 50;
-  jogador.y = 300;
-  jogador.velocidade = 0;
-  canos = [];
-  timerCano = 0;
-
-  countdownEl.style.display = 'block';
-  let contagem = 3;
-  countdownEl.innerText = contagem;
-
+// Contagem 3-2-1 antes de devolver o controle. GameLoop.resumir() zera o
+// relógio, então não há salto de tempo depois da espera.
+function contagemRegressiva(aoTerminar) {
   clearInterval(timerContagem);
+  let restante = 3;
+  countdownEl.classList.remove('texto');
+  countdownEl.textContent = restante;
+  countdownEl.style.display = 'block';
+
   timerContagem = setInterval(() => {
-    contagem--;
-    if (contagem > 0) {
-      countdownEl.innerText = contagem;
+    restante--;
+    if (restante > 0) {
+      countdownEl.textContent = restante;
       return;
     }
     clearInterval(timerContagem);
     timerContagem = null;
     countdownEl.style.display = 'none';
+    aoTerminar();
+  }, 800);
+}
+
+// Marcos reposicionam o pássaro e limpam os canos. A velocidade acumulada
+// continua: é isso que faz o "modo impossível" depois dos 100 pontos.
+function retomarComContagem() {
+  milestoneScreen.style.display = 'none';
+  jogador.x = 50;
+  jogador.y = 300;
+  jogador.velocidade = 0;
+  canos = [];
+  timerCano = 0;
+  contagemRegressiva(() => {
     audio.tocarMusica();
     loop.resumir();
-  }, 800);
+  });
+}
+
+// Pausa manual: ao contrário do marco, NÃO reposiciona nem limpa os canos —
+// senão pausar viraria uma forma de escapar de um cano.
+function alternarPausa() {
+  if (!loop.rodando || emCutscene || timerContagem) return;
+  if (milestoneScreen.style.display === 'block') return;
+
+  if (pausadoManual) {
+    pausadoManual = false;
+    btnPause.innerHTML = '&#10074;&#10074;';
+    countdownEl.classList.remove('texto');
+    contagemRegressiva(() => {
+      audio.tocarMusica();
+      loop.resumir();
+    });
+    return;
+  }
+
+  pausadoManual = true;
+  loop.pausar();
+  audio.pausarMusica();
+  btnPause.textContent = '\u25B6';
+  countdownEl.textContent = 'PAUSA';
+  countdownEl.classList.add('texto');
+  countdownEl.style.display = 'block';
 }
 
 function iniciarMissao() {
@@ -305,6 +342,9 @@ function iniciarMissao() {
 function novaPartida() {
   clearInterval(timerContagem);
   timerContagem = null;
+  pausadoManual = false;
+  btnPause.innerHTML = '&#10074;&#10074;';
+  countdownEl.classList.remove('texto');
 
   milestoneScreen.style.display = 'none';
   gameOverDiv.style.display = 'none';
@@ -331,6 +371,8 @@ function novaPartida() {
 
 function fimDeJogo(bateuNoCano = false) {
   loop.parar();
+  pausadoManual = false;
+  btnPause.innerHTML = '&#10074;&#10074;';
   audio.pausarMusica();
 
   if (bateuNoCano) {
@@ -357,10 +399,14 @@ function pular(evento) {
 canvas.addEventListener('mousedown', pular);
 canvas.addEventListener('touchstart', pular, { passive: false });
 window.addEventListener('keydown', pular);
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyP' || e.code === 'Escape') alternarPausa();
+});
 
 $('#btn-voar').addEventListener('click', iniciarMissao);
 $('#btn-continue').addEventListener('click', retomarComContagem);
 $('#btn-tentar-novamente').addEventListener('click', novaPartida);
+$('#btn-pause').addEventListener('click', alternarPausa);
 $('#btn-close').addEventListener('click', () => {
   window.location.href = 'index.html';
 });

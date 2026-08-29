@@ -10,17 +10,17 @@
     <link rel="stylesheet" href="src/css/arcade-theme.css">
 
     <style>
-        :root { --wrapper-altura: 97%; }
+        :root { --wrapper-altura: 97%; --caixa-largura: min(100%, 360px); }
 
-        .top-controls { padding: 0 15px; margin-bottom: 5px; }
         .btn-ctrl { height: 38px; padding: 8px; }
         .btn-close { width: 45px; }
 
-        .score-board { padding: 10px; font-size: 10px; margin-bottom: 8px; width: 90%; }
+        .score-board { padding: 10px; font-size: 10px; }
 
         canvas {
-            width: 95%; max-width: 360px;
+            width: var(--caixa-largura);
             height: calc(var(--vh, 1vh) * 72);
+            box-sizing: border-box;
             cursor: crosshair;
         }
 
@@ -49,9 +49,8 @@
 
         @media (max-height: 480px) {
             canvas { height: calc(var(--vh, 1vh) * 100 - 120px); }
-            .top-controls { margin-bottom: 2px; }
             .btn-ctrl { height: 30px; padding: 5px; font-size: 7px; }
-            .score-board { padding: 5px; font-size: 8px; margin-bottom: 4px; }
+            .score-board { padding: 5px; font-size: 8px; }
             .life-counter { bottom: 8px; font-size: 8px; }
         }
     </style>
@@ -62,7 +61,7 @@
 
     <div id="app-wrapper">
         <div class="top-controls">
-            <button id="btn-pause" class="btn-ctrl btn-pause">PAUSE</button>
+            <button id="btn-pause" class="btn-ctrl btn-pause" title="Pausar">&#10074;&#10074;</button>
             <button id="btn-close" class="btn-ctrl btn-close">X</button>
         </div>
 

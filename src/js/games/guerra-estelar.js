@@ -232,7 +232,7 @@ function novaPartida() {
 
   telaVitoria.style.display = 'none';
   telaDerrota.style.display = 'none';
-  btnPause.innerText = 'PAUSE';
+  btnPause.innerHTML = '&#10074;&#10074;';
 
   audio.tocarMusica();
   loop.iniciar();
@@ -261,7 +261,7 @@ function fimDeJogo(venceu) {
 function alternarPausa() {
   if (!loop.rodando) return;
   loop.alternarPausa();
-  btnPause.innerText = loop.pausado ? 'RESUME' : 'PAUSE';
+  btnPause.innerHTML = loop.pausado ? '\u25B6' : '&#10074;&#10074;';
   if (loop.pausado) audio.pausarMusica();
   else audio.tocarMusica();
 }

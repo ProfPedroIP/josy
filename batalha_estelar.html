@@ -10,9 +10,13 @@
     <link rel="stylesheet" href="src/css/arcade-theme.css">
 
     <style>
+        .game-header { margin-top: 0; }
+        /* A caixa é a grade; o placar e a barra copiam a largura dela. */
+        :root { --caixa-largura: calc(5 * var(--cel) + 4 * var(--grade-espaco)
+                                      + 2 * var(--grade-borda) + 8px); }
+
         :root { --wrapper-padding-inferior: 30px; --wrapper-largura: 540px; }
 
-        #app-wrapper { justify-content: space-evenly; }
 
         .cell.hit { animation: blinkForte 0.5s infinite; }
         @keyframes blinkForte { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -31,7 +35,9 @@
                 <button id="btn-iniciar" class="start-btn">INICIAR MISSÃO</button>
             </div>
         </div>
-        <button id="btn-close" class="btn-close btn-flutuante-dir">X</button>
+        <div class="top-controls">
+            <button id="btn-close" class="btn-close">X</button>
+        </div>
 
         <div class="game-header">
             <h1>&gt; 01. BUSCA ESTELAR</h1>

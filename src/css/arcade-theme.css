@@ -40,6 +40,22 @@
   --wrapper-altura: 96%;
   --wrapper-largura: 450px;
   --wrapper-padding-inferior: 20px;
+
+  /* Espaço vertical entre barra de controles, placar e a caixa do jogo. */
+  --espaco: 15px;
+
+  /* Medidas da grade. Ficam no :root para o placar poder calcular a mesma
+     largura da caixa e ficar alinhado com ela. */
+  --grade-espaco: clamp(5px, 1.6vw, 10px);
+  --grade-borda: 12px;
+  --cel: clamp(
+    44px,
+    min(
+      (min(100vw, var(--wrapper-largura)) - 40px - 2 * var(--grade-borda) - 4 * var(--grade-espaco)) / 5,
+      (var(--vh, 1vh) * 100 - 330px) / 5
+    ),
+    88px
+  );
 }
 
 body {
@@ -149,13 +165,14 @@ body.tela-rolavel #app-wrapper {
   }
 }
 
+/* X sempre à direita; o pause, quando existe, vai para a esquerda. */
 .top-controls {
-  width: 100%;
+  width: var(--caixa-largura, 100%);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   box-sizing: border-box;
-  margin-bottom: 15px;
+  margin-bottom: var(--espaco);
   z-index: 50;
 }
 
@@ -193,7 +210,9 @@ body.tela-rolavel #app-wrapper {
   color: var(--ouro);
   border-color: var(--ouro-borda);
   box-shadow: 3px 3px 0px var(--ouro-borda);
-  width: 80px;
+  width: 40px;
+  font-size: 12px;
+  margin-right: auto;
 }
 
 .btn-close {
@@ -215,7 +234,8 @@ body.tela-rolavel #app-wrapper {
   font-size: 9px;
   color: var(--ouro);
   box-shadow: 4px 4px 0px var(--ouro-sombra);
-  margin-bottom: 15px;
+  width: var(--caixa-largura, auto);
+  margin-bottom: var(--espaco);
   text-align: center;
   line-height: 1.5;
   box-sizing: border-box;
@@ -254,17 +274,6 @@ canvas {
    largura, o que cabe na altura e o teto de 88px. Antes era fixa em 60px e
    sobrava metade da tela no computador. */
 .grid {
-  --grade-espaco: clamp(5px, 1.6vw, 10px);
-  --grade-borda: 12px;
-  --cel: clamp(
-    44px,
-    min(
-      (min(100vw, var(--wrapper-largura)) - 40px - 2 * var(--grade-borda) - 4 * var(--grade-espaco)) / 5,
-      (var(--vh, 1vh) * 100 - 330px) / 5
-    ),
-    88px
-  );
-
   display: grid;
   grid-template-columns: repeat(5, var(--cel));
   gap: var(--grade-espaco);
@@ -272,7 +281,7 @@ canvas {
   padding: var(--grade-borda);
   border: 4px solid var(--azul);
   box-shadow: 0 0 15px var(--azul);
-  margin-bottom: 15px;
+  margin-bottom: var(--espaco);
   z-index: 5;
 }
 
@@ -307,17 +316,20 @@ canvas {
 }
 
 /* Celular deitado: tudo encolhe, senão o tabuleiro é cortado. */
-@media (max-height: 480px) {
-  .grid {
-    --cel: clamp(26px, (var(--vh, 1vh) * 100 - 130px) / 5, 60px);
+@media (max-height: 560px) {
+  :root {
+    --espaco: 6px;
     --grade-espaco: 4px;
     --grade-borda: 6px;
-    margin-bottom: 8px;
+    --cel: clamp(26px, (var(--vh, 1vh) * 100 - 200px) / 5, 60px);
   }
+  .btn-ctrl,
+  .btn-close,
+  .btn-pause { height: 30px; width: 34px; padding: 4px; font-size: 10px; }
   .game-header { margin-top: 6px; margin-bottom: 4px; }
   .game-header h1 { font-size: 10px; margin-bottom: 3px; }
   .subtitle { display: none; }
-  .score-board { padding: 5px 10px; font-size: 7px; margin-bottom: 6px; line-height: 1.3; }
+  .score-board { padding: 5px 10px; font-size: 7px; line-height: 1.3; }
 }
 
 /* Overlays e caixas de mensagem. */

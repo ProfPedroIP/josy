@@ -1,8 +1,18 @@
 /* Versão e novidades. A VERSAO daqui e a do sw.js precisam ser iguais. */
 
-export const VERSAO = '5.3.0';
+export const VERSAO = '5.4.0';
 
 export const HISTORICO = [
+  {
+    versao: '5.4.0',
+    titulo: 'PAUSA NO LOVE BIRD',
+    itens: [
+      { texto: 'Agora dá para pausar o Love Bird — e a culpa é sua se voltar num cano', destaque: true },
+      { texto: 'O X foi para a direita, alinhado com a barra de pontos' },
+      { texto: 'O botão de pausa virou duas barrinhas, igual em todo lugar' },
+      { texto: 'No computador, a tecla P ou Esc também pausa' },
+    ],
+  },
   {
     versao: '5.3.0',
     titulo: 'SOM, CHAT E TABULEIROS MAIORES',

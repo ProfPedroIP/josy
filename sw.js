@@ -3,7 +3,7 @@
    invalida o cache. Precisa ser igual à de src/js/versao.js.
    */
 
-const VERSAO = '5.3.0';
+const VERSAO = '5.4.0';
 
 const CACHE_APP = `josy-app-${VERSAO}`;
 const CACHE_MIDIA = `josy-midia-${VERSAO}`;

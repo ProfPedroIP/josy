@@ -10,15 +10,11 @@
     <link rel="stylesheet" href="src/css/arcade-theme.css">
 
     <style>
-        .top-controls { margin-bottom: 15px; }
+        :root { --caixa-largura: min(100%, 360px); }
 
-        .score-board {
-            border: 3px solid var(--ouro); padding: 10px 20px; font-size: 10px;
-            width: 100%; margin-bottom: 15px;
-        }
 
         .canvas-container {
-            position: relative; width: 100%; max-width: 360px;
+            position: relative; width: var(--caixa-largura);
             display: flex; justify-content: center; align-items: center;
         }
 
@@ -27,6 +23,7 @@
             width: 100%; height: auto; aspect-ratio: 360 / 600; object-fit: contain;
         }
 
+        #countdown.texto { font-size: 26px; letter-spacing: 4px; }
         #countdown {
             position: absolute; font-size: 80px; color: var(--ciano); z-index: 200;
             text-shadow: 5px 5px #000; display: none; pointer-events: none;
@@ -45,6 +42,7 @@
 
     <div id="app-wrapper">
         <div class="top-controls">
+            <button id="btn-pause" class="btn-ctrl btn-pause" title="Pausar">&#10074;&#10074;</button>
             <button id="btn-close" class="btn-close">X</button>
         </div>
 
