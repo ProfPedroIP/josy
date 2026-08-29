@@ -27,10 +27,10 @@ const placar = $('#score-display');
 const overlay = $('#overlay');
 
 const audio = new AudioManager({
-  musica: som('batalha_estelar.mp3'),
+  musica: som('cool.aac'),
   efeitos: {
-    clique: som('click.wav'),
-    vitoria: som('win.wav'),
+    clique: som('click.aac'),
+    vitoria: som('win.aac'),
   },
 });
 audio.ligarBotao('#btn-sound');
