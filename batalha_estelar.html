@@ -11,10 +11,14 @@
 
     <style>
         /* ----- Específico da Busca Estelar ----- */
-        :root { --wrapper-padding-inferior: 30px; }
+        :root { --wrapper-padding-inferior: 30px; --wrapper-largura: 540px; }
 
-        .grid { margin-bottom: 10px; }
-        .cell { font-size: 24px; }
+        /* A grade é quadrada e, no celular, limitada pela LARGURA da tela.
+           Como sobra altura que ela não tem como ocupar, espalhamos a sobra
+           entre cabeçalho, placar e grade em vez de empilhar tudo no meio e
+           deixar dois vazios enormes em cima e embaixo. */
+        #app-wrapper { justify-content: space-evenly; }
+
         .cell.hit { animation: blinkForte 0.5s infinite; }
         @keyframes blinkForte { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
@@ -32,8 +36,6 @@
                 <button id="btn-iniciar" class="start-btn">INICIAR MISSÃO</button>
             </div>
         </div>
-
-        <button id="btn-sound" class="btn-sound btn-flutuante-esq">🔇</button>
         <button id="btn-close" class="btn-close btn-flutuante-dir">X</button>
 
         <div class="game-header">
