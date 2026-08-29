@@ -32,21 +32,15 @@ export const VERSAO = '5.1.0';
 export const HISTORICO = [
   {
     versao: '5.1.0',
-    titulo: 'RECADO DE VOZ E NOTIFICAÇÕES',
+    titulo: 'VOZ, NOTIFICAÇÕES E SONS NOVOS',
     itens: [
       { texto: 'Recado de voz no chat: grave, ouça antes e mande', destaque: true },
       { texto: 'Notificação no celular quando chega mensagem', destaque: true },
-      { texto: 'Notificação quando o outro bate um recorde ou vence o Guardião' },
+      { texto: 'Notificação quando o outro bate um recorde ou vence' },
       { texto: 'Ative em: foto de perfil → ATIVAR NOTIFICAÇÕES' },
-    ],
-  },
-  {
-    versao: '5.0.1',
-    titulo: 'SONS NOVOS E APP COMPLETO OFFLINE',
-    itens: [
-      { texto: 'Trilha nova em cada jogo', destaque: true },
-      { texto: 'Love Bird ganhou som de pulo, de ponto e de batida' },
-      { texto: 'O app agora baixa TUDO na instalação e roda 100% sem internet', destaque: true },
+      { texto: 'Trilha sonora nova em todos os jogos', destaque: true },
+      { texto: 'Love Bird ganhou som de voar, de ponto e de batida' },
+      { texto: 'O app baixa tudo na instalação e roda 100% sem internet' },
       { texto: 'O botão NÃO não foge mais para fora da tela' },
       { texto: 'Tela de novidades a cada atualização' },
     ],
