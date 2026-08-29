@@ -1,80 +1,200 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="manifest" href="manifest.json">
-    <title>Minado Amorous: Josy & Pedro</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="src/css/arcade-theme.css">
+/* =============================================================================
+   src/js/games/minado.js
+   -----------------------------------------------------------------------------
+   Minado Amorous — campo minado 5x5 com corações e buracos negros.
 
-    <style>
-        /* ----- Específico do Minado Amorous ----- */
-        :root { --wrapper-padding-inferior: 30px; }
+   CORREÇÕES APLICADAS NESTA REFATORAÇÃO
+   1. `positions.sort(() => Math.random() - 0.5)` é um embaralhamento enviesado:
+      algumas casas recebiam buraco negro com mais frequência. Trocado por
+      Fisher-Yates (embaralhar()).
+   2. Áudio centralizado no AudioManager.
+   3. Grava em CHAVES.MINADO, a mesma chave que o menu lê.
+   ============================================================================= */
 
-        .mode-selection { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
-        .start-game-btn {
-            padding: 15px; font-family: var(--fonte); cursor: pointer; border: 4px solid;
-            color: #000; font-size: 10px; box-shadow: 4px 4px 0px; transition: 0.2s;
-        }
-        .btn-easy   { background: var(--verde); border-color: var(--verde-sombra); box-shadow: 4px 4px 0px var(--verde-sombra); }
-        .btn-medium { background: var(--ouro); border-color: var(--ouro-borda); box-shadow: 4px 4px 0px var(--ouro-borda); }
-        .btn-hard   { background: var(--vermelho); border-color: var(--vermelho-sombra); box-shadow: 4px 4px 0px var(--vermelho-sombra); color: #fff; }
+import { initViewportFix, AudioManager, embaralhar, som, $ } from '../utils.js';
+import { registrarRecorde, CHAVES } from '../firebase-config.js';
 
-        .cell { font-size: 20px; }
-        .cell.heart { animation: blinkForte 0.5s infinite; }
-        @keyframes blinkForte { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    </style>
-</head>
-<body class="tela-fixa">
+initViewportFix();
 
-    <div class="stars stars--sobe"></div>
+/* -----------------------------------------------------------------------------
+   DOM E ÁUDIO
+----------------------------------------------------------------------------- */
 
-    <div id="app-wrapper">
-        <div id="overlay" class="overlay--coluna">
-            <div class="popup-start">
-                <p style="line-height: 1.6; font-size: 9px; color: #00ff41;">SISTEMA DE RADAR PRONTO. SELECIONE A DIFICULDADE DA MISSÃO:</p>
-                <div class="mode-selection">
-                    <button class="start-game-btn btn-easy"   data-dificuldade="3">FÁCIL (3 🌑)</button>
-                    <button class="start-game-btn btn-medium" data-dificuldade="4">MÉDIO (4 🌑)</button>
-                    <button class="start-game-btn btn-hard"   data-dificuldade="5">DIFÍCIL (5 🌑)</button>
-                </div>
-            </div>
-        </div>
+const grade = $('#grid');
+const telaVitoria = $('#message');
+const telaDerrota = $('#game-over');
+const placar = $('#score-display');
+const overlay = $('#overlay');
 
-        <button id="btn-sound" class="btn-sound btn-flutuante-esq">🔇</button>
-        <button id="btn-close" class="btn-close btn-flutuante-dir">X</button>
+const audio = new AudioManager({
+  musica: som('cool.aac'),
+  efeitos: {
+    clique: som('click.aac'),
+    vitoria: som('win.aac'),
+    derrota: som('lose.aac'),
+  },
+});
+audio.ligarBotao('#btn-sound');
 
-        <div class="game-header">
-            <h1>&gt; 02. MINADO AMOROUS</h1>
-            <div class="subtitle">PLAYER 1: JOSY</div>
-        </div>
+/* -----------------------------------------------------------------------------
+   CONSTANTES  (idênticas ao original)
+----------------------------------------------------------------------------- */
 
-        <div class="score-board" id="score-display">
-            CORAÇÕES: 0 / 3<br>PONTOS: 1000
-        </div>
+const LADO = 5;
+const TOTAL_CASAS = LADO * LADO;
+const TOTAL_CORACOES = 3;
+const PONTUACAO_INICIAL = 1000;
+const PENALIDADE = 40;
+const PONTUACAO_MINIMA = 120;
 
-        <div class="grid" id="grid"></div>
+/* -----------------------------------------------------------------------------
+   ESTADO
+----------------------------------------------------------------------------- */
 
-        <div id="message" class="message-box message-box--rosa">
-            <h2 class="msg-title">SYSTEM RESTORED! 🏆</h2>
-            <p class="msg-text">Você desviou de todos os buracos negros para me encontrar.</p>
-            <p id="win-score-msg" style="color:#ffd700; font-size:10px; margin:10px 0;"></p>
-            <p class="msg-text" style="color:#ff0000; font-size:12px;"><strong>PEDRO AMA JOSY!</strong></p>
-            <button class="btn btn-restart" data-acao="reiniciar">JOGAR DE NOVO</button>
-            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
-        </div>
+let coracoes = [];
+let buracos = [];
+let coracoesEncontrados = 0;
+let pontuacao = PONTUACAO_INICIAL;
+let partidaAtiva = false;
+let totalBuracos = 3;
 
-        <div id="game-over" class="message-box message-box--rosa">
-            <h2 class="msg-title">SYSTEM OFFLINE! 🌑</h2>
-            <p class="msg-text">Você caiu em um buraco negro!</p>
-            <p class="msg-text" style="color:#00ffff;">O amor vence o tempo e o espaço. Tente de novo!</p>
-            <button class="btn btn-restart-lose" data-acao="reiniciar">REINICIAR</button>
-            <a href="index.html" class="btn btn-menu">VOLTAR AO MENU</a>
-        </div>
-    </div>
+/* -----------------------------------------------------------------------------
+   PARTIDA
+----------------------------------------------------------------------------- */
 
-    <script type="module" src="src/js/games/minado.js"></script>
-</body>
-</html>
+function iniciarMissao(dificuldade) {
+  totalBuracos = dificuldade;
+  overlay.style.display = 'none';
+  audio.ligar();
+  novaPartida();
+}
+
+function novaPartida() {
+  grade.innerHTML = '';
+  telaVitoria.style.display = 'none';
+  telaDerrota.style.display = 'none';
+
+  coracoesEncontrados = 0;
+  pontuacao = PONTUACAO_INICIAL;
+  partidaAtiva = true;
+  atualizarPlacar();
+
+  // Fisher-Yates: distribuição realmente uniforme
+  const posicoes = embaralhar([...Array(TOTAL_CASAS).keys()]);
+  coracoes = posicoes.slice(0, TOTAL_CORACOES);
+  buracos = posicoes.slice(TOTAL_CORACOES, TOTAL_CORACOES + totalBuracos);
+
+  for (let i = 0; i < TOTAL_CASAS; i++) {
+    const casa = document.createElement('div');
+    casa.classList.add('cell');
+    casa.innerHTML = '★';
+    casa.id = 'cell-' + i;
+    casa.addEventListener('click', () => revelar(casa, i));
+    grade.appendChild(casa);
+  }
+
+  audio.tocarMusica();
+}
+
+function atualizarPlacar() {
+  placar.innerHTML = `CORAÇÕES: ${coracoesEncontrados} / ${TOTAL_CORACOES}<br>PONTOS: ${pontuacao}`;
+}
+
+function revelar(casa, indice) {
+  if (!partidaAtiva || casa.classList.contains('revealed')) return;
+  casa.classList.add('revealed');
+
+  if (buracos.includes(indice)) {
+    audio.pausarMusica();
+    audio.tocar('derrota');
+    casa.innerHTML = '🌑';
+    casa.classList.add('blackhole');
+    fimDeJogo(false);
+    return;
+  }
+
+  if (coracoes.includes(indice)) {
+    audio.tocar('clique');
+    casa.innerHTML = '❤️';
+    casa.classList.add('heart');
+    coracoesEncontrados++;
+    atualizarPlacar();
+
+    if (coracoesEncontrados === TOTAL_CORACOES) {
+      audio.pausarMusica();
+      audio.tocar('vitoria');
+      fimDeJogo(true);
+    }
+    return;
+  }
+
+  audio.tocar('clique');
+  const vizinhos = contarCoracoesVizinhos(indice);
+  casa.classList.add('number');
+  casa.innerHTML = vizinhos > 0 ? vizinhos : '';
+  if (pontuacao > PONTUACAO_MINIMA) pontuacao -= PENALIDADE;
+  atualizarPlacar();
+}
+
+function contarCoracoesVizinhos(indice) {
+  const linha = Math.floor(indice / LADO);
+  const coluna = indice % LADO;
+  let total = 0;
+
+  for (let dl = -1; dl <= 1; dl++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      const l = linha + dl;
+      const c = coluna + dc;
+      if (l < 0 || l >= LADO || c < 0 || c >= LADO) continue;
+      if (coracoes.includes(l * LADO + c)) total++;
+    }
+  }
+  return total;
+}
+
+function fimDeJogo(venceu) {
+  partidaAtiva = false;
+
+  if (venceu) {
+    $('#win-score-msg').innerText = `SCORE: ${pontuacao} PTS`;
+    telaVitoria.style.display = 'block';
+    registrarRecorde(pontuacao, CHAVES.MINADO);
+
+    // Mostra onde estavam os buracos que ela desviou
+    buracos.forEach((i) => {
+      const casa = $('#cell-' + i);
+      if (casa.classList.contains('revealed')) return;
+      casa.innerHTML = '🌑';
+      casa.classList.add('revealed', 'blackhole');
+      casa.style.opacity = '0.5';
+    });
+    return;
+  }
+
+  telaDerrota.style.display = 'block';
+  buracos.forEach((i) => {
+    const casa = $('#cell-' + i);
+    casa.innerHTML = '🌑';
+    casa.classList.add('revealed', 'blackhole');
+  });
+  coracoes.forEach((i) => {
+    const casa = $('#cell-' + i);
+    if (casa.classList.contains('revealed')) return;
+    casa.innerHTML = '❤️';
+    casa.classList.add('revealed', 'heart-revealed');
+  });
+}
+
+/* -----------------------------------------------------------------------------
+   LIGAÇÃO COM O HTML
+----------------------------------------------------------------------------- */
+
+document.querySelectorAll('[data-dificuldade]').forEach((btn) => {
+  btn.addEventListener('click', () => iniciarMissao(Number(btn.dataset.dificuldade)));
+});
+document.querySelectorAll('[data-acao="reiniciar"]').forEach((btn) => {
+  btn.addEventListener('click', novaPartida);
+});
+$('#btn-close').addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
