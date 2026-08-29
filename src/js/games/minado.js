@@ -34,7 +34,6 @@ const audio = new AudioManager({
     derrota: som('lose.aac'),
   },
 });
-audio.ligarBotao('#btn-sound');
 
 /* -----------------------------------------------------------------------------
    CONSTANTES  (idênticas ao original)
@@ -65,7 +64,6 @@ let totalBuracos = 3;
 function iniciarMissao(dificuldade) {
   totalBuracos = dificuldade;
   overlay.style.display = 'none';
-  audio.ligar();
   novaPartida();
 }
 
