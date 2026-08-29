@@ -51,7 +51,8 @@ export {
   estaOnline,
   onConexao,
   registrarServiceWorker,
-  baixarMidiaOffline,
+  versaoDoServiceWorker,
+  completarMidiaOffline,
 } from './offline.js';
 
 /* -----------------------------------------------------------------------------
@@ -436,7 +437,31 @@ export function enviarMensagem(uid, nome, texto) {
   return push(ref(db, 'chat_global'), {
     uid,
     nome,
+    tipo: 'texto',
     texto: limpo,
+    timestamp: serverTimestamp(),
+    lida: false,
+  })
+    .then(() => true)
+    .catch(() => false);
+}
+
+/**
+ * Publica um recado de voz já enviado ao Storage.
+ * O áudio em si mora no Storage; aqui vai só o endereço dele, para o chat
+ * continuar leve — o `onValue` baixa a lista inteira a cada mensagem nova.
+ *
+ * @param {string} url      endereço devolvido pelo upload
+ * @param {number} duracao  segundos
+ */
+export function enviarAudio(uid, nome, url, duracao) {
+  if (!url) return Promise.resolve(false);
+  return push(ref(db, 'chat_global'), {
+    uid,
+    nome,
+    tipo: 'audio',
+    audioUrl: url,
+    duracao: Math.round(duracao) || 0,
     timestamp: serverTimestamp(),
     lida: false,
   })
