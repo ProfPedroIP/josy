@@ -63,7 +63,8 @@
   --scanline-c3: rgba(0, 0, 255, 0.06);
 
   /* Moldura do app (varia por página) */
-  --wrapper-altura: 90%;
+  --wrapper-altura: 96%;
+  --wrapper-largura: 450px;
   --wrapper-padding-inferior: 20px;
 }
 
@@ -155,7 +156,7 @@ body::before {
 #app-wrapper {
   position: relative;
   width: 100%;
-  max-width: 450px;
+  max-width: var(--wrapper-largura);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -307,12 +308,38 @@ canvas {
    9. GRID 5x5 (Busca Estelar e Minado Amorous)
 ----------------------------------------------------------------------------- */
 
+/* -----------------------------------------------------------------------------
+   O grid é ELÁSTICO: a célula cresce até preencher o espaço disponível.
+
+   Antes era travada em 60px, então em tela grande o jogo ficava do mesmo
+   tamanho de um celular e sobrava metade da altura vazia (medi 53% de
+   desperdício num monitor 1920x1080).
+
+   O tamanho da célula é o MENOR entre três limites:
+     - o que cabe na largura   -> 5 células + 4 espaços + bordas
+     - o que cabe na altura    -> descontando cabeçalho, placar e margens
+     - o teto de 96px          -> para não virar um tabuleiro gigante
+
+   O piso de 44px garante que continue clicável com o dedo em tela pequena.
+----------------------------------------------------------------------------- */
+
 .grid {
+  --grade-espaco: clamp(5px, 1.6vw, 10px);
+  --grade-borda: 12px;
+  --cel: clamp(
+    44px,
+    min(
+      (min(100vw, var(--wrapper-largura)) - 40px - 2 * var(--grade-borda) - 4 * var(--grade-espaco)) / 5,
+      (var(--vh, 1vh) * 100 - 330px) / 5
+    ),
+    88px
+  );
+
   display: grid;
-  grid-template-columns: repeat(5, 60px);
-  gap: 8px;
+  grid-template-columns: repeat(5, var(--cel));
+  gap: var(--grade-espaco);
   background: var(--cor-painel);
-  padding: 12px;
+  padding: var(--grade-borda);
   border: 4px solid var(--azul);
   box-shadow: 0 0 15px var(--azul);
   margin-bottom: 15px;
@@ -320,15 +347,15 @@ canvas {
 }
 
 .cell {
-  width: 60px;
-  height: 60px;
+  width: var(--cel);
+  height: var(--cel);
   background: #000;
   border: 2px solid #333;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: calc(var(--cel) * 0.38);
   color: var(--ouro);
   transition: 0.2s;
   -webkit-tap-highlight-color: transparent;
@@ -342,9 +369,40 @@ canvas {
 .cell.miss           { background: var(--cor-painel); border-color: var(--vermelho); color: var(--vermelho); }
 .cell.number         { color: var(--ciano); }
 
-@media (max-width: 380px) {
-  .grid { grid-template-columns: repeat(5, 52px); gap: 5px; }
-  .cell { width: 52px; height: 52px; font-size: 18px; }
+/* -----------------------------------------------------------------------------
+   TELA GRANDE
+   -----------------------------------------------------------------------------
+   Com o tabuleiro elástico, num monitor ele fica quase 4x maior que o texto
+   ao redor. Aqui o título e o placar crescem junto para o conjunto não ficar
+   desproporcional.
+----------------------------------------------------------------------------- */
+
+@media (min-width: 600px) and (min-height: 700px) {
+  .game-header h1 { font-size: 17px; }
+  .subtitle { font-size: 10px; }
+  .score-board { font-size: 11px; padding: 13px 20px; }
+}
+
+/* -----------------------------------------------------------------------------
+   TELA DEITADA / MUITO BAIXA
+   -----------------------------------------------------------------------------
+   Celular na horizontal tem menos de 400px de altura. Antes desta regra o
+   conteúdo estourava e era cortado em cima E embaixo pelo overflow do
+   gabinete (medi -55px de cada lado, no código original). Aqui o cabeçalho
+   encolhe, o subtítulo sai e a célula pode ficar menor que o piso normal.
+----------------------------------------------------------------------------- */
+
+@media (max-height: 480px) {
+  .grid {
+    --cel: clamp(26px, (var(--vh, 1vh) * 100 - 130px) / 5, 60px);
+    --grade-espaco: 4px;
+    --grade-borda: 6px;
+    margin-bottom: 8px;
+  }
+  .game-header { margin-top: 6px; margin-bottom: 4px; }
+  .game-header h1 { font-size: 10px; margin-bottom: 3px; }
+  .subtitle { display: none; }
+  .score-board { padding: 5px 10px; font-size: 7px; margin-bottom: 6px; line-height: 1.3; }
 }
 
 /* -----------------------------------------------------------------------------
