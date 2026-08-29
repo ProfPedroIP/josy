@@ -18,6 +18,13 @@
    o FCM entregar direto ao nosso Service Worker em vez de desenhar a
    notificação sozinho — assim o sw.js controla o texto, o ícone e o que
    acontece ao tocar.
+
+   ⚠️ O campo `url` é SEMPRE relativo, sem barra no começo.
+   Com barra ('/index.html') o navegador entende "raiz do domínio" e, num
+   GitHub Pages de projeto (profpedroip.github.io/josy/), cai em
+   profpedroip.github.io/index.html — que não existe. O Service Worker resolve
+   o caminho a partir do escopo dele, então relativo funciona em qualquer
+   hospedagem.
    ============================================================================= */
 
 const { onValueCreated, onValueWritten } = require('firebase-functions/v2/database');
@@ -69,7 +76,7 @@ async function outrosUsuarios(uidAutor) {
  * navegador, troca de celular. Sem a faxina a lista cresce para sempre e cada
  * envio fica mais lento e mais caro.
  */
-async function avisar(uid, { titulo, corpo, tag, url = '/index.html' }) {
+async function avisar(uid, { titulo, corpo, tag, url = 'index.html' }) {
   const tokens = await tokensDe(uid);
   if (tokens.length === 0) return { enviados: 0, removidos: 0 };
 
@@ -129,7 +136,7 @@ exports.notificarChat = onValueCreated(
       titulo: msg.nome || 'JOSY ARCADE',
       corpo,
       tag: 'chat', // mesma tag = as mensagens se agrupam em vez de empilhar
-      url: '/index.html?abrir=chat',
+      url: 'index.html?abrir=chat',
     });
   }
 );
@@ -158,7 +165,7 @@ exports.notificarRecorde = onValueWritten(
       titulo: '🔥 RECORDE NOVO',
       corpo: `${nome} fez ${depois} pontos em ${jogo}!`,
       tag: `recorde-${chave}`,
-      url: '/index.html',
+      url: 'index.html',
     });
   }
 );
@@ -185,7 +192,7 @@ exports.notificarVitoria = onValueCreated(
       titulo: '🏆 VITÓRIA',
       corpo: `${nome} venceu o ${jogo}! (${quantas} no total)`,
       tag: `vitoria-${chave}`,
-      url: '/index.html',
+      url: 'index.html',
     });
   }
 );
