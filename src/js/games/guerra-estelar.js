@@ -1,15 +1,24 @@
 /* =============================================================================
-   src/js/games/love-bird.js
+   src/js/games/guerra-estelar.js
    -----------------------------------------------------------------------------
-   Flappy Bird com física escalada por segundo, milestones e cutscene final.
+   Guardião do Amor — space shooter top-down, modos Clássico e Recorde.
 
    CORREÇÕES APLICADAS NESTA REFATORAÇÃO
-   1. Teletransporte no unpause: o GameLoop zera o relógio em resumir(), então
-      o primeiro quadro após milestone/countdown/troca de aba tem delta 0.
-   2. pipes.forEach + splice: substituído por atualizarEPodar (loop reverso).
-   3. `pipes = []` era executado DENTRO da iteração ao atingir 100 pontos.
-      Agora o pedido de cutscene é sinalizado e tratado depois do loop.
-   4. Áudio centralizado no AudioManager (sem listener de mute próprio).
+   1. bullets/enemies/items eram percorridos com .forEach() e removidos com
+      .splice(i, 1) na mesma passada — o que pula o elemento seguinte. Agora
+      todos usam loops reversos.
+   2. A colisão tiro x inimigo era um forEach ANINHADO com splice nos DOIS
+      arrays: o pior caso possível. Reescrita com loops reversos e `break`
+      quando o inimigo morre.
+   3. O loop contava frames++ sem delta time: em tela de 144 Hz o jogo rodava
+      2,4x mais rápido. Agora GameLoop com passoFixo 1/60 garante 60 passos de
+      lógica por segundo em qualquer tela — mecânica idêntica à original.
+   4. resetGame() chamava loop() sem cancelar o rAF anterior, podendo deixar
+      dois loops vivos. GameLoop.iniciar() cancela o anterior.
+   5. Áudio centralizado no AudioManager.
+
+   IMPORTANTE: como o passo é fixo em 1/60 s, todas as velocidades continuam
+   expressas em "pixels por quadro", exatamente como no código original.
    ============================================================================= */
 
 import {
@@ -17,418 +26,334 @@ import {
   AudioManager,
   GameLoop,
   atualizarEPodar,
+  posicaoNoCanvas,
+  limitar,
   som,
   $,
 } from '../utils.js';
-import { registrarRecorde, CHAVES } from '../firebase-config.js';
+import { registrarVitoria, registrarRecorde, CHAVES } from '../firebase-config.js';
 
 initViewportFix();
 
 /* -----------------------------------------------------------------------------
-   DOM
+   DOM E ÁUDIO
 ----------------------------------------------------------------------------- */
 
 const canvas = $('#gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = $('#score-display');
-const countdownEl = $('#countdown');
+const lifeDisplay = $('#life-display');
+const btnPause = $('#btn-pause');
 const overlay = $('#overlay');
-const milestoneScreen = $('#milestone-screen');
-const gameOverDiv = $('#game-over');
-const btnContinuar = $('#btn-continue');
-
-/* -----------------------------------------------------------------------------
-   ÁUDIO
------------------------------------------------------------------------------ */
+const telaVitoria = $('#message');
+const telaDerrota = $('#game-over');
 
 const audio = new AudioManager({
-  musica: som('happy.aac'),
+  musica: som('excited.aac'),
   efeitos: {
-    pulo: som('flap.wav'),      // clicou para voar
-    ponto: som('score.wav'),    // passou por um cano
-    batida: som('hit.wav'),     // encostou no cano
-    derrota: som('lose.aac'),   // fim de jogo (cano ou chão)
-    vitoria: som('win.aac'),    // marco atingido
+    laser: som('laser.aac'),
+    explosao: som('explosion.aac'),
+    poder: som('win.aac'),
   },
 });
 
 /* -----------------------------------------------------------------------------
-   CONSTANTES DE JOGO  (idênticas ao original — física por segundo)
+   CONSTANTES  (idênticas ao original)
 ----------------------------------------------------------------------------- */
 
-const GRAVIDADE = 1200;
-const IMPULSO_PULO = -400;
-const INTERVALO_CANO = 1.6;
-const VELOCIDADE_INICIAL = 210;
-const VELOCIDADE_MAXIMA = 390;
-const ACELERACAO_POR_CANO = 5;
-const VAO_CANO = 160;
-const DURACAO_CUTSCENE = 3;
+const META_CLASSICO = 1000;
+const SPAWN_INICIAL = 80;
+const SPAWN_MINIMO = 15;
+const CADENCIA = { classic: 12, infinite: 15 };
+const INTERVALO_ITENS = 500;
+const DURACAO_TIRO_ESPECIAL = 400;
 
-const MILESTONES = {
-  25: 'Você é o meu melhor começo! ❤️',
-  50: 'Metade do caminho, mas você já tem 100% do meu amor! 🥰',
-  75: 'Quase lá! Minha campeã favorita. 🏆',
-  100: 'VOCÊ É INCRÍVEL! 100 pontos! O amor venceu todos os obstáculos. 💖',
-};
-
-const CORACAO = [
-  [0, 1, 1, 0, 0, 0, 1, 1, 0],
-  [1, 1, 1, 1, 0, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [0, 1, 1, 1, 1, 1, 1, 1, 0],
-  [0, 0, 1, 1, 1, 1, 1, 0, 0],
-  [0, 0, 0, 1, 1, 1, 0, 0, 0],
-  [0, 0, 0, 0, 1, 0, 0, 0, 0],
+const TIPOS_INIMIGO = [
+  { limite: 0.6,  hp: 1, tipo: '🛸', pts: 10, velocidade: 2 },
+  { limite: 0.85, hp: 2, tipo: '👾', pts: 30, velocidade: 3 },
+  { limite: 1,    hp: 5, tipo: '☄️', pts: 50, velocidade: 1.5 },
 ];
 
 /* -----------------------------------------------------------------------------
    ESTADO
 ----------------------------------------------------------------------------- */
 
-const jogador = { x: 50, y: 300, width: 35, height: 35, velocidade: 0 };
-let canos = [];
+let modo = 'classic';
 let pontos = 0;
-let velocidadeCano = VELOCIDADE_INICIAL;
-let timerCano = 0;
+let vidas = 1;
+let quadros = 0;
+let taxaSpawn = SPAWN_INICIAL;
+let timerTiroEspecial = 0;
 
-let emCutscene = false;
-let cutsceneJaAconteceu = false;
-let tempoCutscene = 0;
-let pedidoCutscene = false; // sinalizado dentro do loop, tratado depois
-let milestonePendente = null;
-let timerContagem = null;
+const nave = { x: 160, y: 520, width: 40, height: 40 };
+let tiros = [];
+let inimigos = [];
+let itens = [];
 
 /* -----------------------------------------------------------------------------
-   LOOP
+   LOOP — passo fixo de 60 Hz
 ----------------------------------------------------------------------------- */
 
-const loop = new GameLoop((delta) => atualizar(delta), { maxDelta: 0.1 });
+const loop = new GameLoop(() => atualizar(), { passoFixo: 1 / 60, maxPassos: 5 });
 
-function atualizar(delta) {
+function atualizar() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  quadros++;
 
-  if (emCutscene) {
-    desenharCutscene(delta);
-    return;
-  }
-
-  /* --- física do pássaro --- */
-  jogador.velocidade += GRAVIDADE * delta;
-  jogador.y += jogador.velocidade * delta;
-  if (jogador.y < 0) {
-    jogador.y = 0;
-    jogador.velocidade = 0;
-  }
-
-  desenharJogador();
-
-  /* --- spawn de canos --- */
-  timerCano += delta;
-  if (timerCano >= INTERVALO_CANO) {
-    const alturaTopo = Math.floor(Math.random() * (canvas.height - VAO_CANO - 100)) + 50;
-    canos.push({
-      x: canvas.width,
-      topY: 0,
-      topHeight: alturaTopo,
-      bottomY: alturaTopo + VAO_CANO,
-      bottomHeight: canvas.height - (alturaTopo + VAO_CANO),
-      width: 55,
-      passou: false,
-    });
-    timerCano = 0;
-  }
-
-  /* --- canos: loop reverso, seguro para remoção durante a iteração --- */
-  let morreu = false;
-  let bateuNoCano = false;
-
-  atualizarEPodar(canos, (cano) => {
-    cano.x -= velocidadeCano * delta;
-    desenharCano(cano.x, cano.topY, cano.width, cano.topHeight, true);
-    desenharCano(cano.x, cano.bottomY, cano.width, cano.bottomHeight, false);
-
-    if (cano.x + cano.width < jogador.x && !cano.passou) {
-      cano.passou = true;
-      marcarPonto();
-    }
-
-    const sobrepoeX =
-      jogador.x < cano.x + cano.width && jogador.x + jogador.width > cano.x;
-    const foraDoVao =
-      jogador.y < cano.topHeight || jogador.y + jogador.height > cano.bottomY;
-    if (sobrepoeX && foraDoVao) {
-      morreu = true;
-      bateuNoCano = true;
-    }
-
-    return cano.x + cano.width < 0; // true = remove
-  });
-
-  if (jogador.y + jogador.height >= canvas.height) morreu = true;
-
-  /* --- efeitos colaterais tratados FORA da iteração --- */
-  if (pedidoCutscene) {
-    pedidoCutscene = false;
-    iniciarCutscene();
-    return;
-  }
-
-  if (milestonePendente !== null) {
-    const marco = milestonePendente;
-    milestonePendente = null;
-    mostrarMilestone(marco);
-    return;
-  }
-
-  if (morreu) fimDeJogo(bateuNoCano);
+  desenharNave();
+  atualizarTiros();
+  atualizarItens();
+  atualizarInimigos();
 }
 
-function marcarPonto() {
-  pontos++;
-  scoreDisplay.innerText = 'PONTOS: ' + pontos;
-  audio.tocar('ponto');
-  if (velocidadeCano < VELOCIDADE_MAXIMA) velocidadeCano += ACELERACAO_POR_CANO;
-
-  if (pontos === 100 && !cutsceneJaAconteceu) {
-    cutsceneJaAconteceu = true;
-    pedidoCutscene = true;
-  } else if (MILESTONES[pontos] && pontos !== 100) {
-    milestonePendente = pontos;
-  }
-}
-
-/* -----------------------------------------------------------------------------
-   DESENHO
------------------------------------------------------------------------------ */
-
-function desenharJogador() {
-  ctx.save();
-  ctx.translate(jogador.x + jogador.width / 2, jogador.y + jogador.height / 2);
-  ctx.rotate(Math.min(Math.PI / 4, Math.max(-Math.PI / 4, jogador.velocidade * 0.002)));
-  ctx.scale(-1, 1);
-  ctx.font = '35px Arial';
+function desenharNave() {
+  ctx.font = '40px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('🐦', 0, 0);
+  ctx.save();
+  ctx.translate(nave.x + 20, nave.y + 20);
+  ctx.rotate((-45 * Math.PI) / 180);
+  ctx.fillText('🚀', 0, 0);
   ctx.restore();
 }
 
-function desenharCano(x, y, largura, altura, ehTopo) {
-  const alturaTampa = 24;
-  const larguraExtra = 8;
+/* -----------------------------------------------------------------------------
+   TIROS
+----------------------------------------------------------------------------- */
 
-  const gradiente = ctx.createLinearGradient(x, 0, x + largura, 0);
-  gradiente.addColorStop(0, '#549C16');
-  gradiente.addColorStop(0.3, '#85D638');
-  gradiente.addColorStop(0.7, '#74BF2E');
-  gradiente.addColorStop(1, '#549C16');
-
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#305A0C';
-  ctx.fillStyle = gradiente;
-
-  if (ehTopo) {
-    ctx.fillRect(x, y, largura, altura - alturaTampa);
-    ctx.strokeRect(x, y, largura, altura - alturaTampa);
-    ctx.fillRect(x - larguraExtra / 2, altura - alturaTampa, largura + larguraExtra, alturaTampa);
-    ctx.strokeRect(x - larguraExtra / 2, altura - alturaTampa, largura + larguraExtra, alturaTampa);
-  } else {
-    ctx.fillRect(x, y + alturaTampa, largura, altura - alturaTampa);
-    ctx.strokeRect(x, y + alturaTampa, largura, altura - alturaTampa);
-    ctx.fillRect(x - larguraExtra / 2, y, largura + larguraExtra, alturaTampa);
-    ctx.strokeRect(x - larguraExtra / 2, y, largura + larguraExtra, alturaTampa);
+function atualizarTiros() {
+  if (quadros % CADENCIA[modo] === 0) {
+    tiros.push({ x: nave.x + 18, y: nave.y, vx: 0, vy: -10 });
+    if (timerTiroEspecial > 0) {
+      tiros.push({ x: nave.x + 18, y: nave.y, vx: -3, vy: -9.5 });
+      tiros.push({ x: nave.x + 18, y: nave.y, vx: 3, vy: -9.5 });
+      tiros.push({ x: nave.x + 18, y: nave.y, vx: -6, vy: -8 });
+      tiros.push({ x: nave.x + 18, y: nave.y, vx: 6, vy: -8 });
+    }
+    audio.tocar('laser');
   }
+  if (timerTiroEspecial > 0) timerTiroEspecial--;
+
+  ctx.fillStyle = '#00ffff';
+  atualizarEPodar(tiros, (t) => {
+    t.x += t.vx;
+    t.y += t.vy;
+    ctx.fillRect(t.x, t.y, 4, 12);
+    return t.y < 0 || t.x < 0 || t.x > canvas.width; // true = remove
+  });
 }
 
 /* -----------------------------------------------------------------------------
-   CUTSCENE DOS 100 PONTOS
+   ITENS (só no modo Recorde)
 ----------------------------------------------------------------------------- */
 
-function iniciarCutscene() {
-  emCutscene = true;
-  tempoCutscene = 0;
-  canos = [];
-  audio.pausarMusica();
-  audio.tocar('vitoria');
+function atualizarItens() {
+  if (modo === 'infinite' && quadros % INTERVALO_ITENS === 0) {
+    itens.push({
+      x: Math.random() * 320,
+      y: -30,
+      tipo: Math.random() > 0.5 ? '⭐' : '⚡',
+      velocidade: 2,
+    });
+  }
+
+  ctx.font = '40px Arial';
+  atualizarEPodar(itens, (item) => {
+    item.y += item.velocidade;
+    ctx.fillText(item.tipo, item.x + 15, item.y + 15);
+
+    const pegou =
+      item.x < nave.x + 40 &&
+      item.x + 30 > nave.x &&
+      item.y < nave.y + 40 &&
+      item.y + 30 > nave.y;
+
+    if (!pegou) return item.y > canvas.height + 40;
+
+    audio.tocar('poder');
+    if (item.tipo === '⭐') vidas++;
+    else timerTiroEspecial = DURACAO_TIRO_ESPECIAL;
+    lifeDisplay.innerText = `VIDAS: ${vidas}`;
+    return true;
+  });
 }
 
-function desenharCutscene(delta) {
-  tempoCutscene += delta;
+/* -----------------------------------------------------------------------------
+   INIMIGOS E COLISÕES
+   -----------------------------------------------------------------------------
+   O ponto mais delicado da refatoração. Percorremos inimigos de trás para
+   frente; dentro de cada inimigo, percorremos os tiros também de trás para
+   frente. Quando o inimigo morre, removemos e saímos do laço interno com
+   `break` — nenhum índice é pulado nas duas listas.
+----------------------------------------------------------------------------- */
 
-  const escala = Math.min(20, tempoCutscene * 12);
-  const alfa = Math.min(1, tempoCutscene / 1.5);
+function atualizarInimigos() {
+  if (quadros % Math.floor(taxaSpawn) === 0) {
+    const sorteio = Math.random();
+    const modelo = TIPOS_INIMIGO.find((m) => sorteio < m.limite);
+    inimigos.push({
+      x: Math.random() * 320,
+      y: -40,
+      hp: modelo.hp,
+      tipo: modelo.tipo,
+      pts: modelo.pts,
+      velocidade: modelo.velocidade,
+    });
+  }
 
-  ctx.fillStyle = `rgba(255, 77, 109, ${alfa})`;
-  const inicioX = canvas.width / 2 - (CORACAO[0].length * escala) / 2;
-  const inicioY = canvas.height / 2 - (CORACAO.length * escala) / 2;
-  for (let l = 0; l < CORACAO.length; l++) {
-    for (let c = 0; c < CORACAO[0].length; c++) {
-      if (CORACAO[l][c]) {
-        ctx.fillRect(inicioX + c * escala, inicioY + l * escala, escala, escala);
+  ctx.font = '40px Arial';
+
+  for (let ei = inimigos.length - 1; ei >= 0; ei--) {
+    const inimigo = inimigos[ei];
+    inimigo.y += inimigo.velocidade;
+    ctx.fillText(inimigo.tipo, inimigo.x + 20, inimigo.y + 20);
+
+    /* --- escapou pelo rodapé ou bateu na nave: custa uma vida --- */
+    const bateuNaNave =
+      inimigo.x < nave.x + 35 &&
+      inimigo.x + 35 > nave.x &&
+      inimigo.y < nave.y + 35 &&
+      inimigo.y + 35 > nave.y;
+
+    if (inimigo.y > canvas.height || bateuNaNave) {
+      inimigos.splice(ei, 1);
+      vidas--;
+      lifeDisplay.innerText = `VIDAS: ${vidas}`;
+
+      if (vidas <= 0) {
+        fimDeJogo(false);
+        return;
       }
+      audio.tocar('explosao');
+      ctx.fillStyle = 'rgba(255,0,0,0.5)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      continue;
+    }
+
+    /* --- colisão com os tiros --- */
+    for (let ti = tiros.length - 1; ti >= 0; ti--) {
+      const t = tiros[ti];
+      const acertou =
+        t.x < inimigo.x + 40 &&
+        t.x + 4 > inimigo.x &&
+        t.y < inimigo.y + 40 &&
+        t.y + 12 > inimigo.y;
+
+      if (!acertou) continue;
+
+      tiros.splice(ti, 1);
+      inimigo.hp--;
+
+      if (inimigo.hp > 0) continue;
+
+      inimigos.splice(ei, 1);
+      audio.tocar('explosao');
+      pontos += inimigo.pts;
+      scoreDisplay.innerText = `PONTOS: ${pontos}`;
+
+      const aceleracao = modo === 'classic' ? 1.1 : 0.8;
+      if (taxaSpawn > SPAWN_MINIMO) taxaSpawn -= aceleracao;
+
+      if (modo === 'classic' && pontos >= META_CLASSICO) {
+        fimDeJogo(true);
+        return;
+      }
+      break; // inimigo morreu, não faz sentido testar os outros tiros
     }
   }
-
-  jogador.x += (canvas.width / 2 - 30 - jogador.x) * 0.05;
-  jogador.y += (canvas.height / 2 - jogador.y) * 0.05;
-
-  ctx.save();
-  ctx.translate(jogador.x, jogador.y);
-  ctx.scale(-1, 1);
-  ctx.font = '35px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('🐦', 0, 0);
-  ctx.restore();
-
-  ctx.save();
-  ctx.translate(canvas.width / 2 + 30, canvas.height / 2);
-  ctx.font = '35px Arial';
-  ctx.globalAlpha = alfa;
-  ctx.fillText('🐦', 0, 0);
-  ctx.restore();
-
-  if (tempoCutscene >= DURACAO_CUTSCENE) {
-    emCutscene = false;
-    mostrarMilestone(100);
-  }
-}
-
-/* -----------------------------------------------------------------------------
-   MILESTONES E CONTAGEM REGRESSIVA
------------------------------------------------------------------------------ */
-
-function mostrarMilestone(marco) {
-  loop.pausar();
-  audio.pausarMusica();
-  if (marco !== 100) audio.tocar('vitoria');
-
-  $('#milestone-text').innerText = MILESTONES[marco];
-  if (marco === 100) {
-    btnContinuar.innerText = 'MODO IMPOSSÍVEL 🔥';
-    btnContinuar.style.background = '#ff0000';
-  } else {
-    btnContinuar.innerText = 'CONTINUAR';
-    btnContinuar.style.background = '#00ff41';
-  }
-  milestoneScreen.style.display = 'block';
-}
-
-function retomarComContagem() {
-  milestoneScreen.style.display = 'none';
-
-  // Reposiciona o pássaro e limpa a tela, mantendo a velocidade acumulada
-  // (é isso que faz o "modo impossível" depois dos 100 pontos).
-  jogador.x = 50;
-  jogador.y = 300;
-  jogador.velocidade = 0;
-  canos = [];
-  timerCano = 0;
-
-  countdownEl.style.display = 'block';
-  let contagem = 3;
-  countdownEl.innerText = contagem;
-
-  clearInterval(timerContagem);
-  timerContagem = setInterval(() => {
-    contagem--;
-    if (contagem > 0) {
-      countdownEl.innerText = contagem;
-      return;
-    }
-    clearInterval(timerContagem);
-    timerContagem = null;
-    countdownEl.style.display = 'none';
-    audio.tocarMusica();
-    loop.resumir(); // <- reset do relógio: sem salto de tempo
-  }, 800);
 }
 
 /* -----------------------------------------------------------------------------
    CICLO DA PARTIDA
 ----------------------------------------------------------------------------- */
 
-function iniciarMissao() {
+function iniciarJogo(novoModo) {
+  modo = novoModo;
+  vidas = novoModo === 'infinite' ? 3 : 1;
   overlay.style.display = 'none';
+  lifeDisplay.innerText = `VIDAS: ${vidas}`;
   novaPartida();
 }
 
 function novaPartida() {
-  clearInterval(timerContagem);
-  timerContagem = null;
-
-  milestoneScreen.style.display = 'none';
-  gameOverDiv.style.display = 'none';
-  countdownEl.style.display = 'none';
-
   pontos = 0;
-  velocidadeCano = VELOCIDADE_INICIAL;
-  canos = [];
-  timerCano = 0;
+  quadros = 0;
+  taxaSpawn = SPAWN_INICIAL;
+  timerTiroEspecial = 0;
+  tiros = [];
+  inimigos = [];
+  itens = [];
+
+  vidas = modo === 'infinite' ? 3 : 1;
+  lifeDisplay.innerText = `VIDAS: ${vidas}`;
   scoreDisplay.innerText = 'PONTOS: 0';
 
-  jogador.x = 50;
-  jogador.y = 300;
-  jogador.velocidade = 0;
-
-  emCutscene = false;
-  cutsceneJaAconteceu = false;
-  pedidoCutscene = false;
-  milestonePendente = null;
+  telaVitoria.style.display = 'none';
+  telaDerrota.style.display = 'none';
+  btnPause.innerText = 'PAUSE';
 
   audio.tocarMusica();
   loop.iniciar();
 }
 
-/**
- * @param {boolean} bateuNoCano true = colidiu com um cano; false = caiu no chão
- *
- * Batendo no cano tocam DOIS sons: a batida na hora e a derrota logo depois.
- * O pequeno atraso evita que os dois saiam sobrepostos e virem um borrão.
- */
-function fimDeJogo(bateuNoCano = false) {
+function fimDeJogo(venceu) {
   loop.parar();
   audio.pausarMusica();
 
-  if (bateuNoCano) {
-    audio.tocar('batida');
-    setTimeout(() => audio.tocar('derrota'), 260);
-  } else {
-    audio.tocar('derrota');
+  if (venceu) {
+    telaVitoria.style.display = 'block';
+    registrarVitoria(CHAVES.GUARDIAO_VITORIAS);
+    return;
   }
 
-  registrarRecorde(pontos, CHAVES.LOVE_BIRD);
-  $('#final-score-text').innerText = 'Sua pontuação final: ' + pontos;
-  gameOverDiv.style.display = 'block';
+  telaDerrota.style.display = 'block';
+  $('#go-title').innerText = modo === 'infinite' ? 'MISSÃO CONCLUÍDA!' : 'SISTEMA FALHOU!';
+  $('#go-text').innerText =
+    modo === 'infinite'
+      ? `Que bom que você chegou até aqui! Suas vidas acabaram.\nPontuação final: ${pontos}`
+      : 'A barreira foi rompida. Tente novamente!';
+
+  if (modo === 'infinite') registrarRecorde(pontos, CHAVES.GUARDIAO_RECORDE);
+}
+
+function alternarPausa() {
+  if (!loop.rodando) return;
+  loop.alternarPausa();
+  btnPause.innerText = loop.pausado ? 'RESUME' : 'PAUSE';
+  if (loop.pausado) audio.pausarMusica();
+  else audio.tocarMusica();
 }
 
 /* -----------------------------------------------------------------------------
    ENTRADA
 ----------------------------------------------------------------------------- */
 
-function pular(evento) {
-  if (!loop.rodando || loop.pausado || emCutscene) return;
-  if (evento.type === 'keydown' && evento.code !== 'Space') return;
-  if (evento.type === 'touchstart' || evento.type === 'mousedown') evento.preventDefault();
-  jogador.velocidade = IMPULSO_PULO;
-  audio.tocar('pulo');
+function moverNave(evento) {
+  if (!loop.rodando || loop.pausado) return;
+  const { x } = posicaoNoCanvas(evento, canvas);
+  nave.x = limitar(x - 20, 0, canvas.width - 40);
 }
 
-canvas.addEventListener('mousedown', pular);
-canvas.addEventListener('touchstart', pular, { passive: false });
-window.addEventListener('keydown', pular);
+canvas.addEventListener('mousemove', moverNave);
+canvas.addEventListener(
+  'touchmove',
+  (e) => {
+    e.preventDefault();
+    moverNave(e);
+  },
+  { passive: false }
+);
 
 /* -----------------------------------------------------------------------------
    LIGAÇÃO COM O HTML
-   -----------------------------------------------------------------------------
-   Com type="module" nada vira global, então os antigos onclick="" do HTML
-   foram removidos e substituídos por estes listeners.
 ----------------------------------------------------------------------------- */
 
-$('#btn-voar').addEventListener('click', iniciarMissao);
-$('#btn-continue').addEventListener('click', retomarComContagem);
-$('#btn-tentar-novamente').addEventListener('click', novaPartida);
+$('#btn-modo-classico').addEventListener('click', () => iniciarJogo('classic'));
+$('#btn-modo-recorde').addEventListener('click', () => iniciarJogo('infinite'));
+$('#btn-pause').addEventListener('click', alternarPausa);
 $('#btn-close').addEventListener('click', () => {
   window.location.href = 'index.html';
+});
+document.querySelectorAll('[data-acao="reiniciar"]').forEach((btn) => {
+  btn.addEventListener('click', novaPartida);
 });
