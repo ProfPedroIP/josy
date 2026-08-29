@@ -306,30 +306,36 @@ export function registrarServiceWorker(aoAtualizar) {
 }
 
 /**
- * Manda o Service Worker baixar os áudios para uso offline.
- * @param {(feitos: number, total: number) => void} [aoProgredir]
- * @returns {Promise<{ok: boolean, feitos: number, total: number}>}
+ * Pergunta ao Service Worker qual versão ele está servindo.
+ * Serve para detectar o erro de publicar sem trocar a VERSAO no sw.js.
+ * @returns {Promise<string|null>}
  */
-export function baixarMidiaOffline(aoProgredir) {
+export function versaoDoServiceWorker() {
+  return perguntarAoSW({ tipo: 'VERSAO' }, 3000).then((r) => r?.versao ?? null);
+}
+
+/**
+ * Rede de segurança: manda completar áudios que faltaram na instalação
+ * (rede oscilando no momento em que o app foi instalado).
+ * @returns {Promise<{guardados: number, total: number}|null>}
+ */
+export function completarMidiaOffline() {
+  return perguntarAoSW({ tipo: 'COMPLETAR_MIDIA' }, 120000);
+}
+
+function perguntarAoSW(mensagem, msLimite) {
   return new Promise((resolver) => {
-    if (typeof navigator === 'undefined' || !navigator.serviceWorker?.controller) {
-      resolver({ ok: false, feitos: 0, total: 0 });
+    const controlador = navigator?.serviceWorker?.controller;
+    if (!controlador) {
+      resolver(null);
       return;
     }
-
     const canal = new MessageChannel();
+    const timer = setTimeout(() => resolver(null), msLimite);
     canal.port1.onmessage = (evento) => {
-      const dados = evento.data || {};
-      if (dados.tipo === 'PROGRESSO') {
-        aoProgredir?.(dados.feitos, dados.total);
-        return;
-      }
-      if (dados.tipo === 'CONCLUIDO') {
-        resolver({ ok: true, feitos: dados.feitos, total: dados.total });
-      }
+      clearTimeout(timer);
+      resolver(evento.data || null);
     };
-
-    navigator.serviceWorker.controller.postMessage({ tipo: 'BAIXAR_MIDIA' }, [canal.port2]);
-    setTimeout(() => resolver({ ok: false, feitos: 0, total: 0 }), 180000);
+    controlador.postMessage(mensagem, [canal.port2]);
   });
 }
