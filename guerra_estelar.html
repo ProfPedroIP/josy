@@ -11,18 +11,17 @@
 
     <style>
         /* ----- Específico do Guardião Estelar ----- */
-        :root { --wrapper-altura: 95%; }
+        :root { --wrapper-altura: 97%; }
 
         .top-controls { padding: 0 15px; margin-bottom: 5px; }
         .btn-ctrl { height: 38px; padding: 8px; }
-        .btn-sound { width: 45px; }
         .btn-close { width: 45px; }
 
         .score-board { padding: 10px; font-size: 10px; margin-bottom: 8px; width: 90%; }
 
         canvas {
             width: 95%; max-width: 360px;
-            height: calc(var(--vh, 1vh) * 65);
+            height: calc(var(--vh, 1vh) * 72);
             cursor: crosshair;
         }
 
@@ -48,6 +47,16 @@
         }
 
         .game-btn { font-size: 9px; margin-top: 10px; margin-bottom: 0; }
+
+        /* Celular deitado: sobra pouca altura, então o canvas encolhe e o
+           placar e os controles ficam mais compactos. */
+        @media (max-height: 480px) {
+            canvas { height: calc(var(--vh, 1vh) * 100 - 120px); }
+            .top-controls { margin-bottom: 2px; }
+            .btn-ctrl { height: 30px; padding: 5px; font-size: 7px; }
+            .score-board { padding: 5px; font-size: 8px; margin-bottom: 4px; }
+            .life-counter { bottom: 8px; font-size: 8px; }
+        }
     </style>
 </head>
 <body class="tela-fixa">
@@ -56,7 +65,6 @@
 
     <div id="app-wrapper">
         <div class="top-controls">
-            <button id="btn-sound" class="btn-ctrl btn-sound">🔇</button>
             <button id="btn-pause" class="btn-ctrl btn-pause">PAUSE</button>
             <button id="btn-close" class="btn-ctrl btn-close">X</button>
         </div>
