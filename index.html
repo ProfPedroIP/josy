@@ -29,23 +29,27 @@
         .badge-novo { position: absolute; top: -12px; right: -15px; background: var(--magenta); color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px var(--magenta-sombra); animation: blink 1s infinite; transform: rotate(5deg); }
 
         /* Controles de topo */
-        #btn-sound { position: absolute; top: 25px; left: 20px; z-index: 150; }
         #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--magenta); cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px var(--magenta); object-fit: cover; z-index: 50; display: none; }
 
         /* Chat */
         #chat-trigger { position: absolute; bottom: 25px; left: 20px; z-index: 100; background: var(--cor-painel); border: 3px solid var(--verde); color: var(--verde); padding: 15px; cursor: pointer; font-family: var(--fonte); font-size: 12px; box-shadow: 4px 4px 0px var(--verde-sombra); display: none; }
         .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: var(--vermelho); border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
-        #chat-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); z-index: 300; display: none; flex-direction: column; padding: 40px 20px; box-sizing: border-box; }
-        #chat-messages { flex: 1; overflow-y: auto; border: 2px solid var(--verde); padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0, 20, 0, 0.5); }
-        .msg { max-width: 80%; padding: 10px; font-size: 8px; line-height: 1.5; position: relative; }
+        /* No celular ocupa a tela toda. No computador vira uma janela própria,
+           mais larga que o gabinete de 450px — antes ficava 446x806, um corredor
+           estreito e comprido com fonte de 8px. */
+        #chat-modal { position: fixed; inset: 0; background: #030703; z-index: 300; display: none; flex-direction: column; padding: 16px; box-sizing: border-box; }
+        #chat-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
+        #chat-titulo { font-size: 10px; color: var(--verde); }
+        #chat-messages { flex: 1; min-height: 0; overflow-y: auto; border: 2px solid var(--verde); padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; background: rgba(0, 20, 0, 0.5); }
+        .msg { max-width: 78%; padding: 10px 12px; font-size: 9px; line-height: 1.6; position: relative; word-break: break-word; }
         .msg-me { align-self: flex-end; background: var(--verde-borda); border: 1px solid var(--verde); color: var(--verde); text-align: right; }
         .msg-other { align-self: flex-start; background: var(--cor-painel); border: 1px solid var(--magenta); color: var(--magenta); text-align: left; }
         .msg-info { font-size: 6px; display: block; margin-bottom: 5px; opacity: 0.8; }
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 5px; }
         .msg-time { font-size: 5px; color: #888; }
         .msg-status-neon { font-size: 10px; color: var(--ciano); text-shadow: 0 0 5px var(--ciano); font-weight: bold; }
-        #chat-input-container { display: flex; gap: 10px; }
-        #chat-input { flex: 1; background: #000; border: 2px solid var(--verde); color: var(--verde); padding: 10px; font-family: var(--fonte); font-size: 10px; outline: none; width: 100%; box-sizing: border-box; }
+        #chat-input-container { display: flex; gap: 10px; flex-shrink: 0; }
+        #chat-input { flex: 1; min-width: 0; background: #000; border: 2px solid var(--verde); color: var(--verde); padding: 12px; font-family: var(--fonte); font-size: 10px; outline: none; box-sizing: border-box; }
         #chat-send { background: var(--verde); border: none; color: #000; padding: 10px; font-family: var(--fonte); cursor: pointer; font-size: 8px; }
         #chat-fechar { background: var(--cor-painel); border: 2px solid var(--vermelho); color: var(--vermelho); font-family: var(--fonte); font-size: 10px; width: 30px; height: 30px; cursor: pointer; }
 
@@ -64,9 +68,7 @@
         .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: var(--vermelho-escuro); box-shadow: 4px 4px 0px var(--vermelho-escuro); color: #fff; }
 
         /* Status de conexão e modo offline */
-        .pilula-status { position: absolute; top: 72px; left: 20px; z-index: 150; font-size: 6px; padding: 6px 8px; border: 2px solid; line-height: 1.4; }
-        .pilula-status.offline  { color: var(--ouro); border-color: var(--ouro-borda); background: #1a1400; }
-        .pilula-status.enviando { color: var(--ciano); border-color: var(--ciano-sombra); background: #001a1a; animation: blink 1.2s infinite; }
+
         .marca-pendente { color: var(--ouro); font-size: 6px; vertical-align: middle; }
 
         /* Brincadeira "Conexão Estelar" */
@@ -86,15 +88,13 @@
         .btn-yellow { color: var(--ouro); border-color: var(--ouro); box-shadow: 4px 4px 0px var(--ouro-sombra); }
 
         /* Status de conexão e modo offline */
-        .pilula-status { position: absolute; top: 78px; left: 50%; transform: translateX(-50%); z-index: 160; font-size: 7px; padding: 6px 10px; border: 2px solid; display: none; white-space: nowrap; }
-        .pilula-status.offline { color: var(--ouro); border-color: var(--ouro); background: #1a1400; }
-        .pilula-status.enviando { color: var(--ciano); border-color: var(--ciano); background: #001a1a; animation: blink 1.2s infinite; }
+
         .marca-pendente { color: var(--ouro); font-size: 12px; vertical-align: middle; }
 
         .btn-cyan { color: var(--ciano); border-color: var(--ciano); box-shadow: 4px 4px 0px var(--ciano-sombra); }
 
         /* ----- Estado offline ----- */
-        .status-selo { position: absolute; top: 78px; left: 20px; z-index: 160; font-size: 7px; padding: 6px 8px; border: 2px solid; display: none; }
+        .status-selo { position: absolute; top: 25px; left: 20px; z-index: 160; font-size: 7px; padding: 6px 8px; border: 2px solid; display: none; }
         .status-offline { color: var(--ouro); border-color: var(--ouro); background: rgba(0,0,0,0.85); }
         .status-sync { color: var(--ciano); border-color: var(--ciano); background: rgba(0,0,0,0.85); animation: blink 1.2s infinite; }
         .marca-local { color: var(--ouro); font-size: 10px; }
@@ -118,11 +118,34 @@
         #link-novidades { background: none; border: none; color: var(--ciano); font-family: var(--fonte); font-size: 7px; cursor: pointer; text-decoration: underline; padding: 0; }
         #rodape-versao { font-size: 7px; color: #666; }
 
+        /* ----- Controle de som ----- */
+        .linha-som { display: grid; grid-template-columns: 58px 1fr 38px; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .linha-som span { font-size: 7px; color: var(--ciano); }
+        .linha-som b { font-size: 7px; color: var(--ouro); text-align: right; font-weight: normal; }
+        .linha-som input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; background: #000; border: 2px solid var(--verde-sombra); outline: none; cursor: pointer; }
+        .linha-som input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 18px; background: var(--verde); border: 2px solid #000; cursor: pointer; }
+        .linha-som input[type=range]::-moz-range-thumb { width: 16px; height: 18px; background: var(--verde); border: 2px solid #000; border-radius: 0; cursor: pointer; }
+        .btn-som-mudo { width: 100%; padding: 12px; font-family: var(--fonte); font-size: 8px; background: #222; color: var(--verde); border: 3px solid var(--verde-sombra); cursor: pointer; box-sizing: border-box; }
+        .btn-som-mudo.mudo { color: var(--vermelho); border-color: var(--vermelho-sombra); }
+        .dica-som { font-size: 6px; color: #777; text-align: center; margin: 10px 0 0 0; }
+
         /* ----- Notificações ----- */
         #btn-notificacoes { width: 100%; padding: 12px; font-family: var(--fonte); font-size: 7px; background: #222; color: var(--ouro); border: 3px solid var(--ouro-borda); cursor: pointer; box-sizing: border-box; margin-bottom: 12px; }
         #btn-notificacoes.ligado { color: var(--verde); border-color: var(--verde-sombra); }
         #btn-notificacoes:disabled { opacity: 0.55; cursor: default; }
         #aviso-topo { display: none; position: absolute; top: 0; left: 0; width: 100%; z-index: 550; background: var(--magenta-sombra); border-bottom: 2px solid var(--magenta); color: #fff; font-size: 7px; line-height: 1.5; padding: 10px 12px; box-sizing: border-box; animation: fadeIn 0.3s; }
+
+        @media (min-width: 700px) {
+            #chat-modal { inset: auto; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                          width: min(92vw, 760px); height: min(88vh, 720px);
+                          border: 4px solid var(--verde); box-shadow: 0 0 40px rgba(0,255,65,0.25); padding: 20px; }
+            .msg { font-size: 11px; max-width: 68%; padding: 12px 14px; }
+            .msg-info { font-size: 8px; }
+            .msg-time { font-size: 7px; }
+            #chat-input { font-size: 12px; padding: 14px; }
+            #chat-send { font-size: 10px; padding: 14px 20px; }
+            #chat-titulo { font-size: 13px; }
+        }
 
         /* ----- Recado de voz ----- */
         #btn-gravar { background: var(--cor-painel); border: 2px solid var(--magenta); color: var(--magenta); font-size: 14px; width: 44px; cursor: pointer; flex-shrink: 0; }
@@ -130,7 +153,7 @@
         #btn-gravar:disabled { opacity: 0.4; cursor: default; }
         #voz-painel { display: none; align-items: center; gap: 10px; background: rgba(0,20,0,0.7); border: 2px solid var(--verde); padding: 10px; margin-bottom: 10px; }
         #voz-status { font-size: 7px; color: var(--verde); white-space: nowrap; flex-shrink: 0; }
-        #voz-preview { flex: 1; height: 32px; min-width: 0; display: none; }
+        #voz-play { display: none; background: var(--cor-painel); border: 2px solid var(--ciano); color: var(--ciano); font-size: 11px; width: 36px; height: 32px; cursor: pointer; flex-shrink: 0; }
         #btn-descartar-voz { background: none; border: 2px solid var(--vermelho); color: var(--vermelho); font-family: var(--fonte); font-size: 9px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0; }
 
         /* Balão de áudio no chat */
@@ -144,11 +167,8 @@
     <div class="stars stars--denso stars--sobe"></div>
 
     <div id="app-wrapper">
-        <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
         <div id="status-conexao" class="status-selo"></div>
         <div id="aviso-topo"></div>
-        <div id="status-conexao" class="pilula-status"></div>
-        <div id="status-conexao" class="pilula-status" style="display:none"></div>
 
         <div id="login-screen">
             <img src="assets/images/icon-512.png" class="login-logo" alt="Logo">
@@ -197,13 +217,14 @@
         </div>
 
         <div id="chat-modal">
-            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
+            <div id="chat-topo">
+                <span id="chat-titulo">💬 CHAT</span>
                 <button id="chat-fechar">X</button>
             </div>
             <div id="chat-messages"></div>
             <div id="voz-painel">
                 <span id="voz-status"></span>
-                <audio id="voz-preview" controls></audio>
+                <button id="voz-play" title="Ouvir">▶</button>
                 <button id="btn-descartar-voz" title="Descartar">✕</button>
             </div>
             <div id="chat-input-container">
@@ -222,6 +243,7 @@
                 <div class="modal-tabs">
                     <button class="tab-btn active" data-aba="tab-stats">INDIVIDUAL</button>
                     <button class="tab-btn" data-aba="tab-leaderboard">GERAL</button>
+                    <button class="tab-btn" data-aba="tab-som">SOM</button>
                 </div>
                 <div id="tab-stats" class="tab-content" style="display:block">
                     <table class="leaderboard-table">
@@ -235,6 +257,21 @@
                         <tbody id="leaderboard-body"></tbody>
                     </table>
                 </div>
+                <div id="tab-som" class="tab-content" style="display:none">
+                    <label class="linha-som">
+                        <span>MÚSICA</span>
+                        <input type="range" id="vol-musica" min="0" max="100" step="5">
+                        <b id="vol-musica-num">50%</b>
+                    </label>
+                    <label class="linha-som">
+                        <span>EFEITOS</span>
+                        <input type="range" id="vol-efeitos" min="0" max="100" step="5">
+                        <b id="vol-efeitos-num">80%</b>
+                    </label>
+                    <button id="btn-mudo" class="btn-som-mudo">🔊 SOM LIGADO</button>
+                    <p class="dica-som">Vale para todos os jogos.</p>
+                </div>
+
                 <button id="btn-notificacoes">🔕 ATIVAR NOTIFICAÇÕES</button>
                 <div class="rodape-modal">
                     <button id="link-novidades">NOVIDADES</button>
