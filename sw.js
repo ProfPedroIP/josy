@@ -13,17 +13,20 @@
    nova. Sem trocar a versão, ela continua vendo o site antigo mesmo depois do
    deploy, porque tudo vem do cache.
 
+   ⚠️  A VERSAO aqui e a de src/js/versao.js precisam ser IGUAIS.
+       O menu avisa no console se estiverem diferentes.
+
    ESTRATÉGIAS
      Páginas HTML ....... rede primeiro, cache como reserva
                           (online ela sempre vê a versão mais nova)
      CSS / JS / imagens . cache primeiro
-     Áudios ............. cache primeiro, baixados sob demanda
-                          (são ~11 MB; baixar tudo na instalação gastaria o
-                           plano de dados dela sem necessidade)
+     Áudios ............. baixados JUNTO com o resto, na instalação
+                          (com os arquivos em AAC o pacote ficou pequeno;
+                           antes, em WAV/MP3, eram ~11 MB e valia adiar)
      Firebase / Google .. nunca passa pelo cache
    ============================================================================= */
 
-const VERSAO = 'v1';
+const VERSAO = '5.1.0';
 
 const CACHE_APP = `josy-app-${VERSAO}`;
 const CACHE_MIDIA = `josy-midia-${VERSAO}`;
@@ -41,6 +44,9 @@ const ARQUIVOS_APP = [
   './manifest.json',
   './src/css/arcade-theme.css',
   './src/js/utils.js',
+  './src/js/versao.js',
+  './src/js/notificacoes.js',
+  './src/js/audio-chat.js',
   './src/js/offline.js',
   './src/js/firebase-config.js',
   './src/js/games/menu.js',
@@ -53,20 +59,20 @@ const ARQUIVOS_APP = [
   './assets/images/guerra_estelar_photo.png',
 ];
 
-/* Os áudios: pesados, baixados só quando ela tocar em "BAIXAR OFFLINE". */
+/* Todos os áudios. Agora entram na instalação, junto com o resto. */
 const ARQUIVOS_MIDIA = [
-  './assets/sounds/track.wav',
-  './assets/sounds/click.wav',
-  './assets/sounds/win.wav',
-  './assets/sounds/lose.wav',
-  './assets/sounds/laser.wav',
-  './assets/sounds/explosao.wav',
-  './assets/sounds/guerra_estelar.mp3',
-  './assets/sounds/campo_minado.mp3',
-  './assets/sounds/batalha_estelar.mp3',
-  './assets/sounds/love_bird.mp3',
-  './assets/sounds/pulo.wav',
-  './assets/sounds/ponto.wav',
+  './assets/sounds/track.aac',       // menu
+  './assets/sounds/cool.aac',        // Busca Estelar + Minado
+  './assets/sounds/excited.aac',     // Guardião (os dois modos)
+  './assets/sounds/happy.aac',       // Love Bird
+  './assets/sounds/click.aac',
+  './assets/sounds/win.aac',
+  './assets/sounds/lose.aac',
+  './assets/sounds/laser.aac',
+  './assets/sounds/explosion.aac',
+  './assets/sounds/flap.wav',        // Love Bird: pulo
+  './assets/sounds/score.wav',       // Love Bird: ponto
+  './assets/sounds/hit.wav',         // Love Bird: batida no cano
 ];
 
 /* Domínios que nunca podem ser servidos do cache: precisam falar com o
@@ -84,23 +90,29 @@ const DOMINIOS_AO_VIVO = [
 const DOMINIOS_EXTERNOS = ['gstatic.com', 'fonts.googleapis.com'];
 
 /* -----------------------------------------------------------------------------
-   INSTALAÇÃO
+   INSTALAÇÃO — baixa o app inteiro, áudios inclusive
    -----------------------------------------------------------------------------
    cache.addAll() é tudo-ou-nada: se um único arquivo der 404, a instalação
-   inteira falha e o app fica sem offline. Como love_bird.mp3, pulo.wav e
-   ponto.wav podem ainda não existir no repositório, cacheamos um por um e
-   toleramos as faltas.
+   inteira falha e o app fica sem offline. Por isso cacheamos um a um com
+   allSettled: um arquivo faltando não derruba o resto.
 ----------------------------------------------------------------------------- */
+
+async function encher(nomeCache, lista, rotulo) {
+  const cache = await caches.open(nomeCache);
+  const resultados = await Promise.allSettled(
+    lista.map((url) => cache.add(new Request(url, { cache: 'reload' })))
+  );
+  const falharam = lista.filter((_, i) => resultados[i].status === 'rejected');
+  if (falharam.length) console.warn(`[SW] ${rotulo}: não baixou`, falharam);
+  return lista.length - falharam.length;
+}
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
     (async () => {
-      const cache = await caches.open(CACHE_APP);
-      const resultados = await Promise.allSettled(
-        ARQUIVOS_APP.map((url) => cache.add(new Request(url, { cache: 'reload' })))
-      );
-      const falhas = resultados.filter((r) => r.status === 'rejected').length;
-      if (falhas) console.warn(`[SW] ${falhas} arquivo(s) do app não puderam ser cacheados.`);
+      const app = await encher(CACHE_APP, ARQUIVOS_APP, 'app');
+      const midia = await encher(CACHE_MIDIA, ARQUIVOS_MIDIA, 'áudio');
+      console.log(`[SW ${VERSAO}] instalado: ${app}/${ARQUIVOS_APP.length} do app, ${midia}/${ARQUIVOS_MIDIA.length} áudios.`);
     })()
   );
 });
@@ -218,32 +230,95 @@ self.addEventListener('message', (evento) => {
     return;
   }
 
-  if (dados.tipo === 'BAIXAR_MIDIA') {
+  if (dados.tipo === 'VERSAO') {
+    evento.ports?.[0]?.postMessage({ tipo: 'VERSAO', versao: VERSAO });
+    return;
+  }
+
+  // Rede de segurança: se a instalação pegou o app mas perdeu algum áudio
+  // (rede oscilando), a página pode pedir para completar.
+  if (dados.tipo === 'COMPLETAR_MIDIA') {
     const porta = evento.ports?.[0];
-    evento.waitUntil(baixarMidia(porta));
+    evento.waitUntil(completarMidia(porta));
   }
 });
 
-async function baixarMidia(porta) {
+async function completarMidia(porta) {
   const cache = await caches.open(CACHE_MIDIA);
   const total = ARQUIVOS_MIDIA.length;
-  let feitos = 0;
   let guardados = 0;
 
   for (const url of ARQUIVOS_MIDIA) {
     try {
-      const jaTem = await cache.match(url);
-      if (jaTem) guardados++;
+      if (await cache.match(url)) guardados++;
       else {
         await cache.add(new Request(url, { cache: 'reload' }));
         guardados++;
       }
     } catch {
-      // arquivo ausente no repositório: segue em frente
+      /* arquivo ausente: segue em frente */
     }
-    feitos++;
-    porta?.postMessage({ tipo: 'PROGRESSO', feitos, total });
   }
 
-  porta?.postMessage({ tipo: 'CONCLUIDO', feitos: guardados, total });
+  porta?.postMessage({ tipo: 'CONCLUIDO', guardados, total });
 }
+
+/* -----------------------------------------------------------------------------
+   NOTIFICAÇÕES PUSH
+   -----------------------------------------------------------------------------
+   A Cloud Function envia mensagens SÓ com o bloco `data`, sem `notification`.
+   Isso faz o FCM entregar o pacote cru aqui em vez de desenhar a notificação
+   sozinho — então somos nós que definimos texto, ícone e o que acontece ao
+   tocar. De quebra, não precisamos carregar o SDK de messaging dentro do
+   Service Worker: um arquivo a menos para baixar e nada que quebre offline.
+----------------------------------------------------------------------------- */
+
+self.addEventListener('push', (evento) => {
+  let bruto = {};
+  try {
+    bruto = evento.data?.json() ?? {};
+  } catch {
+    bruto = { corpo: evento.data?.text() || '' };
+  }
+
+  // O FCM embrulha nossos campos dentro de "data"; outras origens mandam direto
+  const dados = bruto.data || bruto;
+
+  const titulo = dados.titulo || 'JOSY ARCADE';
+  const opcoes = {
+    body: dados.corpo || '',
+    icon: './assets/images/icon-192.png',
+    badge: './assets/images/icon-192.png',
+    tag: dados.tag || 'josy-arcade',
+    renotify: true,
+    vibrate: [80, 40, 80],
+    data: { url: dados.url || './index.html' },
+  };
+
+  evento.waitUntil(self.registration.showNotification(titulo, opcoes));
+});
+
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close();
+  const destino = evento.notification.data?.url || './index.html';
+
+  evento.waitUntil(
+    (async () => {
+      const abas = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      });
+
+      // Se o arcade já está aberto em algum lugar, traz para a frente em vez
+      // de abrir uma segunda cópia
+      for (const aba of abas) {
+        if (aba.url.includes(self.location.origin)) {
+          await aba.focus();
+          aba.postMessage({ tipo: 'NOTIFICACAO_ABERTA', url: destino });
+          return;
+        }
+      }
+      await self.clients.openWindow(destino);
+    })()
+  );
+});
