@@ -51,7 +51,6 @@ const audio = new AudioManager({
     vitoria: som('win.aac'),    // marco atingido
   },
 });
-audio.ligarBotao('#btn-sound');
 
 /* -----------------------------------------------------------------------------
    CONSTANTES DE JOGO  (idênticas ao original — física por segundo)
@@ -352,7 +351,6 @@ function retomarComContagem() {
 
 function iniciarMissao() {
   overlay.style.display = 'none';
-  audio.ligar();
   novaPartida();
 }
 
