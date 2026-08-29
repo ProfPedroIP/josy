@@ -5,7 +5,7 @@
    "CONEXÃO ESTELAR" e a camada de estado offline.
    ============================================================================= */
 
-import { initViewportFix, AudioManager, som, limitar, $, $$ } from '../utils.js';
+import { initViewportFix, AudioManager, lerConfigAudio, salvarConfigAudio, onConfigAudio, som, limitar, $, $$ } from '../utils.js';
 import { VERSAO, novidadesAtuais, deveMostrarNovidades, marcarNovidadesVistas } from '../versao.js';
 import {
   notificacoesSuportadas,
@@ -103,9 +103,47 @@ if (deveMostrarNovidades()) abrirNovidades();
    ÁUDIO
 ----------------------------------------------------------------------------- */
 
-const audio = new AudioManager({ musica: som('track.aac'), volumeMusica: 1 });
-audio.ligarBotao('#btn-sound', { ligado: '🔊 SOM ON', desligado: '🔇 SOM OFF' });
+const audio = new AudioManager({ musica: som('track.aac') });
 audio.tocarMusica();
+
+/* -----------------------------------------------------------------------------
+   CONTROLE DE VOLUME
+   -----------------------------------------------------------------------------
+   Substitui os botõezinhos 🔊/🔇 que ficavam no canto de cada página. A
+   preferência vale para o arcade inteiro e o jogo aberto reage na hora.
+----------------------------------------------------------------------------- */
+
+function pintarSom(config) {
+  const m = $('#vol-musica');
+  const e = $('#vol-efeitos');
+  const btn = $('#btn-mudo');
+  if (!m || !e || !btn) return;
+
+  m.value = Math.round(config.musica * 100);
+  e.value = Math.round(config.efeitos * 100);
+  $('#vol-musica-num').textContent = `${m.value}%`;
+  $('#vol-efeitos-num').textContent = `${e.value}%`;
+
+  m.disabled = config.mudo;
+  e.disabled = config.mudo;
+  btn.textContent = config.mudo ? '🔇 SOM MUDO' : '🔊 SOM LIGADO';
+  btn.classList.toggle('mudo', config.mudo);
+}
+
+onConfigAudio(pintarSom);
+
+$('#vol-musica').addEventListener('input', (ev) => {
+  salvarConfigAudio({ musica: Number(ev.target.value) / 100 });
+  audio.tocarMusica();
+});
+$('#vol-efeitos').addEventListener('input', (ev) => {
+  salvarConfigAudio({ efeitos: Number(ev.target.value) / 100 });
+});
+$('#btn-mudo').addEventListener('click', () => {
+  const mudo = !lerConfigAudio().mudo;
+  salvarConfigAudio({ mudo });
+  if (!mudo) audio.tocarMusica();
+});
 
 /* -----------------------------------------------------------------------------
    ESTADO
@@ -146,61 +184,13 @@ function pintarStatus() {
 
 onConexao((estaOn) => {
   online = estaOn;
-  $('#btn-notificacoes').addEventListener('click', alternarNotificacoes);
-$('#btn-gravar').addEventListener('click', alternarGravacao);
-$('#btn-descartar-voz').addEventListener('click', () => Voz.descartar());
-
-if (!Voz.gravacaoSuportada()) $('#btn-gravar').style.display = 'none';
-Voz.onMudanca(pintarGravacao);
-
-// Tocar na notificação com o app aberto: abre o chat direto
-navigator.serviceWorker?.addEventListener?.('message', (evento) => {
-  if (evento.data?.tipo === 'NOTIFICACAO_ABERTA' && evento.data.url?.includes('chat')) {
-    alternarChat(true);
-  }
-});
-if (new URLSearchParams(window.location.search).get('abrir') === 'chat') {
-  onUsuario((u) => {
-    if (u) setTimeout(() => alternarChat(true), 400);
-  });
-}
-
-$('#btn-fechar-novidades').addEventListener('click', fecharNovidades);
-$('#link-novidades').addEventListener('click', abrirNovidades);
-
-$('#rodape-versao').textContent = `v${VERSAO}`;
-
-pintarStatus();
+  pintarStatus();
   if (estaOn) sincronizar();
 });
 
 onPendencias((n) => {
   naFila = n;
-  $('#btn-notificacoes').addEventListener('click', alternarNotificacoes);
-$('#btn-gravar').addEventListener('click', alternarGravacao);
-$('#btn-descartar-voz').addEventListener('click', () => Voz.descartar());
-
-if (!Voz.gravacaoSuportada()) $('#btn-gravar').style.display = 'none';
-Voz.onMudanca(pintarGravacao);
-
-// Tocar na notificação com o app aberto: abre o chat direto
-navigator.serviceWorker?.addEventListener?.('message', (evento) => {
-  if (evento.data?.tipo === 'NOTIFICACAO_ABERTA' && evento.data.url?.includes('chat')) {
-    alternarChat(true);
-  }
-});
-if (new URLSearchParams(window.location.search).get('abrir') === 'chat') {
-  onUsuario((u) => {
-    if (u) setTimeout(() => alternarChat(true), 400);
-  });
-}
-
-$('#btn-fechar-novidades').addEventListener('click', fecharNovidades);
-$('#link-novidades').addEventListener('click', abrirNovidades);
-
-$('#rodape-versao').textContent = `v${VERSAO}`;
-
-pintarStatus();
+  pintarStatus();
 });
 
 /* -----------------------------------------------------------------------------
@@ -584,11 +574,33 @@ onAvisoEmPrimeiroPlano(({ titulo, corpo }) => {
    GRAVAÇÃO DE RECADO DE VOZ
 ----------------------------------------------------------------------------- */
 
+let previaSom = null;
+
+/**
+ * Ouvir a prévia antes de mandar. Antes era um <audio controls>, que traz a
+ * barra de posição com a bolinha: num recado de 1 minuto a barra tem poucos
+ * pixels e é impossível acertar um ponto. Aqui é só tocar/parar.
+ */
+function tocarPrevia(url) {
+  if (previaSom && !previaSom.paused) {
+    previaSom.pause();
+    previaSom.currentTime = 0;
+    return;
+  }
+  if (!previaSom || previaSom.src !== url) {
+    previaSom = new Audio(url);
+    previaSom.addEventListener('ended', () => ($('#voz-play').textContent = '▶'));
+    previaSom.addEventListener('pause', () => ($('#voz-play').textContent = '▶'));
+    previaSom.addEventListener('play', () => ($('#voz-play').textContent = '❚❚'));
+  }
+  previaSom.play().catch(() => {});
+}
+
 function pintarGravacao({ estado, segundos, duracao, url }) {
   const painel = $('#voz-painel');
   const btnGravar = $('#btn-gravar');
   const status = $('#voz-status');
-  const player = $('#voz-preview');
+  const player = $('#voz-play');
   const entrada = $('#chat-input');
 
   btnGravar.classList.toggle('gravando', estado === 'gravando');
@@ -598,7 +610,9 @@ function pintarGravacao({ estado, segundos, duracao, url }) {
     btnGravar.textContent = '🎤';
     btnGravar.disabled = false;
     entrada.disabled = false;
-    player.removeAttribute('src');
+    player.style.display = 'none';
+    previaSom?.pause();
+    previaSom = null;
     return;
   }
 
@@ -619,7 +633,8 @@ function pintarGravacao({ estado, segundos, duracao, url }) {
     btnGravar.disabled = true;
     status.textContent = `OUÇA E MANDE — ${Voz.formatarTempo(duracao)}`;
     player.style.display = 'block';
-    if (url && player.src !== url) player.src = url;
+    player.textContent = '▶';
+    player.dataset.url = url || '';
     return;
   }
 
@@ -736,6 +751,10 @@ $('#chat-input').addEventListener('keypress', (e) => {
 $('#btn-notificacoes').addEventListener('click', alternarNotificacoes);
 $('#btn-gravar').addEventListener('click', alternarGravacao);
 $('#btn-descartar-voz').addEventListener('click', () => Voz.descartar());
+$('#voz-play').addEventListener('click', () => {
+  const url = $('#voz-play').dataset.url;
+  if (url) tocarPrevia(url);
+});
 
 if (!Voz.gravacaoSuportada()) $('#btn-gravar').style.display = 'none';
 Voz.onMudanca(pintarGravacao);
