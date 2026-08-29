@@ -68,8 +68,6 @@
         .pilula-status.offline  { color: var(--ouro); border-color: var(--ouro-borda); background: #1a1400; }
         .pilula-status.enviando { color: var(--ciano); border-color: var(--ciano-sombra); background: #001a1a; animation: blink 1.2s infinite; }
         .marca-pendente { color: var(--ouro); font-size: 6px; vertical-align: middle; }
-        .btn-offline { width: 100%; padding: 10px; font-family: var(--fonte); font-size: 7px; cursor: pointer; background: #001a1a; color: var(--ciano); border: 2px solid var(--ciano-sombra); box-sizing: border-box; }
-        .btn-offline:disabled { color: var(--verde); border-color: var(--verde-sombra); cursor: default; }
 
         /* Brincadeira "Conexão Estelar" */
         #pergunta-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
@@ -92,12 +90,7 @@
         .pilula-status.offline { color: var(--ouro); border-color: var(--ouro); background: #1a1400; }
         .pilula-status.enviando { color: var(--ciano); border-color: var(--ciano); background: #001a1a; animation: blink 1.2s infinite; }
         .marca-pendente { color: var(--ouro); font-size: 12px; vertical-align: middle; }
-        #placar-aviso { display: none; font-size: 6px; color: var(--ouro); text-align: center; margin-top: 8px; line-height: 1.5; }
-        .offline-texto { font-size: 7px; color: #aaa; line-height: 1.8; margin: 0 0 12px 0; }
-        .offline-texto b { color: var(--ciano); }
-        #btn-baixar-offline { width: 100%; padding: 12px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid var(--verde-sombra); background: var(--verde); color: #000; box-shadow: 4px 4px 0px var(--verde-sombra); box-sizing: border-box; }
-        #btn-baixar-offline:disabled { background: #222; color: var(--verde); border-color: #333; box-shadow: 4px 4px 0px #111; cursor: default; }
-        #btn-sincronizar { width: 100%; padding: 10px; margin-top: 10px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid var(--azul-sombra); background: var(--azul); color: #fff; box-shadow: 4px 4px 0px var(--azul-sombra); box-sizing: border-box; }
+
         .btn-cyan { color: var(--ciano); border-color: var(--ciano); box-shadow: 4px 4px 0px var(--ciano-sombra); }
 
         /* ----- Estado offline ----- */
@@ -108,8 +101,42 @@
         #update-bar { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 500; background: var(--magenta-sombra); border-top: 3px solid var(--magenta); padding: 10px; box-sizing: border-box; display: none; align-items: center; justify-content: space-between; gap: 10px; }
         #update-bar span { font-size: 7px; color: #fff; line-height: 1.4; }
         #btn-atualizar { background: var(--magenta); color: #fff; border: 2px solid #fff; font-family: var(--fonte); font-size: 7px; padding: 8px 10px; cursor: pointer; white-space: nowrap; }
-        #btn-baixar-offline { width: 100%; padding: 10px; font-family: var(--fonte); font-size: 7px; background: #222; color: var(--verde); border: 2px solid var(--verde-sombra); cursor: pointer; box-sizing: border-box; }
-        #btn-baixar-offline:disabled { opacity: 0.6; cursor: wait; }
+
+        /* ----- Tela de novidades ----- */
+        #novidades-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 600; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .novidades-box { background: var(--cor-painel); border: 4px solid var(--ciano); box-shadow: 0 0 25px var(--ciano); padding: 25px 20px; width: 100%; max-width: 380px; box-sizing: border-box; text-align: center; }
+        .novidades-versao { font-size: 8px; color: var(--ouro); margin-bottom: 10px; }
+        .novidades-titulo { font-size: 11px; color: var(--magenta); text-shadow: 2px 2px var(--magenta-sombra); margin: 0 0 18px 0; line-height: 1.5; }
+        .novidades-lista { list-style: none; padding: 0; margin: 0 0 20px 0; text-align: left; }
+        .novidades-lista li { font-size: 8px; color: #fff; line-height: 1.7; margin-bottom: 12px; padding-left: 16px; position: relative; }
+        .novidades-lista li::before { content: '>'; position: absolute; left: 0; color: var(--verde); }
+        .novidades-lista li.novidade-destaque { color: var(--magenta); }
+        .novidades-lista li.novidade-destaque::before { content: '*'; color: var(--magenta); }
+
+        /* ----- Rodapé do modal de perfil ----- */
+        .rodape-modal { display: flex; align-items: center; justify-content: space-between; border-top: 2px solid #333; padding-top: 12px; }
+        #link-novidades { background: none; border: none; color: var(--ciano); font-family: var(--fonte); font-size: 7px; cursor: pointer; text-decoration: underline; padding: 0; }
+        #rodape-versao { font-size: 7px; color: #666; }
+
+        /* ----- Notificações ----- */
+        #btn-notificacoes { width: 100%; padding: 12px; font-family: var(--fonte); font-size: 7px; background: #222; color: var(--ouro); border: 3px solid var(--ouro-borda); cursor: pointer; box-sizing: border-box; margin-bottom: 12px; }
+        #btn-notificacoes.ligado { color: var(--verde); border-color: var(--verde-sombra); }
+        #btn-notificacoes:disabled { opacity: 0.55; cursor: default; }
+        #aviso-topo { display: none; position: absolute; top: 0; left: 0; width: 100%; z-index: 550; background: var(--magenta-sombra); border-bottom: 2px solid var(--magenta); color: #fff; font-size: 7px; line-height: 1.5; padding: 10px 12px; box-sizing: border-box; animation: fadeIn 0.3s; }
+
+        /* ----- Recado de voz ----- */
+        #btn-gravar { background: var(--cor-painel); border: 2px solid var(--magenta); color: var(--magenta); font-size: 14px; width: 44px; cursor: pointer; flex-shrink: 0; }
+        #btn-gravar.gravando { background: var(--vermelho); color: #fff; border-color: #fff; animation: blink 1s infinite; }
+        #btn-gravar:disabled { opacity: 0.4; cursor: default; }
+        #voz-painel { display: none; align-items: center; gap: 10px; background: rgba(0,20,0,0.7); border: 2px solid var(--verde); padding: 10px; margin-bottom: 10px; }
+        #voz-status { font-size: 7px; color: var(--verde); white-space: nowrap; flex-shrink: 0; }
+        #voz-preview { flex: 1; height: 32px; min-width: 0; display: none; }
+        #btn-descartar-voz { background: none; border: 2px solid var(--vermelho); color: var(--vermelho); font-family: var(--fonte); font-size: 9px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0; }
+
+        /* Balão de áudio no chat */
+        .audio-msg { display: inline-flex; align-items: center; gap: 8px; padding: 2px 0; }
+        .audio-play { background: none; border: 2px solid currentColor; color: inherit; font-size: 9px; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; line-height: 1; }
+        .audio-tempo { font-size: 7px; opacity: 0.85; font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body class="tela-fixa">
@@ -119,6 +146,7 @@
     <div id="app-wrapper">
         <button id="btn-sound" class="btn-sound">🔇 SOM OFF</button>
         <div id="status-conexao" class="status-selo"></div>
+        <div id="aviso-topo"></div>
         <div id="status-conexao" class="pilula-status"></div>
         <div id="status-conexao" class="pilula-status" style="display:none"></div>
 
@@ -164,8 +192,7 @@
                     ERA O MEU PRÊMIO MÁXIMO.<br><br>
                     <span style="color:#ff0055;">❤️ PEDRO & JOSY ❤️</span>
                 </div>
-                <button id="btn-voltar-fliperama" class="btn-back-action btn-yellow">VOLTAR AO FLIPERAMA</button>
-                <button id="btn-voltar-pergunta" class="btn-back-action btn-cyan">VOLTAR À PERGUNTA</button>
+                <button id="btn-voltar-arcade" class="btn-back-action btn-cyan">VOLTAR PARA O JOSY ARCADE</button>
             </div>
         </div>
 
@@ -174,7 +201,13 @@
                 <button id="chat-fechar">X</button>
             </div>
             <div id="chat-messages"></div>
+            <div id="voz-painel">
+                <span id="voz-status"></span>
+                <audio id="voz-preview" controls></audio>
+                <button id="btn-descartar-voz" title="Descartar">✕</button>
+            </div>
             <div id="chat-input-container">
+                <button id="btn-gravar" title="Gravar recado">🎤</button>
                 <input type="text" id="chat-input" placeholder="DIGITE..." autocomplete="off">
                 <button id="chat-send">SEND</button>
             </div>
@@ -189,7 +222,6 @@
                 <div class="modal-tabs">
                     <button class="tab-btn active" data-aba="tab-stats">INDIVIDUAL</button>
                     <button class="tab-btn" data-aba="tab-leaderboard">GERAL</button>
-                    <button class="tab-btn" data-aba="tab-offline">OFFLINE</button>
                 </div>
                 <div id="tab-stats" class="tab-content" style="display:block">
                     <table class="leaderboard-table">
@@ -202,28 +234,27 @@
                         <thead><tr><th>JOGO</th><th>LÍDER</th><th style="text-align:right">MÁXIMO</th></tr></thead>
                         <tbody id="leaderboard-body"></tbody>
                     </table>
-                    <div id="placar-aviso"></div>
                 </div>
-                <div id="tab-offline" class="tab-content" style="display:none">
-                    <p class="offline-texto">
-                        O arcade j&aacute; funciona sem internet: os jogos ficam salvos no aparelho.<br><br>
-                        As pontua&ccedil;&otilde;es feitas offline entram numa fila e sobem sozinhas
-                        quando a conex&atilde;o voltar &mdash; e s&oacute; substituem o recorde se forem
-                        <b>maiores</b> que o j&aacute; salvo.<br><br>
-                        Os sons somam <b>11 MB</b> e n&atilde;o s&atilde;o baixados sozinhos.
-                        Toque abaixo para jogar offline com &aacute;udio.
-                    </p>
-                    <button id="btn-baixar-offline">⬇ BAIXAR SONS (11 MB)</button>
-                    <button id="btn-sincronizar">↻ SINCRONIZAR AGORA</button>
+                <button id="btn-notificacoes">🔕 ATIVAR NOTIFICAÇÕES</button>
+                <div class="rodape-modal">
+                    <button id="link-novidades">NOVIDADES</button>
+                    <span id="rodape-versao">v0.0.0</span>
                 </div>
-                <button id="btn-baixar-offline" class="btn-offline">⬇ BAIXAR PARA JOGAR OFFLINE</button>
-                <button id="btn-baixar-offline">BAIXAR SONS P/ OFFLINE</button>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button id="btn-fechar-stats" class="btn-modal-action btn-close-blue">VOLTAR</button>
                     <button id="btn-logout" class="btn-modal-action btn-logout-red">SAIR</button>
                 </div>
             </div>
         </div>
+        <div id="novidades-modal">
+            <div class="novidades-box">
+                <div id="novidades-versao" class="novidades-versao">VERSÃO</div>
+                <h2 id="novidades-titulo" class="novidades-titulo"></h2>
+                <ul id="novidades-lista" class="novidades-lista"></ul>
+                <button id="btn-fechar-novidades" class="btn-modal-action btn-close-blue">JOGAR</button>
+            </div>
+        </div>
+
         <div id="update-bar">
             <span>NOVA VERSÃO DISPONÍVEL</span>
             <button id="btn-atualizar">ATUALIZAR</button>
