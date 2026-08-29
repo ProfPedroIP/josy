@@ -11,17 +11,21 @@ on:
   pull_request:
   workflow_dispatch: # permite rodar na mão pela aba Actions
 
+permissions:
+  contents: read
+
 jobs:
   verificar:
     runs-on: ubuntu-latest
     steps:
       - name: Baixar o repositório
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Preparar o Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
+          package-manager-cache: false
 
       - name: Conferir se todo JS tem sintaxe válida
         run: |
