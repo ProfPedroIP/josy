@@ -26,7 +26,7 @@
      Firebase / Google .. nunca passa pelo cache
    ============================================================================= */
 
-const VERSAO = '5.1.2';
+const VERSAO = '5.3.0';
 
 const CACHE_APP = `josy-app-${VERSAO}`;
 const CACHE_MIDIA = `josy-midia-${VERSAO}`;
