@@ -39,19 +39,16 @@ const btnContinuar = $('#btn-continue');
 
 /* -----------------------------------------------------------------------------
    ÁUDIO
-   -----------------------------------------------------------------------------
-   ATENÇÃO: love_bird.mp3, pulo.wav e ponto.wav precisam existir em
-   assets/sounds/. Enquanto não existirem, o jogo roda normalmente e apenas
-   fica mudo nesses três pontos.
 ----------------------------------------------------------------------------- */
 
 const audio = new AudioManager({
-  musica: som('love_bird.mp3'),
+  musica: som('happy.aac'),
   efeitos: {
-    pulo: som('pulo.wav'),
-    ponto: som('ponto.wav'),
-    erro: som('lose.wav'),
-    vitoria: som('win.wav'),
+    pulo: som('flap.wav'),      // clicou para voar
+    ponto: som('score.wav'),    // passou por um cano
+    batida: som('hit.wav'),     // encostou no cano
+    derrota: som('lose.aac'),   // fim de jogo (cano ou chão)
+    vitoria: som('win.aac'),    // marco atingido
   },
 });
 audio.ligarBotao('#btn-sound');
@@ -146,6 +143,7 @@ function atualizar(delta) {
 
   /* --- canos: loop reverso, seguro para remoção durante a iteração --- */
   let morreu = false;
+  let bateuNoCano = false;
 
   atualizarEPodar(canos, (cano) => {
     cano.x -= velocidadeCano * delta;
@@ -161,7 +159,10 @@ function atualizar(delta) {
       jogador.x < cano.x + cano.width && jogador.x + jogador.width > cano.x;
     const foraDoVao =
       jogador.y < cano.topHeight || jogador.y + jogador.height > cano.bottomY;
-    if (sobrepoeX && foraDoVao) morreu = true;
+    if (sobrepoeX && foraDoVao) {
+      morreu = true;
+      bateuNoCano = true;
+    }
 
     return cano.x + cano.width < 0; // true = remove
   });
@@ -182,7 +183,7 @@ function atualizar(delta) {
     return;
   }
 
-  if (morreu) fimDeJogo();
+  if (morreu) fimDeJogo(bateuNoCano);
 }
 
 function marcarPonto() {
@@ -382,10 +383,23 @@ function novaPartida() {
   loop.iniciar();
 }
 
-function fimDeJogo() {
+/**
+ * @param {boolean} bateuNoCano true = colidiu com um cano; false = caiu no chão
+ *
+ * Batendo no cano tocam DOIS sons: a batida na hora e a derrota logo depois.
+ * O pequeno atraso evita que os dois saiam sobrepostos e virem um borrão.
+ */
+function fimDeJogo(bateuNoCano = false) {
   loop.parar();
   audio.pausarMusica();
-  audio.tocar('erro');
+
+  if (bateuNoCano) {
+    audio.tocar('batida');
+    setTimeout(() => audio.tocar('derrota'), 260);
+  } else {
+    audio.tocar('derrota');
+  }
+
   registrarRecorde(pontos, CHAVES.LOVE_BIRD);
   $('#final-score-text').innerText = 'Sua pontuação final: ' + pontos;
   gameOverDiv.style.display = 'block';
