@@ -23,13 +23,21 @@
      .0.1 -> ajuste menor
    ============================================================================= */
 
-export const VERSAO = '5.1.0';
+export const VERSAO = '5.1.1';
 
 /**
  * Histórico, do mais novo para o mais antigo.
  * `destaque: true` deixa o item em rosa, para o que mais importa da versão.
  */
 export const HISTORICO = [
+  {
+    versao: '5.1.1',
+    titulo: 'CORREÇÃO DAS NOTIFICAÇÕES',
+    itens: [
+      { texto: 'Tocar na notificação agora abre o jogo, e não uma página de erro', destaque: true },
+      { texto: 'Se o arcade já estiver aberto, ele é trazido para a frente' },
+    ],
+  },
   {
     versao: '5.1.0',
     titulo: 'VOZ, NOTIFICAÇÕES E SONS NOVOS',
