@@ -219,6 +219,7 @@ function mudarInterface(tela) {
     gatilhoChat.style.display = 'none';
     btnNao.style.position = 'absolute';
     btnNao.style.right = '10px';
+    btnNao.style.bottom = 'auto';
     btnNao.style.top = '';
     btnNao.style.left = '';
     return;
@@ -243,25 +244,51 @@ const btnNao = $('#btn-nao');
 const appWrapper = $('#app-wrapper');
 
 /**
- * Sorteia uma posição nova para o botão NÃO, SEMPRE dentro da área visível.
+ * Sorteia uma posição nova para o botão NÃO, SEMPRE dentro da tela.
  *
- * O bug antigo: a conta não tinha piso em zero. Quando a largura disponível
- * ficava menor que a do botão (celular estreito), o resultado dava negativo e
- * ele ia parar atrás da borda do gabinete, que tem overflow:hidden — some da
- * tela e a brincadeira perde a graça.
+ * O QUE ESTAVA ERRADO (duas vezes):
  *
- * A MARGEM também mantém o botão longe das quinas, e o topo é protegido para
- * ele não cobrir a foto de perfil e o botão de som.
+ * 1ª tentativa: a conta não tinha piso em zero, então em tela estreita dava
+ *    valor negativo e o botão ia para trás da borda do gabinete.
+ *
+ * 2ª tentativa (esta correção): eu passei a limitar pelo tamanho do
+ *    #app-wrapper (450x640), mas o botão é `position: absolute` e o ancestral
+ *    posicionado mais próximo dele é a `.btn-container` — que tem só 320x120.
+ *    Ou seja: eu sorteava um `top` de até 578px e aplicava dentro de uma caixa
+ *    de 120px de altura. Ele saía voando por baixo. 100% dos sorteios
+ *    escapavam.
+ *
+ * A SOLUÇÃO: ao fugir, o botão vira `position: fixed`. Isso o tira de
+ * QUALQUER caixa-mãe — as coordenadas passam a ser da tela inteira, e nenhum
+ * container pode mais limitá-lo. De quebra, ele agora corre pela tela toda em
+ * vez de ficar preso numa faixa de 120px, que é bem mais divertido.
+ *
+ * A MARGEM afasta das quinas e a ZONA_MORTA_TOPO impede que ele cubra a foto
+ * de perfil e o botão de som.
  */
 const MARGEM = 12;
-const ZONA_MORTA_TOPO = 85; // altura ocupada pelos controles do topo
+const ZONA_MORTA_TOPO = 90;
+
+/** Área realmente visível. No celular o teclado e a barra de endereço mudam isso. */
+function areaVisivel() {
+  const vv = window.visualViewport;
+  return {
+    largura: Math.round(vv?.width || window.innerWidth || 360),
+    altura: Math.round(vv?.height || window.innerHeight || 640),
+  };
+}
 
 function desviar() {
-  const larguraBotao = btnNao.offsetWidth || 120;
-  const alturaBotao = btnNao.offsetHeight || 48;
+  const larguraBotao = btnNao.offsetWidth || 130;
+  const alturaBotao = btnNao.offsetHeight || 50;
+  const { largura, altura } = areaVisivel();
 
-  const maxX = Math.max(MARGEM, appWrapper.clientWidth - larguraBotao - MARGEM);
-  const maxY = Math.max(ZONA_MORTA_TOPO, appWrapper.clientHeight - alturaBotao - MARGEM);
+  btnNao.style.position = 'fixed';
+  btnNao.style.right = 'auto';
+  btnNao.style.bottom = 'auto';
+
+  const maxX = Math.max(MARGEM, largura - larguraBotao - MARGEM);
+  const maxY = Math.max(ZONA_MORTA_TOPO, altura - alturaBotao - MARGEM);
 
   const x = limitar(MARGEM + Math.random() * (maxX - MARGEM), MARGEM, maxX);
   const y = limitar(
@@ -270,8 +297,6 @@ function desviar() {
     maxY
   );
 
-  btnNao.style.position = 'absolute';
-  btnNao.style.right = 'auto';
   btnNao.style.left = `${Math.round(x)}px`;
   btnNao.style.top = `${Math.round(y)}px`;
 }
