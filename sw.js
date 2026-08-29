@@ -26,7 +26,7 @@
      Firebase / Google .. nunca passa pelo cache
    ============================================================================= */
 
-const VERSAO = '5.1.0';
+const VERSAO = '5.1.1';
 
 const CACHE_APP = `josy-app-${VERSAO}`;
 const CACHE_MIDIA = `josy-midia-${VERSAO}`;
@@ -298,9 +298,25 @@ self.addEventListener('push', (evento) => {
   evento.waitUntil(self.registration.showNotification(titulo, opcoes));
 });
 
+/**
+ * Monta o endereço final a partir do ESCOPO do Service Worker.
+ *
+ * Por que isso importa: no GitHub Pages de projeto o app não fica na raiz do
+ * domínio, e sim em profpedroip.github.io/josy/. Um caminho com barra no
+ * começo ('/index.html') significa "raiz do domínio" e levaria a
+ * profpedroip.github.io/index.html — 404.
+ *
+ * Resolvendo contra o escopo, o mesmo código funciona na raiz, numa subpasta
+ * ou num domínio próprio, sem nada escrito na mão.
+ */
+function enderecoNoApp(caminho) {
+  const limpo = String(caminho || 'index.html').replace(/^\/+/, '');
+  return new URL(limpo, self.registration.scope).href;
+}
+
 self.addEventListener('notificationclick', (evento) => {
   evento.notification.close();
-  const destino = evento.notification.data?.url || './index.html';
+  const destino = enderecoNoApp(evento.notification.data?.url);
 
   evento.waitUntil(
     (async () => {
@@ -309,12 +325,15 @@ self.addEventListener('notificationclick', (evento) => {
         includeUncontrolled: true,
       });
 
-      // Se o arcade já está aberto em algum lugar, traz para a frente em vez
-      // de abrir uma segunda cópia
+      // Traz o arcade para a frente em vez de abrir uma segunda cópia.
+      // A comparação é pelo ESCOPO, não pelo domínio: profpedroip.github.io
+      // hospeda todos os seus repositórios, e comparar só o domínio focaria a
+      // aba de outro projeto seu.
       for (const aba of abas) {
-        if (aba.url.includes(self.location.origin)) {
+        if (aba.url.startsWith(self.registration.scope)) {
           await aba.focus();
           aba.postMessage({ tipo: 'NOTIFICACAO_ABERTA', url: destino });
+          if ('navigate' in aba) await aba.navigate(destino).catch(() => {});
           return;
         }
       }
