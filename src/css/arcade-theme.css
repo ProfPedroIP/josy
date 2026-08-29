@@ -1,29 +1,7 @@
-/* =============================================================================
-   src/css/arcade-theme.css
-   -----------------------------------------------------------------------------
-   Identidade visual do Josy Arcade: paleta neon, CRT/scanlines, campo de
-   estrelas, botões pixelados e modais.
-
-   Nada aqui muda a aparência do que já existia — é o mesmo CSS que estava
-   copiado nos 5 arquivos, com as diferenças entre páginas expressas como
-   variáveis e modificadores em vez de blocos repetidos.
-
-   Uso na página:
-     <link rel="stylesheet" href="src/css/arcade-theme.css">
-     <body class="tela-fixa">              (ou .tela-rolavel no Love Bird)
-       <div class="stars stars--sobe"></div>
-       <div id="app-wrapper"> ... </div>
-   ============================================================================= */
-
-/* -----------------------------------------------------------------------------
-   1. TOKENS
------------------------------------------------------------------------------ */
-
+/* Tokens: cores, fonte e medidas do gabinete. */
 :root {
-  /* Altura real da viewport no mobile — alimentado por initViewportFix() */
   --vh: 1vh;
 
-  /* Paleta neon */
   --cor-fundo: #050505;
   --cor-painel: #111;
 
@@ -49,28 +27,20 @@
   --ouro-sombra: #8b6508;
   --ouro-borda: #b89b00;
 
-  /* Tipografia */
   --fonte: 'Press Start 2P', cursive;
 
-  /* Campo de estrelas (sobrescrito por .stars--denso) */
   --campo-estrelas:
     10vw 20vh #fff, 30vw 10vh #fff, 50vw 40vh #fff, 70vw 20vh #fff, 90vw 50vh #fff,
     20vw 70vh #fff, 40vw 80vh #fff, 60vw 90vh #fff, 80vw 70vh #fff, 15vw 45vh #fff,
     45vw 15vh #fff, 75vw 35vh #fff, 55vw 65vh #fff, 95vw 85vh #fff;
   --estrelas-duracao: 100s;
 
-  /* Terceira faixa do CRT: azul por padrão, vermelha no menu */
   --scanline-c3: rgba(0, 0, 255, 0.06);
 
-  /* Moldura do app (varia por página) */
   --wrapper-altura: 96%;
   --wrapper-largura: 450px;
   --wrapper-padding-inferior: 20px;
 }
-
-/* -----------------------------------------------------------------------------
-   2. BASE
------------------------------------------------------------------------------ */
 
 body {
   background: var(--cor-fundo);
@@ -83,14 +53,13 @@ body {
   justify-content: center;
 }
 
-/* Páginas que ocupam exatamente a tela */
+/* .tela-fixa = ocupa a tela; .tela-rolavel = pode rolar (Love Bird). */
 body.tela-fixa {
   height: calc(var(--vh, 1vh) * 100);
   width: 100vw;
   overflow: hidden;
 }
 
-/* Página que pode rolar (Love Bird, por causa do canvas alto) */
 body.tela-rolavel {
   min-height: 100dvh;
   overflow-y: auto;
@@ -99,10 +68,7 @@ body.tela-rolavel {
   box-sizing: border-box;
 }
 
-/* -----------------------------------------------------------------------------
-   3. CAMPO DE ESTRELAS
------------------------------------------------------------------------------ */
-
+/* Campo de estrelas do fundo. */
 .stars {
   position: fixed;
   top: 0;
@@ -115,7 +81,6 @@ body.tela-rolavel {
   animation: estrelasSobem var(--estrelas-duracao) linear infinite;
 }
 
-/* Variação usada no menu e na Busca Estelar */
 .stars--denso {
   --campo-estrelas:
     15vw 10vh #fff, 35vw 25vh #fff, 60vw 15vh #fff, 85vw 30vh #fff, 10vw 50vh #fff,
@@ -132,10 +97,7 @@ body.tela-rolavel {
 @keyframes estrelasDescem   { from { transform: translateY(-100vh); } to { transform: translateY(100vh); } }
 @keyframes estrelasLaterais { from { transform: translateX(100vw); }  to { transform: translateX(-100vw); } }
 
-/* -----------------------------------------------------------------------------
-   4. EFEITO CRT (SCANLINES)
------------------------------------------------------------------------------ */
-
+/* Scanlines do efeito CRT. */
 body::before {
   content: ' ';
   display: block;
@@ -149,10 +111,7 @@ body::before {
   pointer-events: none;
 }
 
-/* -----------------------------------------------------------------------------
-   5. MOLDURA DO APLICATIVO
------------------------------------------------------------------------------ */
-
+/* Gabinete do arcade. */
 #app-wrapper {
   position: relative;
   width: 100%;
@@ -168,7 +127,6 @@ body::before {
   padding-bottom: calc(var(--wrapper-padding-inferior) + env(safe-area-inset-bottom));
 }
 
-/* Love Bird: conteúdo cresce, alinhado ao topo */
 body.tela-rolavel #app-wrapper {
   min-height: 90dvh;
   height: auto;
@@ -177,7 +135,6 @@ body.tela-rolavel #app-wrapper {
   padding: max(20px, env(safe-area-inset-top)) 20px 20px 20px;
 }
 
-/* Acima de 450px vira "gabinete" com borda */
 @media (min-width: 451px) {
   #app-wrapper {
     height: var(--wrapper-altura);
@@ -192,10 +149,6 @@ body.tela-rolavel #app-wrapper {
   }
 }
 
-/* -----------------------------------------------------------------------------
-   6. CONTROLES (som / pause / fechar)
------------------------------------------------------------------------------ */
-
 .top-controls {
   width: 100%;
   display: flex;
@@ -206,6 +159,7 @@ body.tela-rolavel #app-wrapper {
   z-index: 50;
 }
 
+/* Controles de topo. */
 .btn-ctrl,
 .btn-sound,
 .btn-close,
@@ -229,7 +183,6 @@ body.tela-rolavel #app-wrapper {
   box-shadow: 3px 3px 0px var(--vermelho-sombra);
 }
 
-/* Estado ligado — controlado por AudioManager.ligarBotao() */
 .btn-sound.on {
   color: var(--verde);
   border-color: var(--verde-sombra);
@@ -251,14 +204,10 @@ body.tela-rolavel #app-wrapper {
   font-size: 12px;
 }
 
-/* Posicionamento absoluto (menu, minado, busca estelar) */
 .btn-flutuante-esq { position: absolute; top: 30px; left: 20px; z-index: 150; }
 .btn-flutuante-dir { position: absolute; top: 30px; right: 20px; z-index: 150; }
 
-/* -----------------------------------------------------------------------------
-   7. CABEÇALHO E PLACAR
------------------------------------------------------------------------------ */
-
+/* Cabeçalho e placar. */
 .score-board {
   background: var(--cor-painel);
   border: 3px solid var(--ouro);
@@ -292,10 +241,7 @@ body.tela-rolavel #app-wrapper {
   color: var(--ciano);
 }
 
-/* -----------------------------------------------------------------------------
-   8. CANVAS
------------------------------------------------------------------------------ */
-
+/* Canvas dos jogos. */
 canvas {
   background: rgba(0, 0, 0, 0.9);
   border: 4px solid var(--azul);
@@ -304,25 +250,9 @@ canvas {
   touch-action: none;
 }
 
-/* -----------------------------------------------------------------------------
-   9. GRID 5x5 (Busca Estelar e Minado Amorous)
------------------------------------------------------------------------------ */
-
-/* -----------------------------------------------------------------------------
-   O grid é ELÁSTICO: a célula cresce até preencher o espaço disponível.
-
-   Antes era travada em 60px, então em tela grande o jogo ficava do mesmo
-   tamanho de um celular e sobrava metade da altura vazia (medi 53% de
-   desperdício num monitor 1920x1080).
-
-   O tamanho da célula é o MENOR entre três limites:
-     - o que cabe na largura   -> 5 células + 4 espaços + bordas
-     - o que cabe na altura    -> descontando cabeçalho, placar e margens
-     - o teto de 96px          -> para não virar um tabuleiro gigante
-
-   O piso de 44px garante que continue clicável com o dedo em tela pequena.
------------------------------------------------------------------------------ */
-
+/* Grade 5x5 elástica: a célula cresce até o menor entre o que cabe na
+   largura, o que cabe na altura e o teto de 88px. Antes era fixa em 60px e
+   sobrava metade da tela no computador. */
 .grid {
   --grade-espaco: clamp(5px, 1.6vw, 10px);
   --grade-borda: 12px;
@@ -369,29 +299,14 @@ canvas {
 .cell.miss           { background: var(--cor-painel); border-color: var(--vermelho); color: var(--vermelho); }
 .cell.number         { color: var(--ciano); }
 
-/* -----------------------------------------------------------------------------
-   TELA GRANDE
-   -----------------------------------------------------------------------------
-   Com o tabuleiro elástico, num monitor ele fica quase 4x maior que o texto
-   ao redor. Aqui o título e o placar crescem junto para o conjunto não ficar
-   desproporcional.
------------------------------------------------------------------------------ */
-
+/* Tela grande: título e placar acompanham o tabuleiro. */
 @media (min-width: 600px) and (min-height: 700px) {
   .game-header h1 { font-size: 17px; }
   .subtitle { font-size: 10px; }
   .score-board { font-size: 11px; padding: 13px 20px; }
 }
 
-/* -----------------------------------------------------------------------------
-   TELA DEITADA / MUITO BAIXA
-   -----------------------------------------------------------------------------
-   Celular na horizontal tem menos de 400px de altura. Antes desta regra o
-   conteúdo estourava e era cortado em cima E embaixo pelo overflow do
-   gabinete (medi -55px de cada lado, no código original). Aqui o cabeçalho
-   encolhe, o subtítulo sai e a célula pode ficar menor que o piso normal.
------------------------------------------------------------------------------ */
-
+/* Celular deitado: tudo encolhe, senão o tabuleiro é cortado. */
 @media (max-height: 480px) {
   .grid {
     --cel: clamp(26px, (var(--vh, 1vh) * 100 - 130px) / 5, 60px);
@@ -405,10 +320,7 @@ canvas {
   .score-board { padding: 5px 10px; font-size: 7px; margin-bottom: 6px; line-height: 1.3; }
 }
 
-/* -----------------------------------------------------------------------------
-   10. OVERLAYS E MODAIS
------------------------------------------------------------------------------ */
-
+/* Overlays e caixas de mensagem. */
 #overlay,
 .overlay {
   position: absolute;
@@ -437,7 +349,6 @@ canvas {
   text-align: center;
 }
 
-/* Caixa central de vitória / derrota / milestone */
 .message-box {
   position: absolute;
   top: 50%;
@@ -465,10 +376,7 @@ canvas {
 .msg-white      { color: #fff; font-size: 9px; line-height: 1.6; margin-bottom: 10px; }
 .msg-final      { color: var(--vermelho); font-size: 12px; margin: 15px 0; text-shadow: 2px 2px var(--vermelho-escuro); }
 
-/* -----------------------------------------------------------------------------
-   11. BOTÕES
------------------------------------------------------------------------------ */
-
+/* Botões. */
 .btn,
 .game-btn {
   padding: 15px;
@@ -502,7 +410,6 @@ canvas {
   font-size: 10px;
 }
 
-/* Botão do gabinete principal (menu) */
 .arcade-btn {
   padding: 20px;
   font-family: var(--fonte);
@@ -523,10 +430,7 @@ canvas {
 .arcade-btn:hover { background: var(--magenta); color: #fff; transform: scale(1.05); }
 .arcade-btn-novo  { border-color: var(--magenta); color: var(--magenta); }
 
-/* -----------------------------------------------------------------------------
-   12. ANIMAÇÕES COMPARTILHADAS
------------------------------------------------------------------------------ */
-
+/* Animações compartilhadas. */
 @keyframes blink  { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pulse  { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -537,7 +441,7 @@ canvas {
   100% { text-shadow: 3px 3px #ff0000, -3px -3px #0000ff; transform: translate(2px, -2px); }
 }
 
-/* Respeita quem prefere menos movimento */
+/* Respeita quem prefere menos movimento. */
 @media (prefers-reduced-motion: reduce) {
   .stars { animation: none; }
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }

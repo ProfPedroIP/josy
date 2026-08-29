@@ -1,31 +1,6 @@
-/* =============================================================================
-   functions/index.js
-   -----------------------------------------------------------------------------
-   O ÚNICO CÓDIGO DO JOSY ARCADE QUE RODA NUM SERVIDOR.
-
-   Por que ele precisa existir: para enviar um push é obrigatório assinar a
-   mensagem com uma credencial privada. Se essa credencial estivesse no
-   JavaScript do site, qualquer pessoa leria e passaria a mandar notificação em
-   nome de vocês. Aqui dentro ela nunca sai do Google.
-
-   Três gatilhos, todos disparados por escritas no Realtime Database:
-
-     1. mensagem nova no chat        -> avisa a outra pessoa
-     2. recorde batido               -> avisa a outra pessoa
-     3. vitória no Guardião          -> avisa a outra pessoa
-
-   As mensagens são enviadas SEM o bloco `notification`, só com `data`. Isso faz
-   o FCM entregar direto ao nosso Service Worker em vez de desenhar a
-   notificação sozinho — assim o sw.js controla o texto, o ícone e o que
-   acontece ao tocar.
-
-   ⚠️ O campo `url` é SEMPRE relativo, sem barra no começo.
-   Com barra ('/index.html') o navegador entende "raiz do domínio" e, num
-   GitHub Pages de projeto (profpedroip.github.io/josy/), cai em
-   profpedroip.github.io/index.html — que não existe. O Service Worker resolve
-   o caminho a partir do escopo dele, então relativo funciona em qualquer
-   hospedagem.
-   ============================================================================= */
+/* Cloud Functions: envia as notificações. Único código que roda em servidor.
+   A credencial de envio precisa ficar fora do navegador, por isso ele existe.
+   */
 
 const { onValueCreated, onValueWritten } = require('firebase-functions/v2/database');
 const { initializeApp } = require('firebase-admin/app');
@@ -34,9 +9,7 @@ const { getMessaging } = require('firebase-admin/messaging');
 
 initializeApp();
 
-/* A região precisa ser a mesma do seu Realtime Database.
-   O seu banco é josyarcade-default-rtdb.firebaseio.com, que fica em us-central1.
-   Se um dia você criar o banco em outra região, troque aqui também. */
+// Precisa ser a mesma região do Realtime Database.
 const REGIAO = 'us-central1';
 
 const NOMES_BONITOS = {
@@ -47,35 +20,21 @@ const NOMES_BONITOS = {
   guardiao_amor: 'Guardião do Amor',
 };
 
-/* -----------------------------------------------------------------------------
-   ENVIO
------------------------------------------------------------------------------ */
-
-/** Lê os tokens de push de um usuário. */
 async function tokensDe(uid) {
   const snap = await getDatabase().ref(`usuarios/${uid}/push`).get();
   return Object.keys(snap.val() || {});
 }
 
-/** Nome curto de um usuário, para montar o texto da notificação. */
 async function nomeDe(uid) {
   const snap = await getDatabase().ref(`usuarios/${uid}/nome`).get();
   return snap.val() || 'ALGUÉM';
 }
 
-/** Todos os usuários cadastrados, menos o que causou o evento. */
 async function outrosUsuarios(uidAutor) {
   const snap = await getDatabase().ref('usuarios').get();
   return Object.keys(snap.val() || {}).filter((uid) => uid !== uidAutor);
 }
 
-/**
- * Envia para todos os aparelhos de um usuário e faxina os tokens mortos.
- *
- * Token morto acontece o tempo todo: ela desinstala o app, limpa os dados do
- * navegador, troca de celular. Sem a faxina a lista cresce para sempre e cada
- * envio fica mais lento e mais caro.
- */
 async function avisar(uid, { titulo, corpo, tag, url = 'index.html' }) {
   const tokens = await tokensDe(uid);
   if (tokens.length === 0) return { enviados: 0, removidos: 0 };
@@ -88,6 +47,7 @@ async function avisar(uid, { titulo, corpo, tag, url = 'index.html' }) {
     },
   });
 
+  // Faxina de token morto: some quando ela desinstala o app ou troca de aparelho.
   const mortos = [];
   resposta.responses.forEach((r, i) => {
     const codigo = r.error?.code || '';
@@ -111,15 +71,10 @@ async function avisar(uid, { titulo, corpo, tag, url = 'index.html' }) {
   return { enviados: resposta.successCount, removidos: mortos.length };
 }
 
-/** Manda o mesmo aviso para todo mundo, menos o autor. */
 async function avisarOsOutros(uidAutor, conteudo) {
   const destinos = await outrosUsuarios(uidAutor);
   await Promise.all(destinos.map((uid) => avisar(uid, conteudo)));
 }
-
-/* -----------------------------------------------------------------------------
-   1. MENSAGEM NOVA NO CHAT
------------------------------------------------------------------------------ */
 
 exports.notificarChat = onValueCreated(
   { ref: '/chat_global/{msgId}', region: REGIAO },
@@ -135,24 +90,17 @@ exports.notificarChat = onValueCreated(
     await avisarOsOutros(msg.uid, {
       titulo: msg.nome || 'JOSY ARCADE',
       corpo,
-      tag: 'chat', // mesma tag = as mensagens se agrupam em vez de empilhar
+      tag: 'chat',
+      // Caminho relativo, sem barra inicial — ver enderecoNoApp no sw.js.
       url: 'index.html?abrir=chat',
     });
   }
 );
 
-/* -----------------------------------------------------------------------------
-   2. RECORDE BATIDO
-   -----------------------------------------------------------------------------
-   Dispara em `estatisticas/<chave>`, que só é escrita pela transação de
-   recorde. Comparamos antes/depois para não notificar gravação repetida —
-   a sincronização offline pode reenviar o mesmo valor, e nesse caso
-   depois === antes e nada é enviado.
------------------------------------------------------------------------------ */
-
 exports.notificarRecorde = onValueWritten(
   { ref: '/usuarios/{uid}/estatisticas/{chave}', region: REGIAO },
   async (evento) => {
+    // Compara antes/depois: reenvio da fila offline não vira notificação repetida.
     const antes = evento.data.before.val() || 0;
     const depois = evento.data.after.val() || 0;
     if (typeof depois !== 'number' || depois <= antes) return;
@@ -169,14 +117,6 @@ exports.notificarRecorde = onValueWritten(
     });
   }
 );
-
-/* -----------------------------------------------------------------------------
-   3. VITÓRIA NO GUARDIÃO
-   -----------------------------------------------------------------------------
-   Cada vitória é uma chave própria (o formato idempotente que adotamos para
-   sobreviver à sincronização offline). Regravar o mesmo id não cria evento
-   novo, então não há risco de notificar duas vezes a mesma partida.
------------------------------------------------------------------------------ */
 
 exports.notificarVitoria = onValueCreated(
   { ref: '/usuarios/{uid}/vitorias/{chave}/{vitoriaId}', region: REGIAO },

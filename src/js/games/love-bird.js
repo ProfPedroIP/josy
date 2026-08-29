@@ -1,16 +1,4 @@
-/* =============================================================================
-   src/js/games/love-bird.js
-   -----------------------------------------------------------------------------
-   Flappy Bird com física escalada por segundo, milestones e cutscene final.
-
-   CORREÇÕES APLICADAS NESTA REFATORAÇÃO
-   1. Teletransporte no unpause: o GameLoop zera o relógio em resumir(), então
-      o primeiro quadro após milestone/countdown/troca de aba tem delta 0.
-   2. pipes.forEach + splice: substituído por atualizarEPodar (loop reverso).
-   3. `pipes = []` era executado DENTRO da iteração ao atingir 100 pontos.
-      Agora o pedido de cutscene é sinalizado e tratado depois do loop.
-   4. Áudio centralizado no AudioManager (sem listener de mute próprio).
-   ============================================================================= */
+/* Love Bird: física por segundo, marcos e cutscene aos 100 pontos. */
 
 import {
   initViewportFix,
@@ -24,10 +12,6 @@ import { registrarRecorde, CHAVES } from '../firebase-config.js';
 
 initViewportFix();
 
-/* -----------------------------------------------------------------------------
-   DOM
------------------------------------------------------------------------------ */
-
 const canvas = $('#gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = $('#score-display');
@@ -37,24 +21,16 @@ const milestoneScreen = $('#milestone-screen');
 const gameOverDiv = $('#game-over');
 const btnContinuar = $('#btn-continue');
 
-/* -----------------------------------------------------------------------------
-   ÁUDIO
------------------------------------------------------------------------------ */
-
 const audio = new AudioManager({
   musica: som('happy.aac'),
   efeitos: {
-    pulo: som('flap.wav'),      // clicou para voar
-    ponto: som('score.wav'),    // passou por um cano
-    batida: som('hit.wav'),     // encostou no cano
-    derrota: som('lose.aac'),   // fim de jogo (cano ou chão)
-    vitoria: som('win.aac'),    // marco atingido
+    pulo: som('flap.wav'),
+    ponto: som('score.wav'),
+    batida: som('hit.wav'),
+    derrota: som('lose.aac'),
+    vitoria: som('win.aac'),
   },
 });
-
-/* -----------------------------------------------------------------------------
-   CONSTANTES DE JOGO  (idênticas ao original — física por segundo)
------------------------------------------------------------------------------ */
 
 const GRAVIDADE = 1200;
 const IMPULSO_PULO = -400;
@@ -83,10 +59,6 @@ const CORACAO = [
   [0, 0, 0, 0, 1, 0, 0, 0, 0],
 ];
 
-/* -----------------------------------------------------------------------------
-   ESTADO
------------------------------------------------------------------------------ */
-
 const jogador = { x: 50, y: 300, width: 35, height: 35, velocidade: 0 };
 let canos = [];
 let pontos = 0;
@@ -96,13 +68,9 @@ let timerCano = 0;
 let emCutscene = false;
 let cutsceneJaAconteceu = false;
 let tempoCutscene = 0;
-let pedidoCutscene = false; // sinalizado dentro do loop, tratado depois
+let pedidoCutscene = false;
 let milestonePendente = null;
 let timerContagem = null;
-
-/* -----------------------------------------------------------------------------
-   LOOP
------------------------------------------------------------------------------ */
 
 const loop = new GameLoop((delta) => atualizar(delta), { maxDelta: 0.1 });
 
@@ -114,7 +82,6 @@ function atualizar(delta) {
     return;
   }
 
-  /* --- física do pássaro --- */
   jogador.velocidade += GRAVIDADE * delta;
   jogador.y += jogador.velocidade * delta;
   if (jogador.y < 0) {
@@ -124,7 +91,6 @@ function atualizar(delta) {
 
   desenharJogador();
 
-  /* --- spawn de canos --- */
   timerCano += delta;
   if (timerCano >= INTERVALO_CANO) {
     const alturaTopo = Math.floor(Math.random() * (canvas.height - VAO_CANO - 100)) + 50;
@@ -140,7 +106,6 @@ function atualizar(delta) {
     timerCano = 0;
   }
 
-  /* --- canos: loop reverso, seguro para remoção durante a iteração --- */
   let morreu = false;
   let bateuNoCano = false;
 
@@ -163,12 +128,12 @@ function atualizar(delta) {
       bateuNoCano = true;
     }
 
-    return cano.x + cano.width < 0; // true = remove
+    return cano.x + cano.width < 0;
   });
 
   if (jogador.y + jogador.height >= canvas.height) morreu = true;
 
-  /* --- efeitos colaterais tratados FORA da iteração --- */
+  // Efeitos que mexem na lista de canos ficam fora do laço de iteração.
   if (pedidoCutscene) {
     pedidoCutscene = false;
     iniciarCutscene();
@@ -198,10 +163,6 @@ function marcarPonto() {
     milestonePendente = pontos;
   }
 }
-
-/* -----------------------------------------------------------------------------
-   DESENHO
------------------------------------------------------------------------------ */
 
 function desenharJogador() {
   ctx.save();
@@ -241,10 +202,6 @@ function desenharCano(x, y, largura, altura, ehTopo) {
     ctx.strokeRect(x - larguraExtra / 2, y, largura + larguraExtra, alturaTampa);
   }
 }
-
-/* -----------------------------------------------------------------------------
-   CUTSCENE DOS 100 PONTOS
------------------------------------------------------------------------------ */
 
 function iniciarCutscene() {
   emCutscene = true;
@@ -295,10 +252,6 @@ function desenharCutscene(delta) {
   }
 }
 
-/* -----------------------------------------------------------------------------
-   MILESTONES E CONTAGEM REGRESSIVA
------------------------------------------------------------------------------ */
-
 function mostrarMilestone(marco) {
   loop.pausar();
   audio.pausarMusica();
@@ -315,11 +268,10 @@ function mostrarMilestone(marco) {
   milestoneScreen.style.display = 'block';
 }
 
+// Não reduz a velocidade dos canos: é isso que faz o "modo impossível".
 function retomarComContagem() {
   milestoneScreen.style.display = 'none';
 
-  // Reposiciona o pássaro e limpa a tela, mantendo a velocidade acumulada
-  // (é isso que faz o "modo impossível" depois dos 100 pontos).
   jogador.x = 50;
   jogador.y = 300;
   jogador.velocidade = 0;
@@ -341,13 +293,9 @@ function retomarComContagem() {
     timerContagem = null;
     countdownEl.style.display = 'none';
     audio.tocarMusica();
-    loop.resumir(); // <- reset do relógio: sem salto de tempo
+    loop.resumir();
   }, 800);
 }
-
-/* -----------------------------------------------------------------------------
-   CICLO DA PARTIDA
------------------------------------------------------------------------------ */
 
 function iniciarMissao() {
   overlay.style.display = 'none';
@@ -381,18 +329,13 @@ function novaPartida() {
   loop.iniciar();
 }
 
-/**
- * @param {boolean} bateuNoCano true = colidiu com um cano; false = caiu no chão
- *
- * Batendo no cano tocam DOIS sons: a batida na hora e a derrota logo depois.
- * O pequeno atraso evita que os dois saiam sobrepostos e virem um borrão.
- */
 function fimDeJogo(bateuNoCano = false) {
   loop.parar();
   audio.pausarMusica();
 
   if (bateuNoCano) {
     audio.tocar('batida');
+    // Atraso para a batida e a derrota não saírem sobrepostas.
     setTimeout(() => audio.tocar('derrota'), 260);
   } else {
     audio.tocar('derrota');
@@ -402,10 +345,6 @@ function fimDeJogo(bateuNoCano = false) {
   $('#final-score-text').innerText = 'Sua pontuação final: ' + pontos;
   gameOverDiv.style.display = 'block';
 }
-
-/* -----------------------------------------------------------------------------
-   ENTRADA
------------------------------------------------------------------------------ */
 
 function pular(evento) {
   if (!loop.rodando || loop.pausado || emCutscene) return;
@@ -418,13 +357,6 @@ function pular(evento) {
 canvas.addEventListener('mousedown', pular);
 canvas.addEventListener('touchstart', pular, { passive: false });
 window.addEventListener('keydown', pular);
-
-/* -----------------------------------------------------------------------------
-   LIGAÇÃO COM O HTML
-   -----------------------------------------------------------------------------
-   Com type="module" nada vira global, então os antigos onclick="" do HTML
-   foram removidos e substituídos por estes listeners.
------------------------------------------------------------------------------ */
 
 $('#btn-voar').addEventListener('click', iniciarMissao);
 $('#btn-continue').addEventListener('click', retomarComContagem);

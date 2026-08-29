@@ -1,30 +1,7 @@
-/* =============================================================================
-   sw.js — Service Worker do Josy Arcade
-   -----------------------------------------------------------------------------
-   Faz o arcade funcionar sem internet e ser instalável como aplicativo.
-
-   ANTES: este arquivo tinha só um listener de fetch vazio (o mínimo para o
-   Chrome considerar o site instalável) e nem era registrado por página nenhuma.
-   Nada ficava guardado: sem rede, tela branca.
-
-   ⚠️  IMPORTANTE — LEIA ANTES DE PUBLICAR QUALQUER MUDANÇA ⚠️
-   Sempre que você alterar um HTML, CSS ou JS do projeto, MUDE A LINHA `VERSAO`
-   abaixo (v1 -> v2 -> v3...). É isso que faz o celular da Josy baixar a versão
-   nova. Sem trocar a versão, ela continua vendo o site antigo mesmo depois do
-   deploy, porque tudo vem do cache.
-
-   ⚠️  A VERSAO aqui e a de src/js/versao.js precisam ser IGUAIS.
-       O menu avisa no console se estiverem diferentes.
-
-   ESTRATÉGIAS
-     Páginas HTML ....... rede primeiro, cache como reserva
-                          (online ela sempre vê a versão mais nova)
-     CSS / JS / imagens . cache primeiro
-     Áudios ............. baixados JUNTO com o resto, na instalação
-                          (com os arquivos em AAC o pacote ficou pequeno;
-                           antes, em WAV/MP3, eram ~11 MB e valia adiar)
-     Firebase / Google .. nunca passa pelo cache
-   ============================================================================= */
+/* Service Worker: cache offline e notificações.
+   Ao publicar qualquer mudança, incremente a VERSAO abaixo — é ela que
+   invalida o cache. Precisa ser igual à de src/js/versao.js.
+   */
 
 const VERSAO = '5.3.0';
 
@@ -33,7 +10,6 @@ const CACHE_MIDIA = `josy-midia-${VERSAO}`;
 const CACHE_EXTERNO = `josy-externo-${VERSAO}`;
 const CACHES_ATUAIS = [CACHE_APP, CACHE_MIDIA, CACHE_EXTERNO];
 
-/* O esqueleto do app: leve, baixado na instalação. */
 const ARQUIVOS_APP = [
   './',
   './index.html',
@@ -59,24 +35,21 @@ const ARQUIVOS_APP = [
   './assets/images/guerra_estelar_photo.png',
 ];
 
-/* Todos os áudios. Agora entram na instalação, junto com o resto. */
 const ARQUIVOS_MIDIA = [
-  './assets/sounds/track.aac',       // menu
-  './assets/sounds/cool.aac',        // Busca Estelar + Minado
-  './assets/sounds/excited.aac',     // Guardião (os dois modos)
-  './assets/sounds/happy.aac',       // Love Bird
+  './assets/sounds/track.aac',
+  './assets/sounds/cool.aac',
+  './assets/sounds/excited.aac',
+  './assets/sounds/happy.aac',
   './assets/sounds/click.aac',
   './assets/sounds/win.aac',
   './assets/sounds/lose.aac',
   './assets/sounds/laser.aac',
   './assets/sounds/explosion.aac',
-  './assets/sounds/flap.wav',        // Love Bird: pulo
-  './assets/sounds/score.wav',       // Love Bird: ponto
-  './assets/sounds/hit.wav',         // Love Bird: batida no cano
+  './assets/sounds/flap.wav',
+  './assets/sounds/score.wav',
+  './assets/sounds/hit.wav',
 ];
 
-/* Domínios que nunca podem ser servidos do cache: precisam falar com o
-   servidor de verdade para autenticar e sincronizar. */
 const DOMINIOS_AO_VIVO = [
   'firebaseio.com',
   'firebasedatabase.app',
@@ -86,17 +59,9 @@ const DOMINIOS_AO_VIVO = [
   'accounts.google.com',
 ];
 
-/* Recursos externos que valem cachear para o app abrir offline. */
 const DOMINIOS_EXTERNOS = ['gstatic.com', 'fonts.googleapis.com'];
 
-/* -----------------------------------------------------------------------------
-   INSTALAÇÃO — baixa o app inteiro, áudios inclusive
-   -----------------------------------------------------------------------------
-   cache.addAll() é tudo-ou-nada: se um único arquivo der 404, a instalação
-   inteira falha e o app fica sem offline. Por isso cacheamos um a um com
-   allSettled: um arquivo faltando não derruba o resto.
------------------------------------------------------------------------------ */
-
+// Um arquivo por vez: com addAll, um único 404 derruba a instalação inteira.
 async function encher(nomeCache, lista, rotulo) {
   const cache = await caches.open(nomeCache);
   const resultados = await Promise.allSettled(
@@ -117,10 +82,6 @@ self.addEventListener('install', (evento) => {
   );
 });
 
-/* -----------------------------------------------------------------------------
-   ATIVAÇÃO — limpa versões antigas
------------------------------------------------------------------------------ */
-
 self.addEventListener('activate', (evento) => {
   evento.waitUntil(
     (async () => {
@@ -134,10 +95,6 @@ self.addEventListener('activate', (evento) => {
     })()
   );
 });
-
-/* -----------------------------------------------------------------------------
-   INTERCEPTAÇÃO DE REQUISIÇÕES
------------------------------------------------------------------------------ */
 
 function ehAoVivo(url) {
   return DOMINIOS_AO_VIVO.some((d) => url.hostname.includes(d));
@@ -163,7 +120,8 @@ self.addEventListener('fetch', (evento) => {
   }
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
-  if (ehAoVivo(url)) return; // Firebase e login vão direto para a rede
+  // Firebase e login nunca passam pelo cache.
+  if (ehAoVivo(url)) return;
 
   if (request.mode === 'navigate') {
     evento.respondWith(redePrimeiro(request));
@@ -180,7 +138,7 @@ self.addEventListener('fetch', (evento) => {
   evento.respondWith(cachePrimeiro(request, ehMidia(url) ? CACHE_MIDIA : CACHE_APP));
 });
 
-/** Busca na rede; se falhar, entrega o que estiver no cache. */
+// Páginas: rede primeiro, cache como reserva.
 async function redePrimeiro(request) {
   const cache = await caches.open(CACHE_APP);
   try {
@@ -201,7 +159,6 @@ async function redePrimeiro(request) {
   }
 }
 
-/** Entrega do cache na hora; busca na rede se não tiver. */
 async function cachePrimeiro(request, nomeCache) {
   const cache = await caches.open(nomeCache);
   const guardado = await cache.match(request);
@@ -218,10 +175,6 @@ async function cachePrimeiro(request, nomeCache) {
   }
 }
 
-/* -----------------------------------------------------------------------------
-   MENSAGENS VINDAS DA PÁGINA
------------------------------------------------------------------------------ */
-
 self.addEventListener('message', (evento) => {
   const dados = evento.data || {};
 
@@ -235,8 +188,6 @@ self.addEventListener('message', (evento) => {
     return;
   }
 
-  // Rede de segurança: se a instalação pegou o app mas perdeu algum áudio
-  // (rede oscilando), a página pode pedir para completar.
   if (dados.tipo === 'COMPLETAR_MIDIA') {
     const porta = evento.ports?.[0];
     evento.waitUntil(completarMidia(porta));
@@ -255,24 +206,13 @@ async function completarMidia(porta) {
         await cache.add(new Request(url, { cache: 'reload' }));
         guardados++;
       }
-    } catch {
-      /* arquivo ausente: segue em frente */
-    }
+    } catch {}
   }
 
   porta?.postMessage({ tipo: 'CONCLUIDO', guardados, total });
 }
 
-/* -----------------------------------------------------------------------------
-   NOTIFICAÇÕES PUSH
-   -----------------------------------------------------------------------------
-   A Cloud Function envia mensagens SÓ com o bloco `data`, sem `notification`.
-   Isso faz o FCM entregar o pacote cru aqui em vez de desenhar a notificação
-   sozinho — então somos nós que definimos texto, ícone e o que acontece ao
-   tocar. De quebra, não precisamos carregar o SDK de messaging dentro do
-   Service Worker: um arquivo a menos para baixar e nada que quebre offline.
------------------------------------------------------------------------------ */
-
+// A function manda só "data": quem monta a notificação somos nós.
 self.addEventListener('push', (evento) => {
   let bruto = {};
   try {
@@ -281,7 +221,6 @@ self.addEventListener('push', (evento) => {
     bruto = { corpo: evento.data?.text() || '' };
   }
 
-  // O FCM embrulha nossos campos dentro de "data"; outras origens mandam direto
   const dados = bruto.data || bruto;
 
   const titulo = dados.titulo || 'JOSY ARCADE';
@@ -298,17 +237,8 @@ self.addEventListener('push', (evento) => {
   evento.waitUntil(self.registration.showNotification(titulo, opcoes));
 });
 
-/**
- * Monta o endereço final a partir do ESCOPO do Service Worker.
- *
- * Por que isso importa: no GitHub Pages de projeto o app não fica na raiz do
- * domínio, e sim em profpedroip.github.io/josy/. Um caminho com barra no
- * começo ('/index.html') significa "raiz do domínio" e levaria a
- * profpedroip.github.io/index.html — 404.
- *
- * Resolvendo contra o escopo, o mesmo código funciona na raiz, numa subpasta
- * ou num domínio próprio, sem nada escrito na mão.
- */
+// Resolve pelo escopo do Service Worker: o app não fica na raiz do domínio
+// (profpedroip.github.io/josy/), então caminho com barra inicial daria 404.
 function enderecoNoApp(caminho) {
   const limpo = String(caminho || 'index.html').replace(/^\/+/, '');
   return new URL(limpo, self.registration.scope).href;
@@ -325,11 +255,8 @@ self.addEventListener('notificationclick', (evento) => {
         includeUncontrolled: true,
       });
 
-      // Traz o arcade para a frente em vez de abrir uma segunda cópia.
-      // A comparação é pelo ESCOPO, não pelo domínio: profpedroip.github.io
-      // hospeda todos os seus repositórios, e comparar só o domínio focaria a
-      // aba de outro projeto seu.
       for (const aba of abas) {
+        // Compara pelo escopo: o domínio hospeda outros repositórios.
         if (aba.url.startsWith(self.registration.scope)) {
           await aba.focus();
           aba.postMessage({ tipo: 'NOTIFICACAO_ABERTA', url: destino });

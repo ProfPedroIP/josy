@@ -1,42 +1,10 @@
-/* =============================================================================
-   src/js/offline.js
-   -----------------------------------------------------------------------------
-   FUNCIONAMENTO OFFLINE DO JOSY ARCADE.
+/* Recordes locais e fila de envio, para jogar sem internet. */
 
-   Três responsabilidades:
-     1. Guardar os recordes localmente, sempre — mesmo sem login e sem internet.
-     2. Manter uma "caixa de saída" (outbox) das gravações que ainda não
-        chegaram no Firebase, e reenviar quando a conexão voltar.
-     3. Falar com o Service Worker (atualização de versão, download de mídia).
-
-   Este arquivo NÃO importa Firebase. Ele só guarda intenções; quem sabe enviar
-   é o firebase-config.js.
-
-   POR QUE UMA CAIXA DE SAÍDA PRÓPRIA?
-   O SDK do Realtime Database já tem fila offline, mas ela vive só na memória
-   da aba. Se a Josy jogar no metrô e fechar o app antes de reconectar, a fila
-   do SDK evapora. O localStorage sobrevive a fechar o app e reiniciar o
-   celular.
-
-   IDEMPOTÊNCIA (o ponto delicado)
-   Reenviar é seguro só se aplicar a mesma operação duas vezes der o mesmo
-   resultado que aplicar uma vez:
-     - RECORDE  -> max(atual, novo). Idempotente por natureza. ✔
-     - VITÓRIA  -> "total + 1" NÃO é idempotente. Por isso cada vitória vira um
-                   ID único gravado como uma chave própria; regravar o mesmo ID
-                   não muda nada. A contagem passa a ser o número de chaves. ✔
-   ============================================================================= */
-
+// A fila mora no localStorage porque a fila do SDK do Firebase morre
+// quando o app fecha.
 const CHAVE_RECORDES = 'josy-arcade:recordes';
 const CHAVE_OUTBOX = 'josy-arcade:outbox';
 const BUCKET_SEM_LOGIN = 'local';
-
-/* -----------------------------------------------------------------------------
-   1. ARMAZENAMENTO SEGURO
-   -----------------------------------------------------------------------------
-   localStorage lança exceção em modo privativo do Safari e quando a cota
-   estoura. Nenhuma falha de armazenamento pode derrubar o jogo.
------------------------------------------------------------------------------ */
 
 function ler(chave, padrao) {
   try {
@@ -56,19 +24,6 @@ function gravar(chave, valor) {
   }
 }
 
-/* -----------------------------------------------------------------------------
-   2. RECORDES LOCAIS
-   -----------------------------------------------------------------------------
-   Formato: { "<uid|local>": { "love_bird_max": 100, ... } }
-
-   Serve para dois fins: mostrar a pontuação na tela de estatísticas mesmo sem
-   internet, e não perder nada se o envio falhar.
------------------------------------------------------------------------------ */
-
-/**
- * Guarda o recorde local se for maior que o já guardado.
- * @returns {boolean} true se era um recorde novo
- */
 export function guardarRecordeLocal(uid, chave, pontos) {
   const bucket = uid || BUCKET_SEM_LOGIN;
   const tudo = ler(CHAVE_RECORDES, {});
@@ -80,16 +35,11 @@ export function guardarRecordeLocal(uid, chave, pontos) {
   return true;
 }
 
-/** @returns {Object<string, number>} recordes locais do usuário */
 export function recordesLocais(uid) {
   const tudo = ler(CHAVE_RECORDES, {});
   return { ...(tudo[BUCKET_SEM_LOGIN] || {}), ...(tudo[uid] || {}) };
 }
 
-/**
- * Move o que foi jogado antes do login para o balde do usuário.
- * Acontece quando a Josy abre um jogo direto pelo link, sem passar pelo menu.
- */
 export function migrarRecordesLocais(uid) {
   if (!uid) return;
   const tudo = ler(CHAVE_RECORDES, {});
@@ -104,13 +54,6 @@ export function migrarRecordesLocais(uid) {
   gravar(CHAVE_RECORDES, tudo);
 }
 
-/* -----------------------------------------------------------------------------
-   3. CAIXA DE SAÍDA
-   -----------------------------------------------------------------------------
-   Formato de cada item:
-     { id, uid, tipo: 'recorde'|'vitoria', chave, pontos?, quando, tentativas }
------------------------------------------------------------------------------ */
-
 const LIMITE_ITENS = 200;
 
 function novoId() {
@@ -122,19 +65,12 @@ export function lerOutbox() {
   return Array.isArray(itens) ? itens : [];
 }
 
-/** @returns {number} quantidade de gravações esperando envio */
 export function pendentes(uid) {
   const itens = lerOutbox();
   return uid ? itens.filter((i) => i.uid === uid).length : itens.length;
 }
 
-/**
- * Enfileira uma gravação.
- *
- * Recordes se sobrepõem: se já existe um recorde pendente do mesmo jogo,
- * fica só o maior — não faz sentido enviar 40, 80 e 120 do Love Bird.
- * Vitórias nunca se sobrepõem: cada uma tem seu ID e todas contam.
- */
+// Recordes se fundem (fica o maior). Vitórias nunca: cada uma tem id próprio.
 export function enfileirar({ uid, tipo, chave, pontos = null }) {
   const itens = lerOutbox();
 
@@ -164,14 +100,12 @@ export function enfileirar({ uid, tipo, chave, pontos = null }) {
   };
   itens.push(item);
 
-  // Guarda de segurança: descarta os mais antigos se algo der muito errado
   while (itens.length > LIMITE_ITENS) itens.shift();
 
   gravar(CHAVE_OUTBOX, itens);
   return item.id;
 }
 
-/** Remove um item confirmado pelo servidor. */
 export function remover(id) {
   gravar(
     CHAVE_OUTBOX,
@@ -179,7 +113,6 @@ export function remover(id) {
   );
 }
 
-/** Marca uma tentativa que falhou, para diagnóstico. */
 export function marcarFalha(id) {
   const itens = lerOutbox();
   const item = itens.find((i) => i.id === id);
@@ -189,10 +122,6 @@ export function marcarFalha(id) {
   gravar(CHAVE_OUTBOX, itens);
 }
 
-/**
- * Reatribui itens sem dono ao usuário que acabou de logar.
- * Cobre o caso de jogar offline antes de o Firebase resolver a sessão.
- */
 export function adotarItensOrfaos(uid) {
   if (!uid) return;
   const itens = lerOutbox();
@@ -206,20 +135,12 @@ export function adotarItensOrfaos(uid) {
   if (mudou) gravar(CHAVE_OUTBOX, itens);
 }
 
-/* -----------------------------------------------------------------------------
-   4. ESTADO DA CONEXÃO
------------------------------------------------------------------------------ */
-
 const ouvintesConexao = new Set();
 
 export function estaOnline() {
   return typeof navigator === 'undefined' ? true : navigator.onLine !== false;
 }
 
-/**
- * Avisa quando a conexão muda. Dispara na hora com o estado atual.
- * @returns {() => void} cancela a inscrição
- */
 export function onConexao(callback) {
   ouvintesConexao.add(callback);
   callback(estaOnline());
@@ -236,14 +157,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('offline', avisarConexao);
 }
 
-/* -----------------------------------------------------------------------------
-   5. UTILIDADE DE TEMPO LIMITE
-   -----------------------------------------------------------------------------
-   Offline, uma escrita no Realtime Database não rejeita: ela fica pendente
-   para sempre. Sem tempo limite, o await trava e a caixa de saída nunca é
-   processada.
------------------------------------------------------------------------------ */
-
+// Offline uma escrita no Firebase fica pendente para sempre; sem teto o await trava.
 export function comTempoLimite(promessa, ms = 8000) {
   let timer;
   const limite = new Promise((_, rejeitar) => {
@@ -252,16 +166,9 @@ export function comTempoLimite(promessa, ms = 8000) {
   return Promise.race([promessa, limite]).finally(() => clearTimeout(timer));
 }
 
-/* -----------------------------------------------------------------------------
-   6. SERVICE WORKER
------------------------------------------------------------------------------ */
-
 let registroSW = null;
 
-/**
- * Registra o Service Worker e avisa quando houver versão nova esperando.
- * @param {(aplicar: () => void) => void} [aoAtualizar]
- */
+// Avisa quando há versão nova esperando e recarrega uma única vez ao trocar.
 export function registrarServiceWorker(aoAtualizar) {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 
@@ -279,7 +186,6 @@ export function registrarServiceWorker(aoAtualizar) {
       });
     };
 
-    // Já havia uma versão nova esperando quando a página abriu
     if (registroSW.waiting && navigator.serviceWorker.controller) {
       oferecer(registroSW.waiting);
     }
@@ -288,14 +194,12 @@ export function registrarServiceWorker(aoAtualizar) {
       const novo = registroSW.installing;
       if (!novo) return;
       novo.addEventListener('statechange', () => {
-        // 'installed' + já existe controller = é atualização, não primeira visita
         if (novo.state === 'installed' && navigator.serviceWorker.controller) {
           oferecer(novo);
         }
       });
     });
 
-    // Quando o novo assume o controle, recarrega uma única vez
     let recarregando = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (recarregando) return;
@@ -305,20 +209,10 @@ export function registrarServiceWorker(aoAtualizar) {
   });
 }
 
-/**
- * Pergunta ao Service Worker qual versão ele está servindo.
- * Serve para detectar o erro de publicar sem trocar a VERSAO no sw.js.
- * @returns {Promise<string|null>}
- */
 export function versaoDoServiceWorker() {
   return perguntarAoSW({ tipo: 'VERSAO' }, 3000).then((r) => r?.versao ?? null);
 }
 
-/**
- * Rede de segurança: manda completar áudios que faltaram na instalação
- * (rede oscilando no momento em que o app foi instalado).
- * @returns {Promise<{guardados: number, total: number}|null>}
- */
 export function completarMidiaOffline() {
   return perguntarAoSW({ tipo: 'COMPLETAR_MIDIA' }, 120000);
 }

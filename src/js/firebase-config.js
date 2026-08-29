@@ -1,14 +1,4 @@
-/* =============================================================================
-   src/js/firebase-config.js
-   -----------------------------------------------------------------------------
-   CAMADA ÚNICA DE ACESSO AO FIREBASE DO JOSY ARCADE — com suporte offline.
-
-   Nenhuma página importa de gstatic.com diretamente.
-
-   Uso:
-     import { registrarRecorde, CHAVES } from './src/js/firebase-config.js';
-     await registrarRecorde(score, CHAVES.LOVE_BIRD);
-   ============================================================================= */
+/* Único ponto de acesso ao Firebase: sessão, placar e chat. */
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js';
 import {
@@ -44,7 +34,6 @@ import {
   comTempoLimite,
 } from './offline.js';
 
-// Reexportado para as páginas não precisarem conhecer offline.js
 export {
   recordesLocais,
   pendentes,
@@ -54,10 +43,6 @@ export {
   versaoDoServiceWorker,
   completarMidiaOffline,
 } from './offline.js';
-
-/* -----------------------------------------------------------------------------
-   1. CREDENCIAIS E INICIALIZAÇÃO
------------------------------------------------------------------------------ */
 
 const firebaseConfig = {
   apiKey: 'AIzaSyC1drW6iVlzZUKaP_BcEVdACEr_cHn23vI',
@@ -75,12 +60,7 @@ export const db = getDatabase(app);
 
 const provider = new GoogleAuthProvider();
 
-/** Quem enxerga o chat global. */
 export const USUARIOS_AUTORIZADOS = ['phsc1994@gmail.com', 'johcat.barth@gmail.com'];
-
-/* -----------------------------------------------------------------------------
-   2. CATÁLOGO DE JOGOS
------------------------------------------------------------------------------ */
 
 export const CHAVES = {
   BUSCA_ESTELAR: 'busca_estelar_max',
@@ -98,17 +78,8 @@ export const JOGOS = [
   { rotulo: '04. LOVE BIRD',       chave: CHAVES.LOVE_BIRD,         tipo: 'recorde',  sufixo: 'Pts' },
 ];
 
-/**
- * Lê o valor de um jogo a partir do nó completo do usuário.
- *
- * Recordes ficam em `estatisticas/<chave>` como número.
- *
- * Vitórias mudaram de forma nesta versão: cada vitória virou uma chave própria
- * em `vitorias/<chave>/<idUnico>`. Isso torna a gravação IDEMPOTENTE —
- * reenviar a mesma vitória depois de uma queda de rede não conta duas vezes.
- * O total soma o contador antigo (partidas anteriores a esta mudança, que
- * nunca mais cresce) com a quantidade de IDs novos.
- */
+// Vitória virou uma chave por partida, para reenviar sem contar duas vezes.
+// O total soma o contador antigo com a quantidade de chaves novas.
 function lerEstatistica(dadosUsuario, jogo) {
   if (jogo.tipo === 'vitorias') {
     const legado = dadosUsuario?.estatisticas?.[jogo.chave];
@@ -119,10 +90,6 @@ function lerEstatistica(dadosUsuario, jogo) {
   const valor = dadosUsuario?.estatisticas?.[jogo.chave];
   return typeof valor === 'number' ? valor : 0;
 }
-
-/* -----------------------------------------------------------------------------
-   3. SESSÃO / AUTENTICAÇÃO
------------------------------------------------------------------------------ */
 
 let usuario = null;
 let resolvePrimeiroEstado;
@@ -163,7 +130,6 @@ export function sair() {
   return signOut(auth);
 }
 
-/** "Pedro Henrique Silva" -> "PEDRO". Não quebra se displayName vier null. */
 export function nomeCurto(user) {
   const nome = user?.displayName || user?.email || 'JOGADOR';
   return String(nome).trim().split(/\s+/)[0].toUpperCase();
@@ -173,30 +139,9 @@ export function salvarNome(uid, nome) {
   return set(ref(db, `usuarios/${uid}/nome`), nome).catch(() => {});
 }
 
-/* -----------------------------------------------------------------------------
-   4. GRAVAÇÃO DE PLACAR (offline-first)
-   -----------------------------------------------------------------------------
-   Toda gravação segue a mesma ordem:
-
-     1. guarda no aparelho          <- instantâneo, nunca falha
-     2. enfileira na caixa de saída <- sobrevive a fechar o app
-     3. tenta enviar agora          <- se falhar, fica para a próxima conexão
-
-   Offline, os passos 1 e 2 acontecem e o 3 expira por tempo limite. Quando a
-   conexão voltar, sincronizar() roda sozinho.
-
-   As duas operações são IDEMPOTENTES, então reenviar é sempre seguro:
-     recorde -> runTransaction com Math.max(atual, novo)
-     vitória -> grava um ID único; o mesmo ID duas vezes continua sendo uma
------------------------------------------------------------------------------ */
-
 const TEMPO_LIMITE = 8000;
 
-/**
- * Transação atômica: quem compara é o servidor, não o celular.
- * Isso também resolve o caso de vocês dois gravarem quase ao mesmo tempo —
- * com get + set uma escrita podia sobrescrever a outra.
- */
+// Transação: quem compara é o servidor, não o aparelho.
 async function enviarRecorde(uid, chave, pontos) {
   const alvo = ref(db, `usuarios/${uid}/estatisticas/${chave}`);
   await comTempoLimite(
@@ -222,12 +167,7 @@ function enviar(item) {
   return Promise.resolve(false);
 }
 
-/**
- * Registra um recorde. Funciona offline.
- * @returns {Promise<{local: boolean, enviado: boolean}>}
- *   local   = superou o melhor guardado neste aparelho
- *   enviado = confirmado pelo Firebase
- */
+// Guarda no aparelho, enfileira e tenta enviar. Reenviar é sempre seguro.
 export async function registrarRecorde(pontos, chave) {
   const user = await aguardarUsuario();
   const uid = user?.uid || null;
@@ -254,12 +194,6 @@ export async function registrarRecorde(pontos, chave) {
   }
 }
 
-/**
- * Registra uma vitória. Funciona offline.
- * O id da fila é o mesmo id gravado no banco — é ele que impede vitória
- * dobrada quando uma retentativa acontece.
- * @returns {Promise<{enviado: boolean}>}
- */
 export async function registrarVitoria(chave) {
   const user = await aguardarUsuario();
   const uid = user?.uid || null;
@@ -284,13 +218,8 @@ export async function registrarVitoria(chave) {
   }
 }
 
-/* -----------------------------------------------------------------------------
-   5. SINCRONIZAÇÃO
------------------------------------------------------------------------------ */
-
 const ouvintesPendencias = new Set();
 
-/** Observa quantas gravações ainda não subiram. @returns {() => void} */
 export function onPendencias(callback) {
   ouvintesPendencias.add(callback);
   callback(lerOutbox().length);
@@ -304,10 +233,7 @@ function avisarPendencias() {
 
 let sincronizando = false;
 
-/**
- * Esvazia a caixa de saída. Seguro chamar várias vezes.
- * @returns {Promise<{enviados: number, restantes: number}>}
- */
+// Esvazia a fila. Roda sozinho ao logar e ao reconectar.
 export async function sincronizar() {
   if (sincronizando) return { enviados: 0, restantes: lerOutbox().length };
 
@@ -327,7 +253,7 @@ export async function sincronizar() {
         enviados++;
       } catch {
         marcarFalha(item.id);
-        break; // rede caiu de novo: para e tenta na próxima
+        break;
       }
     }
   } finally {
@@ -338,7 +264,6 @@ export async function sincronizar() {
   return { enviados, restantes: lerOutbox().length };
 }
 
-// Dispara sozinho ao logar e sempre que a conexão voltar
 onUsuario((user) => {
   if (!user) return;
   migrarRecordesLocais(user.uid);
@@ -350,15 +275,6 @@ onConexao((online) => {
   if (online) sincronizar();
 });
 
-/* -----------------------------------------------------------------------------
-   6. LEITURA DE PLACAR
------------------------------------------------------------------------------ */
-
-/**
- * Estatísticas em tempo real, combinadas com os recordes locais.
- * Pinta na hora com o que já existe no aparelho e depois atualiza com o
- * servidor — assim a tela nunca fica vazia offline.
- */
 export function observarEstatisticas(uid, callback) {
   const entregar = (dados) => {
     const locais = recordesLocais(uid);
@@ -383,10 +299,6 @@ export function observarEstatisticas(uid, callback) {
   );
 }
 
-/**
- * Placar global consolidado.
- * @returns {Promise<{linhas: Array, online: boolean}>}
- */
 export async function carregarPlacarGlobal() {
   let todos = {};
   let online = true;
@@ -416,10 +328,6 @@ export async function carregarPlacarGlobal() {
   return { linhas, online };
 }
 
-/* -----------------------------------------------------------------------------
-   7. CHAT GLOBAL
------------------------------------------------------------------------------ */
-
 export function observarChat(meuUid, callback) {
   return onValue(ref(db, 'chat_global'), (snap) => {
     const bruto = snap.val() || {};
@@ -446,14 +354,6 @@ export function enviarMensagem(uid, nome, texto) {
     .catch(() => false);
 }
 
-/**
- * Publica um recado de voz já enviado ao Storage.
- * O áudio em si mora no Storage; aqui vai só o endereço dele, para o chat
- * continuar leve — o `onValue` baixa a lista inteira a cada mensagem nova.
- *
- * @param {string} url      endereço devolvido pelo upload
- * @param {number} duracao  segundos
- */
 export function enviarAudio(uid, nome, url, duracao) {
   if (!url) return Promise.resolve(false);
   return push(ref(db, 'chat_global'), {
@@ -478,7 +378,5 @@ export async function marcarMensagensComoLidas(meuUid) {
       if (m.uid !== meuUid && m.lida === false) patch[`chat_global/${id}/lida`] = true;
     });
     if (Object.keys(patch).length) await update(ref(db), patch);
-  } catch {
-    /* offline: as mensagens serão marcadas na próxima abertura com rede */
-  }
+  } catch {}
 }

@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="src/css/arcade-theme.css">
 
     <style>
-        /* ----- Específico do Guardião Estelar ----- */
         :root { --wrapper-altura: 97%; }
 
         .top-controls { padding: 0 15px; margin-bottom: 5px; }
@@ -48,8 +47,6 @@
 
         .game-btn { font-size: 9px; margin-top: 10px; margin-bottom: 0; }
 
-        /* Celular deitado: sobra pouca altura, então o canvas encolhe e o
-           placar e os controles ficam mais compactos. */
         @media (max-height: 480px) {
             canvas { height: calc(var(--vh, 1vh) * 100 - 120px); }
             .top-controls { margin-bottom: 2px; }

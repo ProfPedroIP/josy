@@ -1,25 +1,9 @@
-/* =============================================================================
-   src/js/games/busca-estelar.js
-   -----------------------------------------------------------------------------
-   Busca Estelar — encontre os 3 corações escondidos na grade 5x5.
-
-   CORREÇÕES APLICADAS NESTA REFATORAÇÃO
-   1. Sorteio dos alvos com embaralhar() (Fisher-Yates) no lugar do laço
-      while + includes.
-   2. Áudio centralizado no AudioManager.
-   3. Grava em CHAVES.BUSCA_ESTELAR, a mesma chave que o menu lê.
-   4. A pontuação agora tem piso em 0 — antes podia ficar negativa depois de
-      muitos erros e aparecia "SCORE: -320 PTS" na tela de vitória.
-   ============================================================================= */
+/* Busca Estelar: encontre os 3 corações na grade 5x5. */
 
 import { initViewportFix, AudioManager, embaralhar, som, $ } from '../utils.js';
 import { registrarRecorde, CHAVES } from '../firebase-config.js';
 
 initViewportFix();
-
-/* -----------------------------------------------------------------------------
-   DOM E ÁUDIO
------------------------------------------------------------------------------ */
 
 const grade = $('#grid');
 const telaVitoria = $('#message');
@@ -34,26 +18,14 @@ const audio = new AudioManager({
   },
 });
 
-/* -----------------------------------------------------------------------------
-   CONSTANTES
------------------------------------------------------------------------------ */
-
 const TOTAL_CASAS = 25;
 const TOTAL_ALVOS = 3;
 const PONTUACAO_INICIAL = 1000;
 const PENALIDADE = 40;
 
-/* -----------------------------------------------------------------------------
-   ESTADO
------------------------------------------------------------------------------ */
-
 let alvos = [];
 let encontrados = 0;
 let pontuacao = PONTUACAO_INICIAL;
-
-/* -----------------------------------------------------------------------------
-   PARTIDA
------------------------------------------------------------------------------ */
 
 function novaPartida() {
   grade.innerHTML = '';
@@ -62,6 +34,7 @@ function novaPartida() {
   pontuacao = PONTUACAO_INICIAL;
   atualizarPlacar();
 
+  // Fisher-Yates: distribuição uniforme dos corações.
   alvos = embaralhar([...Array(TOTAL_CASAS).keys()]).slice(0, TOTAL_ALVOS);
 
   for (let i = 0; i < TOTAL_CASAS; i++) {
@@ -101,10 +74,6 @@ function revelar(casa, indice) {
   registrarRecorde(pontuacao, CHAVES.BUSCA_ESTELAR);
   telaVitoria.style.display = 'block';
 }
-
-/* -----------------------------------------------------------------------------
-   LIGAÇÃO COM O HTML
------------------------------------------------------------------------------ */
 
 $('#btn-iniciar').addEventListener('click', () => {
   overlay.style.display = 'none';

@@ -1,9 +1,4 @@
-/* =============================================================================
-   src/js/games/menu.js
-   -----------------------------------------------------------------------------
-   Hub do Josy Arcade: login, menu, chat global, placar, brincadeira da
-   "CONEXÃO ESTELAR" e a camada de estado offline.
-   ============================================================================= */
+/* Hub: login, menu, chat, placar, som e a brincadeira do "NÃO". */
 
 import { initViewportFix, AudioManager, lerConfigAudio, salvarConfigAudio, onConfigAudio, som, limitar, $, $$ } from '../utils.js';
 import { VERSAO, novidadesAtuais, deveMostrarNovidades, marcarNovidadesVistas } from '../versao.js';
@@ -41,10 +36,6 @@ import {
 
 initViewportFix();
 
-/* -----------------------------------------------------------------------------
-   SERVICE WORKER + AVISO DE VERSÃO NOVA
------------------------------------------------------------------------------ */
-
 registrarServiceWorker((aplicarAtualizacao) => {
   const barra = $('#update-bar');
   if (!barra) return;
@@ -52,7 +43,7 @@ registrarServiceWorker((aplicarAtualizacao) => {
   $('#btn-atualizar').addEventListener('click', aplicarAtualizacao, { once: true });
 });
 
-// Protege contra o erro clássico: publicar sem trocar a VERSAO do sw.js
+// Avisa no console se sw.js e versao.js estiverem em versões diferentes.
 versaoDoServiceWorker().then((doSW) => {
   if (doSW && doSW !== VERSAO) {
     console.warn(
@@ -61,13 +52,6 @@ versaoDoServiceWorker().then((doSW) => {
     );
   }
 });
-
-/* -----------------------------------------------------------------------------
-   TELA DE NOVIDADES
-   -----------------------------------------------------------------------------
-   Abre sozinha quando a versão guardada no aparelho é diferente da atual —
-   ou seja, logo depois de atualizar. Nunca na primeira instalação.
------------------------------------------------------------------------------ */
 
 function montarNovidades() {
   const dados = novidadesAtuais();
@@ -99,19 +83,8 @@ function fecharNovidades() {
 
 if (deveMostrarNovidades()) abrirNovidades();
 
-/* -----------------------------------------------------------------------------
-   ÁUDIO
------------------------------------------------------------------------------ */
-
 const audio = new AudioManager({ musica: som('track.aac') });
 audio.tocarMusica();
-
-/* -----------------------------------------------------------------------------
-   CONTROLE DE VOLUME
-   -----------------------------------------------------------------------------
-   Substitui os botõezinhos 🔊/🔇 que ficavam no canto de cada página. A
-   preferência vale para o arcade inteiro e o jogo aberto reage na hora.
------------------------------------------------------------------------------ */
 
 function pintarSom(config) {
   const m = $('#vol-musica');
@@ -145,18 +118,10 @@ $('#btn-mudo').addEventListener('click', () => {
   if (!mudo) audio.tocarMusica();
 });
 
-/* -----------------------------------------------------------------------------
-   ESTADO
------------------------------------------------------------------------------ */
-
 let meuUid = '';
 let meuNome = '';
 let chatAberto = false;
 let cancelarChat = null;
-
-/* -----------------------------------------------------------------------------
-   INDICADOR DE CONEXÃO E FILA
------------------------------------------------------------------------------ */
 
 let online = estaOnline();
 let naFila = 0;
@@ -193,10 +158,6 @@ onPendencias((n) => {
   pintarStatus();
 });
 
-/* -----------------------------------------------------------------------------
-   NAVEGAÇÃO ENTRE TELAS
------------------------------------------------------------------------------ */
-
 function mudarInterface(tela) {
   const fliperama = $('#game-content');
   const pergunta = $('#pergunta-content');
@@ -226,40 +187,12 @@ function mostrarPopup(abrir) {
   $('#glitch-popup').style.display = abrir ? 'flex' : 'none';
 }
 
-/* -----------------------------------------------------------------------------
-   BRINCADEIRA DO BOTÃO "NÃO"
------------------------------------------------------------------------------ */
-
 const btnNao = $('#btn-nao');
 const appWrapper = $('#app-wrapper');
 
-/**
- * Sorteia uma posição nova para o botão NÃO, SEMPRE dentro da tela.
- *
- * O QUE ESTAVA ERRADO (duas vezes):
- *
- * 1ª tentativa: a conta não tinha piso em zero, então em tela estreita dava
- *    valor negativo e o botão ia para trás da borda do gabinete.
- *
- * 2ª tentativa (esta correção): eu passei a limitar pelo tamanho do
- *    #app-wrapper (450x640), mas o botão é `position: absolute` e o ancestral
- *    posicionado mais próximo dele é a `.btn-container` — que tem só 320x120.
- *    Ou seja: eu sorteava um `top` de até 578px e aplicava dentro de uma caixa
- *    de 120px de altura. Ele saía voando por baixo. 100% dos sorteios
- *    escapavam.
- *
- * A SOLUÇÃO: ao fugir, o botão vira `position: fixed`. Isso o tira de
- * QUALQUER caixa-mãe — as coordenadas passam a ser da tela inteira, e nenhum
- * container pode mais limitá-lo. De quebra, ele agora corre pela tela toda em
- * vez de ficar preso numa faixa de 120px, que é bem mais divertido.
- *
- * A MARGEM afasta das quinas e a ZONA_MORTA_TOPO impede que ele cubra a foto
- * de perfil e o botão de som.
- */
 const MARGEM = 12;
 const ZONA_MORTA_TOPO = 90;
 
-/** Área realmente visível. No celular o teclado e a barra de endereço mudam isso. */
 function areaVisivel() {
   const vv = window.visualViewport;
   return {
@@ -268,6 +201,8 @@ function areaVisivel() {
   };
 }
 
+// position:fixed tira o botão da .btn-container (320x120) e solta na tela inteira.
+// Sem isso ele era sorteado para fora e o gabinete cortava.
 function desviar() {
   const larguraBotao = btnNao.offsetWidth || 130;
   const alturaBotao = btnNao.offsetHeight || 50;
@@ -291,7 +226,6 @@ function desviar() {
   btnNao.style.top = `${Math.round(y)}px`;
 }
 
-// Se a tela girar ou mudar de tamanho, traz o botão de volta para dentro
 window.addEventListener('resize', () => {
   if ($('#pergunta-content').style.display === 'flex' && btnNao.style.left) desviar();
 });
@@ -301,10 +235,6 @@ btnNao.addEventListener('touchstart', (e) => {
   e.preventDefault();
   desviar();
 });
-
-/* -----------------------------------------------------------------------------
-   AUTENTICAÇÃO
------------------------------------------------------------------------------ */
 
 function podeVerChat() {
   return USUARIOS_AUTORIZADOS.includes($('#profile-pic').dataset.email || '');
@@ -342,8 +272,6 @@ onUsuario((user) => {
   iniciarEstatisticas(user.uid);
   carregarPlacar();
 
-  // Tokens do FCM mudam sozinhos de vez em quando; revalidar a cada abertura
-  // mantém o banco em dia sem incomodar ninguém.
   revalidarToken(user.uid);
   pintarBotaoNotificacao();
 
@@ -353,17 +281,12 @@ onUsuario((user) => {
   }
 });
 
-/* -----------------------------------------------------------------------------
-   ESTATÍSTICAS E PLACAR
------------------------------------------------------------------------------ */
-
 function iniciarEstatisticas(uid) {
   const corpo = $('#stats-body');
   observarEstatisticas(uid, (linhas) => {
     corpo.innerHTML = '';
     linhas.forEach(({ jogo, valor, apenasLocal }) => {
       const tr = document.createElement('tr');
-      // O • marca pontuação feita offline que ainda não subiu
       const marca = apenasLocal ? ' <span class="marca-local" title="ainda não sincronizado">•</span>' : '';
       tr.innerHTML =
         `<td>${jogo.rotulo}</td>` +
@@ -398,10 +321,6 @@ async function carregarPlacar() {
   });
 }
 
-/* -----------------------------------------------------------------------------
-   CHAT GLOBAL
------------------------------------------------------------------------------ */
-
 function iniciarChat() {
   const container = $('#chat-messages');
 
@@ -416,9 +335,9 @@ function iniciarChat() {
       autor.className = 'msg-info';
       autor.textContent = m.nome || '';
 
-      // Corpo: texto puro ou player de áudio
       const corpo =
         m.tipo === 'audio' && m.audioUrl
+          // Texto entra como nó de texto, nunca innerHTML.
           ? montarPlayer(m.audioUrl, m.duracao)
           : document.createTextNode(m.texto || '');
 
@@ -456,11 +375,7 @@ function iniciarChat() {
   });
 }
 
-/**
- * Balão de áudio: botão de play e o tempo.
- * O <audio> fica com preload="none" de propósito — senão a lista inteira de
- * recados começaria a baixar sozinha toda vez que o chat abre.
- */
+// preload="none": senão abrir o chat baixaria todos os recados de uma vez.
 function montarPlayer(url, duracao) {
   const caixa = document.createElement('span');
   caixa.className = 'audio-msg';
@@ -478,7 +393,6 @@ function montarPlayer(url, duracao) {
 
   botao.addEventListener('click', () => {
     if (som.paused) {
-      // Pausa qualquer outro recado que esteja tocando
       document.querySelectorAll('.audio-play.tocando').forEach((b) => b.click());
       som.play().catch(() => {
         tempo.textContent = 'ERRO';
@@ -507,10 +421,6 @@ function montarPlayer(url, duracao) {
   caixa.append(botao, tempo);
   return caixa;
 }
-
-/* -----------------------------------------------------------------------------
-   NOTIFICAÇÕES
------------------------------------------------------------------------------ */
 
 async function pintarBotaoNotificacao() {
   const btn = $('#btn-notificacoes');
@@ -558,7 +468,6 @@ async function alternarNotificacoes() {
   await pintarBotaoNotificacao();
 }
 
-/** Tarja discreta quando chega mensagem com o app já aberto. */
 onAvisoEmPrimeiroPlano(({ titulo, corpo }) => {
   const tarja = $('#aviso-topo');
   if (!tarja) return;
@@ -570,17 +479,8 @@ onAvisoEmPrimeiroPlano(({ titulo, corpo }) => {
   }, 5000);
 });
 
-/* -----------------------------------------------------------------------------
-   GRAVAÇÃO DE RECADO DE VOZ
------------------------------------------------------------------------------ */
-
 let previaSom = null;
 
-/**
- * Ouvir a prévia antes de mandar. Antes era um <audio controls>, que traz a
- * barra de posição com a bolinha: num recado de 1 minuto a barra tem poucos
- * pixels e é impossível acertar um ponto. Aqui é só tocar/parar.
- */
 function tocarPrevia(url) {
   if (previaSom && !previaSom.paused) {
     previaSom.pause();
@@ -687,7 +587,6 @@ async function alternarChat(abrir) {
 }
 
 async function enviar() {
-  // Se existe um recado gravado esperando, SEND manda o áudio
   if (Voz.situacao().estado === 'pronto') {
     await enviarRecado();
     return;
@@ -698,10 +597,6 @@ async function enviar() {
   await enviarMensagem(meuUid, meuNome, texto);
 }
 
-/* -----------------------------------------------------------------------------
-   ABAS DO MODAL DE PERFIL
------------------------------------------------------------------------------ */
-
 function abrirAba(botao, idAba) {
   $$('.tab-content').forEach((c) => (c.style.display = 'none'));
   $$('.tab-btn').forEach((b) => b.classList.remove('active'));
@@ -709,10 +604,6 @@ function abrirAba(botao, idAba) {
   botao.classList.add('active');
   if (idAba === 'tab-leaderboard') carregarPlacar();
 }
-
-/* -----------------------------------------------------------------------------
-   LIGAÇÃO COM O HTML
------------------------------------------------------------------------------ */
 
 $('#btn-login-google').addEventListener('click', () => entrarComGoogle());
 
@@ -759,7 +650,6 @@ $('#voz-play').addEventListener('click', () => {
 if (!Voz.gravacaoSuportada()) $('#btn-gravar').style.display = 'none';
 Voz.onMudanca(pintarGravacao);
 
-// Tocar na notificação com o app aberto: abre o chat direto
 navigator.serviceWorker?.addEventListener?.('message', (evento) => {
   if (evento.data?.tipo === 'NOTIFICACAO_ABERTA' && evento.data.url?.includes('chat')) {
     alternarChat(true);

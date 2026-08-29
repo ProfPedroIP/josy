@@ -1,20 +1,4 @@
-/* =============================================================================
-   src/js/audio-chat.js
-   -----------------------------------------------------------------------------
-   RECADOS DE VOZ NO CHAT.
-
-   Fluxo, do jeito que você pediu:
-
-     tocar GRAVAR  ->  grava (mostra o tempo correndo)
-     tocar PARAR   ->  vira um player para ouvir antes de mandar
-     tocar SEND    ->  sobe para o Firebase Storage e publica no chat
-     tocar X       ->  descarta e volta ao começo
-
-   Teto de 60 segundos, com parada automática.
-
-   Este arquivo cuida do microfone e do upload. Quem desenha os botões é o
-   menu.js — aqui só existe a máquina de estados e os avisos de mudança.
-   ============================================================================= */
+/* Grava, deixa ouvir e envia o recado de voz do chat. */
 
 import {
   getStorage,
@@ -26,18 +10,11 @@ import {
 import { app } from './firebase-config.js';
 
 export const LIMITE_SEGUNDOS = 60;
-const TETO_BYTES = 3 * 1024 * 1024; // combina com a regra do storage.rules
+const TETO_BYTES = 3 * 1024 * 1024;
 
 const storage = getStorage(app);
 
-/* -----------------------------------------------------------------------------
-   FORMATO
-   -----------------------------------------------------------------------------
-   Cada navegador grava num formato diferente. Chrome e Android gravam
-   webm/opus; Safari grava mp4/AAC. Pegamos o primeiro que o aparelho aceitar e
-   guardamos qual foi, para tocar de volta corretamente.
------------------------------------------------------------------------------ */
-
+// Cada navegador grava num formato diferente; usamos o primeiro aceito.
 const FORMATOS = [
   'audio/webm;codecs=opus',
   'audio/webm',
@@ -57,7 +34,6 @@ function extensaoDe(mime) {
   return 'webm';
 }
 
-/** @returns {boolean} se este aparelho consegue gravar áudio */
 export function gravacaoSuportada() {
   return (
     typeof MediaRecorder !== 'undefined' &&
@@ -65,14 +41,6 @@ export function gravacaoSuportada() {
     !!melhorFormato()
   );
 }
-
-/* -----------------------------------------------------------------------------
-   MÁQUINA DE ESTADOS
-     'parado'    nada acontecendo
-     'gravando'  microfone ligado
-     'pronto'    tem um áudio gravado esperando ser ouvido/enviado
-     'enviando'  subindo para o Storage
------------------------------------------------------------------------------ */
 
 let estado = 'parado';
 let gravador = null;
@@ -87,11 +55,6 @@ let duracaoGravada = 0;
 
 const ouvintes = new Set();
 
-/**
- * Observa as mudanças de estado, para a interface se redesenhar.
- * @param {(info: {estado: string, segundos: number, duracao: number}) => void} cb
- * @returns {() => void}
- */
 export function onMudanca(cb) {
   ouvintes.add(cb);
   cb(situacao());
@@ -112,14 +75,6 @@ function avisar() {
   ouvintes.forEach((cb) => cb(s));
 }
 
-/* -----------------------------------------------------------------------------
-   GRAVAR
------------------------------------------------------------------------------ */
-
-/**
- * Liga o microfone. Pede permissão na primeira vez.
- * @returns {Promise<{ok: boolean, motivo?: string}>}
- */
 export async function gravar() {
   if (estado !== 'parado') return { ok: false, motivo: 'Já existe uma gravação em andamento.' };
   if (!gravacaoSuportada()) {
@@ -156,7 +111,6 @@ export async function gravar() {
   estado = 'gravando';
   inicio = Date.now();
 
-  // Cronômetro para a interface + parada automática no limite
   cronometro = setInterval(() => {
     const s = Math.floor((Date.now() - inicio) / 1000);
     if (s >= LIMITE_SEGUNDOS) parar();
@@ -167,21 +121,20 @@ export async function gravar() {
   return { ok: true };
 }
 
-/** Encerra a gravação e prepara o player de conferência. */
 export function parar() {
   if (estado !== 'gravando' || !gravador) return;
   clearInterval(cronometro);
   cronometro = null;
   duracaoGravada = Math.max(1, Math.round((Date.now() - inicio) / 1000));
-  gravador.stop(); // dispara onstop -> fecharGravacao
+  gravador.stop();
 }
 
+// Precisa soltar o microfone, senão a luz de gravando fica acesa no celular.
 function fecharGravacao() {
   const mime = gravador?.mimeType || melhorFormato() || 'audio/webm';
   blobGravado = new Blob(pedacos, { type: mime });
   pedacos = [];
 
-  // Solta o microfone: sem isso a luzinha de "gravando" fica acesa no celular
   trilha?.getTracks().forEach((t) => t.stop());
   trilha = null;
   gravador = null;
@@ -191,16 +144,13 @@ function fecharGravacao() {
   avisar();
 }
 
-/** Joga fora a gravação atual e volta ao início. */
 export function descartar() {
   if (estado === 'gravando') {
     clearInterval(cronometro);
     cronometro = null;
     try {
       gravador?.stop();
-    } catch {
-      /* já estava parado */
-    }
+    } catch {}
     trilha?.getTracks().forEach((t) => t.stop());
     trilha = null;
     gravador = null;
@@ -217,15 +167,6 @@ function descartarPreview() {
   duracaoGravada = 0;
 }
 
-/* -----------------------------------------------------------------------------
-   ENVIAR
------------------------------------------------------------------------------ */
-
-/**
- * Sobe o áudio gravado para o Firebase Storage.
- * @param {string} uid
- * @returns {Promise<{ok: boolean, url?: string, duracao?: number, motivo?: string}>}
- */
 export async function enviar(uid) {
   if (estado !== 'pronto' || !blobGravado) {
     return { ok: false, motivo: 'Não há nada gravado para enviar.' };
@@ -254,7 +195,7 @@ export async function enviar(uid) {
     return { ok: true, url, duracao };
   } catch (erro) {
     console.error('[audio-chat] falha no envio:', erro);
-    estado = 'pronto'; // deixa a gravação intacta para ela tentar de novo
+    estado = 'pronto';
     avisar();
     return {
       ok: false,
@@ -265,7 +206,6 @@ export async function enviar(uid) {
   }
 }
 
-/** Formata segundos como 0:07. */
 export function formatarTempo(segundos) {
   const s = Math.max(0, Math.floor(segundos));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;

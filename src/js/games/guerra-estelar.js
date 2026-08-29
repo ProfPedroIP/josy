@@ -1,25 +1,4 @@
-/* =============================================================================
-   src/js/games/guerra-estelar.js
-   -----------------------------------------------------------------------------
-   Guardião do Amor — space shooter top-down, modos Clássico e Recorde.
-
-   CORREÇÕES APLICADAS NESTA REFATORAÇÃO
-   1. bullets/enemies/items eram percorridos com .forEach() e removidos com
-      .splice(i, 1) na mesma passada — o que pula o elemento seguinte. Agora
-      todos usam loops reversos.
-   2. A colisão tiro x inimigo era um forEach ANINHADO com splice nos DOIS
-      arrays: o pior caso possível. Reescrita com loops reversos e `break`
-      quando o inimigo morre.
-   3. O loop contava frames++ sem delta time: em tela de 144 Hz o jogo rodava
-      2,4x mais rápido. Agora GameLoop com passoFixo 1/60 garante 60 passos de
-      lógica por segundo em qualquer tela — mecânica idêntica à original.
-   4. resetGame() chamava loop() sem cancelar o rAF anterior, podendo deixar
-      dois loops vivos. GameLoop.iniciar() cancela o anterior.
-   5. Áudio centralizado no AudioManager.
-
-   IMPORTANTE: como o passo é fixo em 1/60 s, todas as velocidades continuam
-   expressas em "pixels por quadro", exatamente como no código original.
-   ============================================================================= */
+/* Guardião do Amor: shooter top-down, modos Clássico e Recorde. */
 
 import {
   initViewportFix,
@@ -34,10 +13,6 @@ import {
 import { registrarVitoria, registrarRecorde, CHAVES } from '../firebase-config.js';
 
 initViewportFix();
-
-/* -----------------------------------------------------------------------------
-   DOM E ÁUDIO
------------------------------------------------------------------------------ */
 
 const canvas = $('#gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -57,10 +32,6 @@ const audio = new AudioManager({
   },
 });
 
-/* -----------------------------------------------------------------------------
-   CONSTANTES  (idênticas ao original)
------------------------------------------------------------------------------ */
-
 const META_CLASSICO = 1000;
 const SPAWN_INICIAL = 80;
 const SPAWN_MINIMO = 15;
@@ -74,10 +45,6 @@ const TIPOS_INIMIGO = [
   { limite: 1,    hp: 5, tipo: '☄️', pts: 50, velocidade: 1.5 },
 ];
 
-/* -----------------------------------------------------------------------------
-   ESTADO
------------------------------------------------------------------------------ */
-
 let modo = 'classic';
 let pontos = 0;
 let vidas = 1;
@@ -90,10 +57,7 @@ let tiros = [];
 let inimigos = [];
 let itens = [];
 
-/* -----------------------------------------------------------------------------
-   LOOP — passo fixo de 60 Hz
------------------------------------------------------------------------------ */
-
+// Passo fixo de 60 Hz: as velocidades seguem em pixels por quadro.
 const loop = new GameLoop(() => atualizar(), { passoFixo: 1 / 60, maxPassos: 5 });
 
 function atualizar() {
@@ -117,10 +81,6 @@ function desenharNave() {
   ctx.restore();
 }
 
-/* -----------------------------------------------------------------------------
-   TIROS
------------------------------------------------------------------------------ */
-
 function atualizarTiros() {
   if (quadros % CADENCIA[modo] === 0) {
     tiros.push({ x: nave.x + 18, y: nave.y, vx: 0, vy: -10 });
@@ -139,13 +99,9 @@ function atualizarTiros() {
     t.x += t.vx;
     t.y += t.vy;
     ctx.fillRect(t.x, t.y, 4, 12);
-    return t.y < 0 || t.x < 0 || t.x > canvas.width; // true = remove
+    return t.y < 0 || t.x < 0 || t.x > canvas.width;
   });
 }
-
-/* -----------------------------------------------------------------------------
-   ITENS (só no modo Recorde)
------------------------------------------------------------------------------ */
 
 function atualizarItens() {
   if (modo === 'infinite' && quadros % INTERVALO_ITENS === 0) {
@@ -178,15 +134,6 @@ function atualizarItens() {
   });
 }
 
-/* -----------------------------------------------------------------------------
-   INIMIGOS E COLISÕES
-   -----------------------------------------------------------------------------
-   O ponto mais delicado da refatoração. Percorremos inimigos de trás para
-   frente; dentro de cada inimigo, percorremos os tiros também de trás para
-   frente. Quando o inimigo morre, removemos e saímos do laço interno com
-   `break` — nenhum índice é pulado nas duas listas.
------------------------------------------------------------------------------ */
-
 function atualizarInimigos() {
   if (quadros % Math.floor(taxaSpawn) === 0) {
     const sorteio = Math.random();
@@ -203,12 +150,12 @@ function atualizarInimigos() {
 
   ctx.font = '40px Arial';
 
+  // Laços reversos nos dois arrays: remover não faz pular ninguém.
   for (let ei = inimigos.length - 1; ei >= 0; ei--) {
     const inimigo = inimigos[ei];
     inimigo.y += inimigo.velocidade;
     ctx.fillText(inimigo.tipo, inimigo.x + 20, inimigo.y + 20);
 
-    /* --- escapou pelo rodapé ou bateu na nave: custa uma vida --- */
     const bateuNaNave =
       inimigo.x < nave.x + 35 &&
       inimigo.x + 35 > nave.x &&
@@ -230,7 +177,6 @@ function atualizarInimigos() {
       continue;
     }
 
-    /* --- colisão com os tiros --- */
     for (let ti = tiros.length - 1; ti >= 0; ti--) {
       const t = tiros[ti];
       const acertou =
@@ -258,14 +204,10 @@ function atualizarInimigos() {
         fimDeJogo(true);
         return;
       }
-      break; // inimigo morreu, não faz sentido testar os outros tiros
+      break;
     }
   }
 }
-
-/* -----------------------------------------------------------------------------
-   CICLO DA PARTIDA
------------------------------------------------------------------------------ */
 
 function iniciarJogo(novoModo) {
   modo = novoModo;
@@ -324,10 +266,6 @@ function alternarPausa() {
   else audio.tocarMusica();
 }
 
-/* -----------------------------------------------------------------------------
-   ENTRADA
------------------------------------------------------------------------------ */
-
 function moverNave(evento) {
   if (!loop.rodando || loop.pausado) return;
   const { x } = posicaoNoCanvas(evento, canvas);
@@ -343,10 +281,6 @@ canvas.addEventListener(
   },
   { passive: false }
 );
-
-/* -----------------------------------------------------------------------------
-   LIGAÇÃO COM O HTML
------------------------------------------------------------------------------ */
 
 $('#btn-modo-classico').addEventListener('click', () => iniciarJogo('classic'));
 $('#btn-modo-recorde').addEventListener('click', () => iniciarJogo('infinite'));

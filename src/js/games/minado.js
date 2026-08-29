@@ -1,24 +1,9 @@
-/* =============================================================================
-   src/js/games/minado.js
-   -----------------------------------------------------------------------------
-   Minado Amorous — campo minado 5x5 com corações e buracos negros.
-
-   CORREÇÕES APLICADAS NESTA REFATORAÇÃO
-   1. `positions.sort(() => Math.random() - 0.5)` é um embaralhamento enviesado:
-      algumas casas recebiam buraco negro com mais frequência. Trocado por
-      Fisher-Yates (embaralhar()).
-   2. Áudio centralizado no AudioManager.
-   3. Grava em CHAVES.MINADO, a mesma chave que o menu lê.
-   ============================================================================= */
+/* Minado Amorous: campo minado 5x5 com corações e buracos negros. */
 
 import { initViewportFix, AudioManager, embaralhar, som, $ } from '../utils.js';
 import { registrarRecorde, CHAVES } from '../firebase-config.js';
 
 initViewportFix();
-
-/* -----------------------------------------------------------------------------
-   DOM E ÁUDIO
------------------------------------------------------------------------------ */
 
 const grade = $('#grid');
 const telaVitoria = $('#message');
@@ -35,10 +20,6 @@ const audio = new AudioManager({
   },
 });
 
-/* -----------------------------------------------------------------------------
-   CONSTANTES  (idênticas ao original)
------------------------------------------------------------------------------ */
-
 const LADO = 5;
 const TOTAL_CASAS = LADO * LADO;
 const TOTAL_CORACOES = 3;
@@ -46,20 +27,12 @@ const PONTUACAO_INICIAL = 1000;
 const PENALIDADE = 40;
 const PONTUACAO_MINIMA = 120;
 
-/* -----------------------------------------------------------------------------
-   ESTADO
------------------------------------------------------------------------------ */
-
 let coracoes = [];
 let buracos = [];
 let coracoesEncontrados = 0;
 let pontuacao = PONTUACAO_INICIAL;
 let partidaAtiva = false;
 let totalBuracos = 3;
-
-/* -----------------------------------------------------------------------------
-   PARTIDA
------------------------------------------------------------------------------ */
 
 function iniciarMissao(dificuldade) {
   totalBuracos = dificuldade;
@@ -77,7 +50,7 @@ function novaPartida() {
   partidaAtiva = true;
   atualizarPlacar();
 
-  // Fisher-Yates: distribuição realmente uniforme
+  // Fisher-Yates: distribuição uniforme dos buracos negros.
   const posicoes = embaralhar([...Array(TOTAL_CASAS).keys()]);
   coracoes = posicoes.slice(0, TOTAL_CORACOES);
   buracos = posicoes.slice(TOTAL_CORACOES, TOTAL_CORACOES + totalBuracos);
@@ -158,7 +131,6 @@ function fimDeJogo(venceu) {
     telaVitoria.style.display = 'block';
     registrarRecorde(pontuacao, CHAVES.MINADO);
 
-    // Mostra onde estavam os buracos que ela desviou
     buracos.forEach((i) => {
       const casa = $('#cell-' + i);
       if (casa.classList.contains('revealed')) return;
@@ -182,10 +154,6 @@ function fimDeJogo(venceu) {
     casa.classList.add('revealed', 'heart-revealed');
   });
 }
-
-/* -----------------------------------------------------------------------------
-   LIGAÇÃO COM O HTML
------------------------------------------------------------------------------ */
 
 document.querySelectorAll('[data-dificuldade]').forEach((btn) => {
   btn.addEventListener('click', () => iniciarMissao(Number(btn.dataset.dificuldade)));

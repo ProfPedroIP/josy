@@ -10,33 +10,26 @@
     <link rel="stylesheet" href="src/css/arcade-theme.css">
 
     <style>
-        /* ----- Específico do menu ----- */
         :root {
-            --scanline-c3: rgba(255, 0, 0, 0.06); /* faixa CRT vermelha só aqui */
+            --scanline-c3: rgba(255, 0, 0, 0.06);
             --wrapper-altura: 90%;
         }
 
-        /* Login */
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
         .login-logo { width: 150px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 15px #ff00ff); animation: pulse 2s infinite; }
         .login-title { font-size: 24px; color: var(--magenta); text-shadow: 4px 4px var(--magenta-sombra); margin-bottom: 40px; }
         .btn-login-large { background: var(--cor-painel); color: var(--ciano); border: 4px solid var(--ciano); padding: 25px 35px; font-family: var(--fonte); font-size: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; box-shadow: 8px 8px 0px var(--azul-sombra); }
 
-        /* Menu de jogos */
         #game-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
         #game-content h1 { font-size: 22px; color: var(--magenta); text-shadow: 4px 4px var(--magenta-sombra); margin-bottom: 40px; text-align: center; }
         .menu-container { display: flex; flex-direction: column; gap: 20px; width: 80%; margin: 0 auto; max-width: 300px; }
         .badge-novo { position: absolute; top: -12px; right: -15px; background: var(--magenta); color: #fff; font-size: 8px; padding: 6px 8px; border: 2px solid #fff; box-shadow: 2px 2px 0px var(--magenta-sombra); animation: blink 1s infinite; transform: rotate(5deg); }
 
-        /* Controles de topo */
         #profile-pic { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--magenta); cursor: pointer; position: absolute; top: 25px; right: 20px; box-shadow: 0 0 15px var(--magenta); object-fit: cover; z-index: 50; display: none; }
 
-        /* Chat */
         #chat-trigger { position: absolute; bottom: 25px; left: 20px; z-index: 100; background: var(--cor-painel); border: 3px solid var(--verde); color: var(--verde); padding: 15px; cursor: pointer; font-family: var(--fonte); font-size: 12px; box-shadow: 4px 4px 0px var(--verde-sombra); display: none; }
         .notification-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: var(--vermelho); border: 2px solid #fff; display: none; animation: blink 0.5s infinite; }
-        /* No celular ocupa a tela toda. No computador vira uma janela própria,
-           mais larga que o gabinete de 450px — antes ficava 446x806, um corredor
-           estreito e comprido com fonte de 8px. */
+
         #chat-modal { position: fixed; inset: 0; background: #030703; z-index: 300; display: none; flex-direction: column; padding: 16px; box-sizing: border-box; }
         #chat-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
         #chat-titulo { font-size: 10px; color: var(--verde); }
@@ -53,7 +46,6 @@
         #chat-send { background: var(--verde); border: none; color: #000; padding: 10px; font-family: var(--fonte); cursor: pointer; font-size: 8px; }
         #chat-fechar { background: var(--cor-painel); border: 2px solid var(--vermelho); color: var(--vermelho); font-family: var(--fonte); font-size: 10px; width: 30px; height: 30px; cursor: pointer; }
 
-        /* Modal de perfil / placar */
         #stats-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .stats-box { background: var(--cor-painel); border: 4px solid var(--magenta); padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px var(--magenta); text-align: left; position: relative; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
         .modal-tabs { display: flex; gap: 5px; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -67,11 +59,8 @@
         .btn-close-blue { background: var(--azul); border-color: var(--azul-sombra); box-shadow: 4px 4px 0px var(--azul-sombra); }
         .btn-logout-red { background: rgba(255, 0, 0, 0.4); border-color: var(--vermelho-escuro); box-shadow: 4px 4px 0px var(--vermelho-escuro); color: #fff; }
 
-        /* Status de conexão e modo offline */
-
         .marca-pendente { color: var(--ouro); font-size: 6px; vertical-align: middle; }
 
-        /* Brincadeira "Conexão Estelar" */
         #pergunta-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
         .question-title { font-size: 20px; color: var(--ciano); text-shadow: 3px 3px var(--azul-sombra); margin-bottom: 50px; text-align: center; line-height: 1.6; padding: 0 20px; }
         .btn-container { position: relative; width: 100%; max-width: 320px; height: 120px; display: flex; align-items: center; justify-content: center; }
@@ -87,13 +76,10 @@
         .btn-back-action { background: var(--cor-painel); padding: 12px; font-family: var(--fonte); font-size: 8px; cursor: pointer; border: 4px solid; display: block; width: 260px; margin: 12px auto; text-align: center; box-sizing: border-box; }
         .btn-yellow { color: var(--ouro); border-color: var(--ouro); box-shadow: 4px 4px 0px var(--ouro-sombra); }
 
-        /* Status de conexão e modo offline */
-
         .marca-pendente { color: var(--ouro); font-size: 12px; vertical-align: middle; }
 
         .btn-cyan { color: var(--ciano); border-color: var(--ciano); box-shadow: 4px 4px 0px var(--ciano-sombra); }
 
-        /* ----- Estado offline ----- */
         .status-selo { position: absolute; top: 25px; left: 20px; z-index: 160; font-size: 7px; padding: 6px 8px; border: 2px solid; display: none; }
         .status-offline { color: var(--ouro); border-color: var(--ouro); background: rgba(0,0,0,0.85); }
         .status-sync { color: var(--ciano); border-color: var(--ciano); background: rgba(0,0,0,0.85); animation: blink 1.2s infinite; }
@@ -102,7 +88,6 @@
         #update-bar span { font-size: 7px; color: #fff; line-height: 1.4; }
         #btn-atualizar { background: var(--magenta); color: #fff; border: 2px solid #fff; font-family: var(--fonte); font-size: 7px; padding: 8px 10px; cursor: pointer; white-space: nowrap; }
 
-        /* ----- Tela de novidades ----- */
         #novidades-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 600; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .novidades-box { background: var(--cor-painel); border: 4px solid var(--ciano); box-shadow: 0 0 25px var(--ciano); padding: 25px 20px; width: 100%; max-width: 380px; box-sizing: border-box; text-align: center; }
         .novidades-versao { font-size: 8px; color: var(--ouro); margin-bottom: 10px; }
@@ -113,12 +98,10 @@
         .novidades-lista li.novidade-destaque { color: var(--magenta); }
         .novidades-lista li.novidade-destaque::before { content: '*'; color: var(--magenta); }
 
-        /* ----- Rodapé do modal de perfil ----- */
         .rodape-modal { display: flex; align-items: center; justify-content: space-between; border-top: 2px solid #333; padding-top: 12px; }
         #link-novidades { background: none; border: none; color: var(--ciano); font-family: var(--fonte); font-size: 7px; cursor: pointer; text-decoration: underline; padding: 0; }
         #rodape-versao { font-size: 7px; color: #666; }
 
-        /* ----- Controle de som ----- */
         .linha-som { display: grid; grid-template-columns: 58px 1fr 38px; align-items: center; gap: 10px; margin-bottom: 16px; }
         .linha-som span { font-size: 7px; color: var(--ciano); }
         .linha-som b { font-size: 7px; color: var(--ouro); text-align: right; font-weight: normal; }
@@ -129,7 +112,6 @@
         .btn-som-mudo.mudo { color: var(--vermelho); border-color: var(--vermelho-sombra); }
         .dica-som { font-size: 6px; color: #777; text-align: center; margin: 10px 0 0 0; }
 
-        /* ----- Notificações ----- */
         #btn-notificacoes { width: 100%; padding: 12px; font-family: var(--fonte); font-size: 7px; background: #222; color: var(--ouro); border: 3px solid var(--ouro-borda); cursor: pointer; box-sizing: border-box; margin-bottom: 12px; }
         #btn-notificacoes.ligado { color: var(--verde); border-color: var(--verde-sombra); }
         #btn-notificacoes:disabled { opacity: 0.55; cursor: default; }
@@ -147,7 +129,6 @@
             #chat-titulo { font-size: 13px; }
         }
 
-        /* ----- Recado de voz ----- */
         #btn-gravar { background: var(--cor-painel); border: 2px solid var(--magenta); color: var(--magenta); font-size: 14px; width: 44px; cursor: pointer; flex-shrink: 0; }
         #btn-gravar.gravando { background: var(--vermelho); color: #fff; border-color: #fff; animation: blink 1s infinite; }
         #btn-gravar:disabled { opacity: 0.4; cursor: default; }
@@ -156,7 +137,6 @@
         #voz-play { display: none; background: var(--cor-painel); border: 2px solid var(--ciano); color: var(--ciano); font-size: 11px; width: 36px; height: 32px; cursor: pointer; flex-shrink: 0; }
         #btn-descartar-voz { background: none; border: 2px solid var(--vermelho); color: var(--vermelho); font-family: var(--fonte); font-size: 9px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0; }
 
-        /* Balão de áudio no chat */
         .audio-msg { display: inline-flex; align-items: center; gap: 8px; padding: 2px 0; }
         .audio-play { background: none; border: 2px solid currentColor; color: inherit; font-size: 9px; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; line-height: 1; }
         .audio-tempo { font-size: 7px; opacity: 0.85; font-variant-numeric: tabular-nums; }
