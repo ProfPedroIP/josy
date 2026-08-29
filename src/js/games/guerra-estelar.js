@@ -56,7 +56,6 @@ const audio = new AudioManager({
     poder: som('win.aac'),
   },
 });
-audio.ligarBotao('#btn-sound');
 
 /* -----------------------------------------------------------------------------
    CONSTANTES  (idênticas ao original)
@@ -273,7 +272,6 @@ function iniciarJogo(novoModo) {
   vidas = novoModo === 'infinite' ? 3 : 1;
   overlay.style.display = 'none';
   lifeDisplay.innerText = `VIDAS: ${vidas}`;
-  audio.ligar();
   novaPartida();
 }
 
