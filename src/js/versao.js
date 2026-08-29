@@ -23,13 +23,26 @@
      .0.1 -> ajuste menor
    ============================================================================= */
 
-export const VERSAO = '5.1.2';
+export const VERSAO = '5.3.0';
 
 /**
  * Histórico, do mais novo para o mais antigo.
  * `destaque: true` deixa o item em rosa, para o que mais importa da versão.
  */
 export const HISTORICO = [
+  {
+    versao: '5.3.0',
+    titulo: 'SOM, CHAT E TABULEIROS MAIORES',
+    itens: [
+      { texto: 'Controle de volume separado para música e efeitos', destaque: true },
+      { texto: 'O botão de mudo saiu do canto e virou o menu SOM no perfil' },
+      { texto: 'Tabuleiros crescem com a tela (bem maiores no computador)', destaque: true },
+      { texto: 'Chat virou uma janela larga e legível no computador', destaque: true },
+      { texto: 'Recado de voz: só tocar e parar, sem a barrinha de posição' },
+      { texto: 'A nave do Guardião ganhou mais espaço de manobra' },
+      { texto: 'Celular deitado não corta mais o tabuleiro' },
+    ],
+  },
   {
     versao: '5.1.2',
     titulo: 'O NÃO APRENDEU A FICAR NA TELA',
