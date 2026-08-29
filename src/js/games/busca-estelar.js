@@ -33,7 +33,6 @@ const audio = new AudioManager({
     vitoria: som('win.aac'),
   },
 });
-audio.ligarBotao('#btn-sound');
 
 /* -----------------------------------------------------------------------------
    CONSTANTES
@@ -109,7 +108,6 @@ function revelar(casa, indice) {
 
 $('#btn-iniciar').addEventListener('click', () => {
   overlay.style.display = 'none';
-  audio.ligar();
   audio.tocarMusica();
 });
 
